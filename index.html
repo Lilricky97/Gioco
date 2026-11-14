@@ -235,7 +235,8 @@ function addName(d){if(d>0&&names.length<20)names.push("");if(d<0&&names.length>
 function createGame(){
   const list=names.map((n,i)=>n.trim()||`Giocatore ${i+1}`);ls.set("sf_names",names);ls.set("sf_gens",gens);
   const AL="ABCDEFGHJKLMNPRSTUVWY";let s=({hot:"X",dark:"Q",mix:"Z"})[gameMode]||AL[Math.floor(Math.random()*AL.length)];for(let i=0;i<3;i++)s+=AL[Math.floor(Math.random()*AL.length)];
-  H={code:`${list.length}-${s}`,names:list,genders:list.map((n,i)=>gens[i]==="F"?"F":"M"),scores:list.map(()=>0),round:0,judge:0,played:{},used:[],phase:"lobby",order:[],winner:null};
+  const jo=mix([...Array(list.length).keys()]);
+  H={jorder:jo,code:`${list.length}-${s}`,names:list,genders:list.map((n,i)=>gens[i]==="F"?"F":"M"),scores:list.map(()=>0),round:0,judge:jo[0],played:{},used:[],phase:"lobby",order:[],winner:null};
   saveH();show("tv");renderTV();startHost();
 }
 function resume(){H=ls.get("sf_host");if(H){show("tv");renderTV();startHost()}}
@@ -270,7 +271,8 @@ function stateFor(seat){
 function sendState(seat){if(hostBus&&H)hostBus.pub(TOP(H.code)+"/down/"+seat,stateFor(seat),true)}
 function broadcast(){if(!hostBus||!H)return;for(let s=0;s<N();s++)sendState(s)}
 
-const VER="2026-11-14-v10";
+const VER="2026-11-14-v11";
+function mix(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function cardOf(s){return (H.ptext&&H.ptext[s])||whiteAt(H.played[s],H.code)}
 function tryPlay(i,pos,text){
   if(H.phase!=="play")return"Aspetta il prossimo round.";
@@ -323,8 +325,8 @@ function renderTV(){
   }
 }
 function startRound(){H.phase="play";H.played={};H.ptext={};H.winner=null;saveH();renderTV()}
-function nextRound(){H.round++;H.judge=(H.judge+1)%N();startRound()}
-function reveal(){const seats=Object.keys(H.played).map(Number);for(let i=seats.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[seats[i],seats[j]]=[seats[j],seats[i]]}
+function nextRound(){H.round++;if(!H.jorder||H.jorder.length!==N())H.jorder=mix([...Array(N()).keys()]);let k=H.round%N();if(k===0){const last=H.judge;H.jorder=mix(H.jorder);if(H.jorder[0]===last&&N()>1)H.jorder.push(H.jorder.shift())}H.judge=H.jorder[k];startRound()}
+function reveal(){const base=Object.keys(H.played).map(Number).sort((a,b)=>a-b);let seats=mix(base);for(let t=0;t<6&&base.length>2&&seats.join()===base.join();t++)seats=mix(base);
   H.order=seats;H.ri=0;H.phase="reveal";saveH();renderTV()}
 function stepR(d){H.ri=Math.max(0,(H.ri||0)+d);saveH();renderTV();window.scrollTo(0,0)}
 function pickWinner(s){modal(`<h2>Vince questa?</h2><div class="wcard" style="font-size:20px">${wc(cardOf(s))}</div><button class="btn" onclick="confirmWin(${s})">Sì, punto!</button><button class="btn ghost" onclick="closeModal()">No, torna indietro</button>`)}
