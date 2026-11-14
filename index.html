@@ -256,27 +256,29 @@ function onHostMsg(m){
   const seat=+m.seat;if(!(seat>=0&&seat<N()))return;
   const wasOn=isOn(seat);seenAt[seat]=Date.now();
   if(m.t==="hello"){sendState(seat);if(!wasOn)renderTV();return}
-  if(m.t==="play"){const err=tryPlay(seat,+m.pos);
+  if(m.t==="play"){const err=tryPlay(seat,+m.pos,m.text);
     hostBus.pub(TOP(H.code)+"/ack/"+seat,{t:"ack",pos:+m.pos,ok:!err,err});
     renderTV()}
 }
 function stateFor(seat){
   const b=blackNow();
-  return{t:"state",names:H.names,genders:H.genders||[],phase:H.phase,round:H.round,black:b,judge:H.judge,judgeName:H.names[H.judge],me:seat,myName:H.names[seat],
+  return{t:"state",ver:VER,names:H.names,genders:H.genders||[],phase:H.phase,round:H.round,black:b,judge:H.judge,judgeName:H.names[H.judge],me:seat,myName:H.names[seat],
     played:H.played[seat]!=null,playedPos:H.played[seat]??null,count:Object.keys(H.played).length,need:N()-1,
-    winnerName:H.winner!=null?H.names[H.winner]:null,winText:H.winner!=null?whiteAt(H.played[H.winner],H.code):null,
+    winnerName:H.winner!=null?H.names[H.winner]:null,winText:H.winner!=null?cardOf(H.winner):null,
     score:H.scores[seat],rank:H.names.map((n,i)=>[n,H.scores[i]]).sort((a,b)=>b[1]-a[1]).slice(0,5)}
 }
 function sendState(seat){if(hostBus&&H)hostBus.pub(TOP(H.code)+"/down/"+seat,stateFor(seat),true)}
 function broadcast(){if(!hostBus||!H)return;for(let s=0;s<N();s++)sendState(s)}
 
-function tryPlay(i,pos){
+const VER="2026-11-14-v10";
+function cardOf(s){return (H.ptext&&H.ptext[s])||whiteAt(H.played[s],H.code)}
+function tryPlay(i,pos,text){
   if(H.phase!=="play")return"Aspetta il prossimo round.";
   if(i===H.judge)return"Questo round sei il giudice.";
   if(H.played[i]!=null)return"Hai già giocato questo round.";
   if(!(pos>=0)||pos%N()!==i||pos>=MOD)return"Codice sbagliato, riprova.";
   if(H.used.includes(pos))return"Questa carta è già stata giocata.";
-  H.played[i]=pos;H.used.push(pos);saveH();return null;
+  H.played[i]=pos;H.used.push(pos);H.ptext=H.ptext||{};H.ptext[i]=(typeof text==="string"&&text.length<300&&text.indexOf("|")>0)?text:null;saveH();return null;
 }
 
 function renderTV(){
@@ -303,29 +305,29 @@ function renderTV(){
     if(ri<tot){
       const s=H.order[ri];
       el.innerHTML=top+`<div class="win"><div class="mut" style="font-size:clamp(14px,1.8vw,24px);margin-top:1vh">Risposta <b style="color:var(--acc2)">${ri+1}</b> di ${tot} · ⚖️ ${esc(H.names[H.judge])} ascolta…</div>
-      <div class="bcard" style="min-height:44vh;display:flex;flex-direction:column;justify-content:center">${fillBlack(b,whiteAt(H.played[s],H.code))}<div class="brand">Senza Filtro</div></div>
+      <div class="bcard" style="min-height:44vh;display:flex;flex-direction:column;justify-content:center">${fillBlack(b,cardOf(s))}<div class="brand">Senza Filtro</div></div>
       <div style="display:flex;gap:12px;max-width:700px;margin:0 auto">${ri>0?`<button class="btn ghost" onclick="stepR(-1)">← Indietro</button>`:""}<button class="btn y" onclick="stepR(1)">${ri+1<tot?"Prossima risposta →":"Vedi tutte e scegli →"}</button></div></div>`;
       return;
     }
     el.innerHTML=top+`<div class="bcard" style="min-height:0;font-size:clamp(18px,2.6vw,38px)">${blankBlack(b)}</div>
     <p class="mut" style="font-size:clamp(14px,1.6vw,22px);margin:2vh 0 0">⚖️ <b style="color:var(--acc2)">${esc(H.names[H.judge])}</b>, qual è la migliore? Tocca la carta vincente.</p>
-    <div class="answers">${H.order.map((s,i)=>`<div class="wcard" onclick="pickWinner(${s})"><span class="n">${i+1}</span>${wc(whiteAt(H.played[s],H.code))}</div>`).join("")}</div>
+    <div class="answers">${H.order.map((s,i)=>`<div class="wcard" onclick="pickWinner(${s})"><span class="n">${i+1}</span>${wc(cardOf(s))}</div>`).join("")}</div>
     <button class="btn ghost" style="max-width:420px;margin:2vh auto 0" onclick="H.ri=0;saveH();renderTV()">↺ Rivedile una alla volta</button>`;return;
   }
   if(H.phase==="winner"){
     const w=H.winner,rank=H.names.map((n,i)=>[n,H.scores[i]]).sort((a,b)=>b[1]-a[1]);
     el.innerHTML=top+`<div class="win"><div style="font-family:'Archivo Black';font-size:clamp(22px,3.4vw,50px);color:var(--acc2);margin-top:2vh">🏆 ${esc(H.names[w])} +1</div>
-    <div class="bcard">${fillBlack(b,whiteAt(H.played[w],H.code))}<div class="brand">Senza Filtro</div></div>
+    <div class="bcard">${fillBlack(b,cardOf(w))}<div class="brand">Senza Filtro</div></div>
     <div class="score">${rank.map(([n,s])=>`<span class="chip">${esc(n)} <b>${s}</b></span>`).join("")}</div>
     <button class="btn" style="max-width:520px;margin:3vh auto 0" onclick="nextRound()">Prossimo round →</button></div>`;
   }
 }
-function startRound(){H.phase="play";H.played={};H.winner=null;saveH();renderTV()}
+function startRound(){H.phase="play";H.played={};H.ptext={};H.winner=null;saveH();renderTV()}
 function nextRound(){H.round++;H.judge=(H.judge+1)%N();startRound()}
 function reveal(){const seats=Object.keys(H.played).map(Number);for(let i=seats.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[seats[i],seats[j]]=[seats[j],seats[i]]}
   H.order=seats;H.ri=0;H.phase="reveal";saveH();renderTV()}
 function stepR(d){H.ri=Math.max(0,(H.ri||0)+d);saveH();renderTV();window.scrollTo(0,0)}
-function pickWinner(s){modal(`<h2>Vince questa?</h2><div class="wcard" style="font-size:20px">${wc(whiteAt(H.played[s],H.code))}</div><button class="btn" onclick="confirmWin(${s})">Sì, punto!</button><button class="btn ghost" onclick="closeModal()">No, torna indietro</button>`)}
+function pickWinner(s){modal(`<h2>Vince questa?</h2><div class="wcard" style="font-size:20px">${wc(cardOf(s))}</div><button class="btn" onclick="confirmWin(${s})">Sì, punto!</button><button class="btn ghost" onclick="closeModal()">No, torna indietro</button>`)}
 function confirmWin(s){H.scores[s]++;H.winner=s;H.phase="winner";closeModal();saveH();renderTV()}
 function submitFlow(){
   const avail=H.names.map((n,i)=>i).filter(i=>i!==H.judge&&H.played[i]==null);
@@ -391,6 +393,7 @@ function toast(t){const d=document.createElement("div");d.className="toast";d.te
 
 function renderHand(){
   const isLive=live();
+  const oldVer=S&&S.ver!==VER?`<div class="box" style="border-color:#ff2e63;background:#3a0d18;font-weight:800">⚠️ Il tuo gioco è una versione diversa da quella del tavolo. Ricarica la pagina (e anche il tavolo, se è vecchio).</div>`:"";
   const status=LIVE?(isLive?`<span class="chip" style="font-size:12px">🟢 Collegato</span>`:`<span class="chip" style="font-size:12px">${pbus&&pbus.up()?"🟡 In attesa del tavolo…":"🟠 Mi collego…"}</span>`):"";
   let head="";
   if(isLive){
@@ -401,7 +404,7 @@ function renderHand(){
     else if(S.phase==="winner")head=`<div class="box">🏆 Vince <b>${esc(S.winnerName)}</b> con <span class="wcard" style="display:block;margin-top:8px">${wc(S.winText)}</span>.<br><span class="small mut">I tuoi punti: <b style="color:var(--acc2)">${S.score}</b></span></div>`;
   }
   document.getElementById("v-hand").innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><button class="back" onclick="leaveHand()">← esci</button>${status}<span class="small mut">${P.code} · n° <b style="color:var(--acc2)">${P.seat+1}</b></span></div>
-  ${head||`<p class="small mut" style="margin-top:14px">Guarda la carta blu sulla TV e tocca la tua risposta. Se sei il giudice, questo round non giochi.</p>`}
+  ${oldVer}${head||`<p class="small mut" style="margin-top:14px">Guarda la carta blu sulla TV e tocca la tua risposta. Se sei il giudice, questo round non giochi.</p>`}
   <h2 style="margin-top:12px">La tua mano</h2>
   <div class="hand">${P.slots.map((k,i)=>`<div class="wcard" onclick="play(${i})">${wc(whiteAt(posOf(k),P.code))}${isLive?"":`<span class="c">${encPos(posOf(k),P.code)}</span>`}</div>`).join("")}</div>`;
 }
@@ -418,7 +421,7 @@ function play(i){const pos=posOf(P.slots[i]),text=whiteAt(pos,P.code);
   <div class="bigcode">${encPos(pos,P.code)}</div>
   <button class="btn" onclick="discardPos(${pos});closeModal();renderHand()">Fatto, pesca una nuova carta</button><button class="btn ghost" onclick="closeModal()">Ci ripenso</button>`)}
 function sendPlay(pos){const b=document.getElementById("pb");if(b){b.disabled=true;b.textContent="Invio…"}
-  pending=pos;try{pbus.pub(TOP(P.code)+"/up",{t:"play",seat:P.seat,pos})}catch(e){toast("Connessione persa, riprova");closeModal()}
+  pending=pos;try{pbus.pub(TOP(P.code)+"/up",{t:"play",seat:P.seat,pos,text:whiteAt(pos,P.code),ver:VER})}catch(e){toast("Connessione persa, riprova");closeModal()}
   setTimeout(()=>{if(pending===pos){pending=null;closeModal();toast("Nessuna risposta dal tavolo, riprova")}},9000)}
 
 // ================= avvio =================
