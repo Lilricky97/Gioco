@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Senza Filtro</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0c;--blk:#000;--wht:#fafafa;--acc:#ff2e63;--acc2:#ffd60a;--mut:#9a9aa5;--line:#2a2a33;--card:#16161b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--wht);font-family:Inter,system-ui,sans-serif;min-height:100%}
+.wrap{max-width:520px;margin:0 auto;padding:20px 16px 50px}
+.tv{max-width:none;padding:2.2vh 2.5vw}
+h1{font-family:'Archivo Black',sans-serif;font-size:46px;line-height:.95;margin:12px 0 6px;letter-spacing:-1px}
+h1 span{color:var(--acc)}
+h2{font-family:'Archivo Black',sans-serif;font-size:22px;margin:6px 0 12px}
+.mut{color:var(--mut)}.small{font-size:13px}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font:800 17px Inter,sans-serif;background:var(--acc);color:#fff;margin:10px 0;cursor:pointer}
+.btn.w{background:var(--wht);color:#000}.btn.y{background:var(--acc2);color:#000}
+.btn.ghost{background:transparent;color:var(--wht);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.35}
+.btn:active{transform:scale(.98)}
+.back{background:none;border:0;color:var(--mut);font:600 15px Inter;padding:4px 0;cursor:pointer}
+.box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+input{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:#0f0f13;color:var(--wht);font:600 16px Inter;margin:4px 0}
+input.code{font:26px 'Archivo Black';text-align:center;letter-spacing:4px;text-transform:uppercase}
+.names{display:grid;gap:6px}
+.nrow{display:flex;gap:8px;align-items:center}.nrow b{width:28px;text-align:right;color:var(--acc2)}
+.nrow input{margin:0}
+.hide{display:none!important}
+/* carte */
+.bcard{background:linear-gradient(160deg,#1747d6,#0b2a8f);border:2px solid #3d6bff;border-radius:20px;padding:26px;font-family:'Archivo Black',sans-serif;line-height:1.2;color:#fff}
+.wcard{background:var(--wht);color:#000;border-radius:16px;padding:16px;font-weight:800;line-height:1.25;position:relative}
+.fill{color:var(--acc2);text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px}
+.brand{font:700 11px Inter;letter-spacing:2px;text-transform:uppercase;opacity:.5;margin-top:14px}
+/* TV */
+.tvgrid{display:grid;grid-template-columns:1.25fr 1fr;gap:2.5vw;align-items:start}
+.tv .bcard{font-size:clamp(22px,3.6vw,54px);min-height:42vh;display:flex;flex-direction:column;justify-content:space-between}
+.tvtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.6vh;gap:12px;flex-wrap:wrap}
+.logo{font-family:'Archivo Black';font-size:clamp(18px,2.4vw,34px)}.logo span{color:var(--acc)}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-weight:700;font-size:clamp(12px,1.4vw,18px)}
+.chip b{color:var(--acc2)}
+.plist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pl{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:700;font-size:clamp(13px,1.5vw,20px)}
+.pl.done{border-color:#2ecc71}.pl.judge{border-color:var(--acc2);color:var(--acc2)}
+.pl .s{font-size:.85em;color:var(--mut)}
+.answers{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;margin-top:2vh}
+.answers .wcard{font-size:clamp(16px,1.9vw,26px);cursor:pointer;min-height:120px;transition:transform .1s}
+.answers .wcard:hover{transform:translateY(-3px)}
+.answers .wcard .n{position:absolute;top:8px;right:12px;font:14px 'Archivo Black';color:#bbb}
+.bigcode{font-family:'Archivo Black';font-size:clamp(40px,8vw,110px);color:var(--acc2);letter-spacing:6px;text-align:center;line-height:1}
+.win{text-align:center}
+.win .bcard{font-size:clamp(22px,3.4vw,48px);max-width:1100px;margin:2vh auto;text-align:left}
+.score{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:2vh}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.sheet{background:#121216;border:1px solid var(--line);border-radius:22px;padding:20px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.pick button{padding:14px 8px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:#fff;font:700 15px Inter;cursor:pointer}
+.secret{-webkit-text-security:disc}
+.err{color:var(--acc);font-weight:700;min-height:20px}
+/* mano */
+.hand{display:grid;gap:10px}
+.hand .wcard{cursor:pointer;padding:16px 64px 16px 16px;font-size:17px;min-height:64px}
+.hand .wcard .c{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#000;color:var(--acc2);font:13px 'Archivo Black';padding:6px 8px;border-radius:8px;letter-spacing:1px}
+.seats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.seats button{aspect-ratio:1;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:#fff;font:22px 'Archivo Black';cursor:pointer}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.pad button{padding:18px 0;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:#fff;font:26px 'Archivo Black';cursor:pointer}
+.pad button:active{background:#26262e}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#fff;color:#000;font-weight:800;padding:12px 18px;border-radius:99px;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.wcard .emo{display:block;font-size:2.1em;line-height:1;margin-bottom:10px}
+.hand .wcard{display:flex;align-items:center;gap:14px}
+.hand .wcard .emo{font-size:34px;margin:0;flex:none}
+.bemo{font-size:1.6em;line-height:1;margin-bottom:.35em}
+.win .bcard .bemo{font-size:2.4em}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="wrap" id="v-home">
+  <h1>SENZA<br><span>FILTRO</span></h1>
+  <p class="mut">Il gioco di carte più scorretto della serata. Una TV fa da tavolo, ogni telefono è una mano.</p>
+  <button class="btn" onclick="show('setup')">📺 Apri il tavolo (da trasmettere in TV)</button>
+  <button class="btn w" onclick="show('join')">🃏 La mia mano</button>
+  <div class="box small mut">
+    <b style="color:#fff">Come si gioca</b><br>
+    1. Chi trasmette sulla TV apre il <b>tavolo</b>, scrive i nomi e ottiene un codice.<br>
+    2. Tutti gli altri aprono questo stesso link → <b>La mia mano</b> → codice + il proprio numero.<br>
+    3. A ogni round c'è un <b>giudice</b> e una carta blu con una frase da completare. Gli altri scelgono la carta bianca più scorretta.<br>
+    4. Ognuno ha 11 carte in mano: tocchi la tua risposta e arriva dritta al tavolo. (Se il telefono non si collega, ti dà un codice di 3 cifre da digitare sul tavolo.)<br>
+    5. Il tavolo aspetta che rispondano tutti, poi chi ha il telefono del tavolo scopre le risposte anonime una alla volta. Il giudice sceglie la migliore: +1 punto.
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="wrap hide" id="v-setup">
+  <button class="back" onclick="show('home')">← indietro</button>
+  <h2>Chi gioca?</h2>
+  <p class="small mut">Mettetevi in cerchio: il numero serve a ognuno per entrare dal proprio telefono.</p>
+  <div class="names" id="names"></div>
+  <div style="display:flex;gap:8px"><button class="btn ghost" onclick="addName(1)">+ giocatore</button><button class="btn ghost" onclick="addName(-1)">− giocatore</button></div>
+  <button class="btn" onclick="createGame()">Crea il tavolo</button>
+  <button class="btn ghost hide" id="resumeBtn" onclick="resume()">Riprendi la partita in corso</button>
+</div>
+
+<!-- TV -->
+<div class="wrap tv hide" id="v-tv"></div>
+
+<!-- JOIN -->
+<div class="wrap hide" id="v-join">
+  <button class="back" onclick="show('home')">← indietro</button>
+  <h2>Entra con il codice</h2>
+  <input class="code" id="jcode" maxlength="7" placeholder="11-KZPQ" autocomplete="off" autocapitalize="characters" spellcheck="false">
+  <div class="err" id="jerr"></div>
+  <button class="btn" onclick="joinCode()">Avanti</button>
+  <button class="btn ghost hide" id="resumeHand" onclick="openHand()">Riprendi la mia mano</button>
+</div>
+
+<!-- SEAT -->
+<div class="wrap hide" id="v-seat">
+  <button class="back" onclick="show('join')">← indietro</button>
+  <h2>Che numero sei?</h2>
+  <p class="small mut">È il numero accanto al tuo nome sulla TV.</p>
+  <div class="seats" id="seats"></div>
+</div>
+
+<!-- HAND -->
+<div class="wrap hide" id="v-hand"></div>
+
+<div id="modal"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+// ================= CARTE (originali) =================
+const BLACK=["🎧|Stasera il DJ ha messo ____ e la pista è esplosa.", "🚪|Il vero motivo per cui mi hanno buttato fuori dalla discoteca: ____.", "🎁|Mia nonna a Natale mi ha regalato ____.", "📱|La prossima moda su TikTok: ____.", "🍹|Cosa c'è davvero nel cocktail da 15 euro? ____.", "💔|Il mio ex mi ha lasciato per ____.", "🌅|Alle 5 del mattino, fuori dal locale, ho trovato ____.", "💍|Il segreto di un matrimonio felice è ____.", "🍦|Il nuovo gusto di gelato più venduto in Riviera: ____.", "📄|Nel curriculum, alla voce \"competenze\", ho scritto ____.", "📖|Il titolo della mia autobiografia: \"Io e ____\".", "🍝|Cosa non bisogna mai dire al primo appuntamento? ____.", "🦺|Il buttafuori mi ha fatto entrare solo perché avevo ____.", "📺|Netflix ha appena annunciato una serie su ____.", "🦸|Il mio superpotere sarebbe ____.", "🥃|Dopo tre shottini mi sembra un'ottima idea ____.", "🛏️|La cosa peggiore da trovare nel letto di un hotel: ____.", "❓|Cosa ho perso stanotte? ____.", "💘|L'app di incontri mi ha abbinato a ____.", "🌸|Il nuovo profumo si chiama \"Essenza di ____\".", "🛋️|Il mio psicologo dice che il problema è ____.", "🍖|Pranzo della domenica: lasagne, arrosto e ____.", "🦖|Cosa ha davvero estinto i dinosauri? ____.", "🇮🇹|Nuovo slogan del turismo: \"Italia, terra di ____\".", "💻|La cosa più imbarazzante che mia madre ha trovato nella cronologia: ____.", "🏝️|In vacanza a Ibiza ho imparato ____.", "🏢|Alla riunione di condominio si è parlato solo di ____.", "💬|Il gruppo WhatsApp si chiama \"Amanti di ____\".", "🎅|Quest'anno Babbo Natale porterà solo ____.", "🚽|Nel bagno della discoteca c'era ____.", "⛪|Il prete in confessione è svenuto quando gli ho parlato di ____.", "🎓|Il piano B se l'università va male: ____.", "🏴|Cosa c'è sotto il kilt di uno scozzese? ____.", "🎰|Il prossimo Gratta e Vinci si chiamerà \"____\".", "⏰|Domani mattina mi sveglierò con ____.", "👵|Il regalo perfetto per la suocera: ____.", "🏅|La nuova disciplina olimpica: ____.", "🫓|L'ingrediente segreto della piadina di mia zia: ____.", "👮|Il vigile mi ha fatto la multa per ____.", "✍️|Il mio tatuaggio più grande rappresenta ____.", "👽|Cosa fanno gli alieni quando vengono in Italia? ____.", "☀️|Niente di meglio, la domenica mattina, di ____.", "👩‍🏫|La prof mi ha bocciato perché all'orale ho parlato di ____.", "🧊|Il mio coinquilino tiene in frigo ____.", "🏃|Ho deciso di mollare tutto e dedicarmi a ____.", "🍪|Nuovo spot dei biscotti: famiglia felice, colazione e ____.", "👴|A 80 anni voglio ancora ____.", "🤐|Il motivo per cui il gruppo non si parla più: ____.", "🏖️|Quest'estate in spiaggia andava di moda ____.", "🎵|____: il tormentone dell'estate.", "🍕|Mi bastano pizza, birra e ____.", "🎤|Il karaoke è finito male per colpa di ____.", "🛂|Alla dogana, nella mia valigia, hanno trovato ____.", "🤖|Ho chiesto all'IA un'immagine di ____ e si è rifiutata.", "🌴|Quello che succede in Riviera resta in Riviera. Tranne ____.", "🎶|La mia playlist per fare l'amore contiene solo ____.", "🎣|Mio padre ha finalmente trovato un hobby: ____.", "🎉|Il tema della mia festa di laurea: ____.", "😀|La nuova emoji più richiesta: ____.", "📅|Il segreto per sopravvivere al lunedì: ____.", "🎩|Il mio talento nascosto: ____.", "🌍|Dio ha creato il mondo in sei giorni. Il settimo ha inventato ____.", "🔧|Cosa sogna un idraulico di notte? ____.", "🎀|Al posto delle bomboniere abbiamo regalato ____.", "🪦|Le ultime parole famose di mio zio: \"Tranquilli, ____\".", "🏋️|Il nuovo corso in palestra: zumba, pilates e ____.", "🙋|Perché sono single? ____.", "🤫|In questa casa non si parla di ____.", "💒|L'unico motivo per cui vado ai matrimoni: ____.", "📢|Il mio vicino urla ogni sera per ____.", "🧳|Ho fatto la valigia per le vacanze: costume, crema e ____.", "🚑|Al pronto soccorso mi hanno chiesto: \"Come si è procurato ____?\"", "🎂|Per i miei 30 anni voglio solo ____.", "🏆|E il premio per il peggior ospite della serata va a ____.", "👨‍🍳|MasterChef: oggi i concorrenti dovranno cucinare ____.", "🧙|Il mago ha fatto sparire ____.", "🦷|Il dentista mi ha trovato in bocca ____.", "👻|Il fantasma di casa mia ha un solo desiderio: ____.", "🛒|Nel carrello della spesa di un single ci sono solo birra e ____.", "📸|La foto profilo perfetta per Tinder: io con ____.", "🏠|Non torno a casa finché non trovo ____.", "🎄|Il cenone di Natale è degenerato quando la zia ha tirato fuori ____.", "🍾|Stasera brindiamo a ____!", "🚕|Il tassista mi ha cacciato dalla macchina per ____.", "👰|La sposa è scappata dall'altare per ____.", "🕵️|La polizia scientifica ha trovato tracce di ____.", "🗿|Il nuovo monumento in piazza è dedicato a ____.", "🧸|Da piccolo dormivo abbracciato a ____.", "🏫|Il preside ha convocato i miei genitori per ____.", "📚|Il nuovo libro per l'esame di maturità: \"Storia di ____\".", "🎡|La nuova attrazione del luna park: ____.", "🌋|Il Vesuvio erutterà solo se vedrà ____.", "⛷️|In settimana bianca ho perso gli sci ma ho trovato ____.", "🚿|Sotto la doccia penso sempre a ____.", "🪞|Specchio, specchio delle mie brame, chi è più bello del reame? ____.", "🍷|Mio zio dopo il terzo bicchiere parla solo di ____.", "🔮|La cartomante mi ha detto che nel mio futuro c'è ____.", "🥇|Nel mio paese sono famoso per ____.", "⚽|Il calciatore ha esultato mostrando ____.", "🎮|Il nuovo videogioco più atteso: \"Call of ____\".", "🛸|Gli alieni ci hanno contattato solo per chiedere ____.", "🚀|Un miliardario annoiato ha mandato nello spazio ____.", "🐶|Il mio cane mi guarda come se fossi ____.", "🐱|Il gatto ha portato in casa ____.", "🦁|Al circo, il numero più applaudito: il leone e ____.", "🏥|Il medico mi ha prescritto tre volte al giorno ____.", "💊|Effetti collaterali: nausea, sonnolenza e ____.", "🧪|L'università ha finalmente scoperto la cura per ____.", "📰|In prima pagina oggi: \"Riccione, trovato ____ in spiaggia\".", "🗞️|Ultim'ora: il governo vieta ____.", "🏛️|Il nuovo ministero si occuperà di ____.", "👑|Se fossi re per un giorno, renderei obbligatorio ____.", "⚖️|L'avvocato dice che posso cavarmela dando la colpa a ____.", "🚔|Mi hanno arrestato per ____, ma ne è valsa la pena.", "🔞|Vietato ai minori di 18 anni: ____.", "🍆|Il mio ex era bravo solo in ____.", "🍑|La parte migliore del mio corpo: ____.", "💋|Il bacio più strano della mia vita: con ____.", "🛌|La mattina dopo, nel mio letto, c'erano due cose: un mal di testa e ____.", "📞|Mamma, ti devo dire una cosa: ____.", "🤰|Ho scoperto chi è il vero padre: ____.", "🧬|Il test del DNA ha rivelato che sono al 30% ____.", "⚰️|Al mio funerale voglio ____.", "🙏|Signore, perdonami per ____.", "😇|L'ottavo peccato capitale: ____.", "😈|Il diavolo mi ha offerto ____ in cambio dell'anima.", "🥂|Il discorso del testimone era tutto su ____.", "💼|Il mio capo mi ha beccato in ufficio con ____.", "📊|Il punto principale della riunione di oggi: ____.", "📧|Oggetto della mail: \"URGENTE: ____\".", "🧑‍💻|La mia password è ____.", "📶|Il Wi-Fi del bar si chiama \"____\".", "🔋|Con l'1% di batteria ho mandato un messaggio su ____.", "📲|L'ultima ricerca su Google che ho fatto: \"come liberarsi di ____\".", "🎬|Il film dell'anno: \"50 sfumature di ____\".", "🎭|La nuova opera a teatro: \"Romeo e ____\".", "🎨|Il quadro più costoso del mondo raffigura ____.", "🎸|Il nuovo singolo del rapper si intitola \"____\".", "🎙️|Il podcast di cui nessuno sentiva il bisogno: \"Parliamo di ____\".", "🏝️|Su un'isola deserta porterei solo ____.", "🗺️|Il tesoro dei pirati in realtà era ____.", "🏰|Il drago custodiva ____.", "🧞|Il genio mi ha concesso tre desideri, li ho sprecati tutti per ____.", "🌈|Alla fine dell'arcobaleno non c'è una pentola d'oro, ma ____.", "❄️|La verità sul Polo Nord: Babbo Natale in realtà produce ____.", "🐰|Quest'anno nell'uovo di Pasqua c'era ____.", "🎃|Ad Halloween mi sono travestito da ____.", "💐|Per San Valentino ho ricevuto ____.", "🍫|Ho rinunciato a ____ per la Quaresima.", "🏖️|Il bagnino ha fischiato perché ho portato in acqua ____.", "🚤|Il motoscafo è affondato a causa di ____.", "🎢|Ho vomitato sulle montagne russe pensando a ____.", "🏕️|In campeggio ho dovuto condividere la tenda con ____.", "⛽|All'Autogrill vendono anche ____.", "🍳|La colazione dei campioni: caffè, sigaretta e ____.", "🥗|La mia dieta prevede solo insalata e ____.", "🏃‍♀️|Corro tutte le mattine per scappare da ____.", "🧘|Il mio insegnante di yoga mi ha insegnato ____.", "💆|Il massaggiatore ha trovato un nodo a forma di ____.", "💇|Il parrucchiere mi ha fatto un taglio alla ____.", "👗|L'abito più sexy del mio armadio: ____.", "👠|Indosso i tacchi solo per ____.", "🕶️|Porto gli occhiali da sole di notte per nascondere ____.", "🧠|Il mio unico neurone è occupato a pensare a ____.", "😱|La mia paura più grande: ____.", "😂|Ho riso così tanto che mi è uscito dal naso ____.", "😭|L'ultima volta che ho pianto è stato per ____.", "🤔|Una domanda esistenziale: perché esiste ____?", "🙄|Mia madre mi ha detto: \"Smettila con ____!\""];
+const WHITE=["😭|Un buttafuori che piange", "👵|Mia nonna su OnlyFans", "🥃|Uno shottino di grappa alla liquirizia", "🎧|Un DJ che mette Gigi D'Agostino alle 4", "🐭|Il pigiama di Topolino", "🧀|Un piede che sa di formaggio", "👙|La suocera in topless", "🎈|Un preservativo scaduto nel 2014", "📶|Il wi-fi del vicino", "🍷|Una sbronza triste", "💔|Il divorzio dei miei", "🌯|Una piadina al tonno e Nutella", "🐹|Un criceto depresso", "📈|Il cugino che fa trading", "⛪|Un rutto in chiesa", "🦍|La peluria della schiena", "🎙️|Un audio WhatsApp di 9 minuti", "🍊|La cellulite", "🐆|Un tanga leopardato", "💸|Il mio conto in banca", "📱|Una storia su Instagram alle 4 del mattino", "✝️|Il prete del paese", "🤮|Un vomito strategico", "👅|Un bacio con la lingua alla zia", "🥙|Il kebabbaro di fiducia", "💦|Un'ascella pezzata", "😶|Il silenzio imbarazzato", "👶|Un neonato molto brutto", "🍺|Il mio ex ubriaco", "🩲|Le mutande del giorno prima", "🐢|Una tartaruga che fa twerking", "💊|Il Viagra del nonno", "🥔|Un sacchetto di patatine vuoto", "🔦|Una colonscopia", "🧓|La crisi di mezza età", "🦂|Un tatuaggio tribale", "🧾|Lo scontrino della cena", "👴|Un'orgia di pensionati", "🐷|La sagra della porchetta", "🐈|Un gatto che ti giudica", "🚗|Un pianto in macchina", "🎤|L'autotune", "🚽|Un bidet rotto", "🥵|Uno sconosciuto sudato", "🤕|Il mal di testa del giorno dopo", "🍯|Una ceretta all'inguine", "🍝|Una cena da 4 euro a testa", "👃|Le dita nel naso", "🐍|Un pitone domestico", "🛒|Il cassiere del discount", "🤬|La nonna che bestemmia", "📑|L'IVA al 22%", "💊|Una pastiglia misteriosa", "🙅|Un amico che non paga mai", "👠|Le scarpe col tacco di mio padre", "🍑|Una sculacciata", "👻|Un ghosting di 3 anni", "🍖|Il ragù della domenica", "🧅|Un alito alla cipolla", "📸|Un selfie nudo mandato al gruppo sbagliato", "🧮|Il commercialista", "🐧|Un pinguino in calore", "🖊️|Gli addominali disegnati col pennarello", "📬|Una cartella esattoriale", "🤡|Un clown triste", "🚙|La macchina del nonno", "🔥|Un'emorroide", "🥬|La dieta del minestrone", "🏦|Un bonifico sbagliato", "👩‍👧|Il gruppo WhatsApp delle mamme", "👱|Una parrucca bionda", "🍹|Un apericena infinito", "🕵️|Uno stalker su Instagram", "💥|Un fallimento totale", "🙈|Una vergogna eterna", "🪩|Un rave in parrocchia", "🦷|Il dentista ubriaco", "🍺|La pancia da birra", "🐂|Un toro meccanico", "🧦|Le ciabatte con i calzini", "🏠|Un mutuo trentennale", "🍑|La prostata", "📦|Un pacco Amazon sbagliato", "🎄|Lo zio fascista al pranzo di Natale", "💆|Un massaggio con lieto fine", "🍰|Il tiramisù della suocera", "🧪|Un tampone positivo", "🎭|Un orgasmo finto", "♻️|La raccolta differenziata", "🧘|Un monaco tibetano", "🍭|Un leccalecca usato", "🚌|Una gita a Medjugorje", "🚾|Un bagno chimico al festival", "📳|Un vibratore con il bluetooth", "👮|Il carabiniere più bello d'Italia", "🧠|Il mio ultimo neurone", "🕺|Uno spogliarellista di 70 anni", "🫣|Un capezzolo fuori", "🦠|L'herpes", "🛏️|Un cuscino che puzza", "⏰|Una sveglia alle 6", "👬|Un tradimento con il cognato", "🐕|Il cane del vicino", "🥂|Uno spritz annacquato", "🚔|La Finanza alla porta", "🗳️|Un pippone sulla politica", "🩴|Un'escursione in ciabatte", "🪑|Una sedia di plastica", "🚂|Un trenino di Capodanno", "🎰|Una piccola truffa", "🌡️|Il riscaldamento globale", "🦄|Un unicorno gonfiabile", "🤳|Un influencer di Rimini", "🤰|Una gravidanza indesiderata", "🦞|Un'aragosta viva", "👃|Una caccola sotto il banco", "🏥|La guardia medica", "🍺|L'ultima birra calda", "🗯️|Una bestemmia creativa", "☕|Un caffè corretto alle 8", "🧦|Il collant smagliato", "🎩|Un mago fallito", "🧙|Un nano da giardino", "🏫|Le chat del liceo", "🛋️|Il mio terapeuta", "🦟|Un'invasione di zanzare", "📢|Una mamma che urla", "🛟|Un gommone a Ferragosto", "💃|La ex del mio migliore amico", "🪬|La macumba", "🍑|Le chiappe al vento", "🏋️|Un abbonamento in palestra mai usato", "▶️|Un tutorial di YouTube", "💨|Uno scoreggione in ascensore", "👴|La pensione a 75 anni", "💍|Una zia che chiede del fidanzato", "🧠|Il cervello in pappa", "🐶|La lingua di un cane", "🍖|Un prosciutto intero", "🧦|Un calzino bucato", "🚘|Una scopata in macchina", "🏜️|Un'astinenza di tre anni", "🦷|Una dentiera nel bicchiere", "💉|La chirurgia estetica", "🍺|Una birra presa dal cestino", "🔥|Un falò in spiaggia", "😁|Un sorriso finto", "🚽|Una tazza del cesso d'oro", "🦌|Le corna", "✈️|Un bambino che urla in aereo", "🤳|Un bastone da selfie", "💘|Un amore non corrisposto", "🎒|Uno zaino Invicta", "🚬|L'ultima sigaretta", "🕺|Il papà che balla", "🌶️|Il cugino della Calabria", "🦶|Un piede sul cruscotto", "🚦|Una pomiciata al semaforo", "👃|Il naso rifatto", "⛓️|Un paio di manette pelose", "🌧️|La danza della pioggia", "📦|Il trasloco al quarto piano senza ascensore", "😤|Una scoreggia trattenuta", "🛗|Un ascensore bloccato", "🎖️|La mia dignità", "🦪|Un piatto di cozze sospette", "⛽|Il bagno dell'Autogrill", "🍾|Un'altra bottiglia", "🌊|Il mal di mare", "😮‍💨|Il fiatone sulle scale", "🐷|Un'amica che ti dice \"sei ingrassato\"", "🕶️|Gli occhiali da sole di notte", "🎀|Un perizoma di pizzo", "🙏|Il prete che balla la macarena", "🌅|L'aperitivo che diventa cena e poi after", "💩|Una diarrea fulminante", "🗡️|Il tradimento", "⛱️|Il vicino di ombrellone", "💰|Un sugar daddy", "🎭|La sindrome dell'impostore", "🐋|Un capodoglio", "🔥|La gastrite", "♈|L'oroscopo", "🌿|Le ascelle non depilate", "🧑‍🚒|Un calendario di pompieri", "🧾|Una multa da 300 euro", "⛷️|La settimana bianca", "🥪|Un panino con la porchetta alle 5", "🎶|Il karaoke dei Pooh", "🩴|Un uomo in pantofole", "🧴|La crema solare spalmata male", "💧|Il letto ad acqua", "🥦|Una grigliata vegana", "⚽|Il Fantacalcio", "🥂|Un discorso da ubriaco al matrimonio", "🐱|Un video di gattini", "🎉|Una festa a sorpresa fallita", "🔙|Il ritorno dell'ex", "👠|Un tacco rotto", "📞|La voce di mia madre", "🌗|Un'abbronzatura a chiazze", "🕺|Il tipo che balla da solo in mezzo alla pista", "🍸|Un drink offerto da uno sconosciuto di 60 anni", "🚺|La coda per il bagno delle donne", "💃|Una cubista in pensione", "👠|Un tacco 12 nel fango", "🚕|Il tassista che ti racconta la sua vita", "🎟️|Un'altra prevendita persa", "🪪|La foto del documento", "😔|Un dopo-sbornia con i sensi di colpa", "🦺|Il gilet del buttafuori", "🎓|Lo sconto studenti", "♨️|Un idromassaggio pubblico", "💎|Un piercing all'ombelico infetto", "📍|La mamma che ti traccia sul telefono", "😢|Un vocale piangendo alle 3", "👩‍🏫|Un lento con la professoressa", "🏭|La cassa integrazione", "🎧|Un selfie con il DJ che non ti conosce", "🕳️|Le chiavi di casa nel tombino", "📲|Un messaggio all'ex alle 4:12", "🌯|Una piadina caduta per terra", "🚗|Il ritorno in macchina in sei", "🌅|L'alba sulla spiaggia", "🐧|Un pinguino gonfiabile", "🦶|Un piede pestato in pista", "🃏|Uno strip poker con i parenti", "💑|Un appuntamento al buio con la propria cugina", "🤵|L'addio al celibato", "👴|La lap dance del nonno", "🤦|Una storia di Instagram di cui pentirsi", "🪞|Lo specchio del bagno del locale", "💆|Un massaggio thailandese", "📣|Il tizio che urla \"UN ALTRO GIRO\"", "👰|La sposa che vomita sull'abito", "🥙|La fila al kebab alle 5", "🍈|Lo zio che fa le battute sulle tette", "😘|Un bacio con il buttafuori", "🎲|La scommessa persa", "🪴|Un bonsai morto", "🛵|Il motorino rubato", "🍌|Un costume di carnevale da banana", "📅|La settimana di lavoro dopo il weekend", "📷|Un ricatto con le foto di Capodanno", "😒|Il fidanzato della mia ex", "✋|Una mano morta in coda", "👯|Un ballo di gruppo", "💧|Un brindisi con l'acqua", "💳|La carta di credito di papà", "🏬|Il pomeriggio al centro commerciale", "🥊|Una rissa per l'ultimo posto in macchina", "🌙|La coinquilina che urla di notte", "🍟|Le patatine della mensa", "🎹|Un pianista ubriaco", "✍️|Un tatuaggio con il nome sbagliato", "🍦|Il gelato al gusto puffo", "👀|Lo sguardo della barista", "💨|Una scoreggia rumorosa durante il minuto di silenzio", "🎄|Un maglione di Natale", "🍔|Un panino del fast food alle 6 del mattino", "🛏️|Il divano letto della zia", "🦵|Le gambe pelose a luglio", "📺|La televendita delle pentole", "🧔|Un barbone hipster", "🧻|L'ultimo rotolo di carta igienica", "🧊|Il ghiaccio nel vino rosso", "🍕|L'ananas sulla pizza", "👨‍🍳|Un cuoco napoletano offeso", "🐓|Il gallo del vicino alle 5", "🍝|La carbonara con la panna", "🧳|Una valigia persa a Fiumicino", "🏖️|Un lettino da 40 euro al giorno", "🌋|Un'eruzione cutanea", "🦞|Un'ustione da spiaggia", "🍉|Un'anguria intera", "🐴|Un cavallo in salotto", "🪓|Il boscaiolo dei miei sogni", "🔮|Una cartomante truffatrice", "🎻|Un violinista al ristorante che non se ne va", "🧟|La faccia del lunedì mattina", "🕯️|Una cena romantica col blackout", "🐀|Una pantegana a Venezia", "🍷|Un vino in cartone", "🤑|Un'eredità contesa", "⚰️|Un funerale con l'open bar", "👽|Un rapimento alieno", "🛸|Un UFO sopra Riccione", "🦖|Un dinosauro gonfiabile", "🎠|La giostra dei cavalli a 30 anni", "🍼|Il biberon di papà", "🧸|Un peluche che ha visto troppo", "🧯|L'estintore del locale", "🚒|I pompieri chiamati per niente", "🧽|Una spugna da bagno condivisa", "🪥|Lo spazzolino del coinquilino", "🍆|Una melanzana dalla forma sospetta", "🍌|Una banana usata male", "🥒|Un cetriolo in offerta", "🍒|La ciliegina sulla torta", "🍑|Una pesca molto matura", "🐝|Una puntura d'ape sul sedere", "🦀|I piattole", "🧂|Il sale sulle ferite", "🥜|Le noccioline del bar", "🔞|Un film vietato ai minori su Rai 1", "📼|La videocassetta del matrimonio dei miei", "💿|Il CD dei Backstreet Boys", "📟|Un cercapersone", "🕹️|Il Game Boy di mio fratello", "🗿|Una statua di Padre Pio fosforescente", "🦩|Un fenicottero di plastica", "🪿|Un'oca aggressiva", "🦨|Una puzzola nel motore", "🐊|Un coccodrillo nel water", "🐟|Un pesce rosso morto", "🦐|Lo scampo scongelato tre volte", "🍤|Il fritto misto del giorno prima", "🧇|Un waffle unto", "🥓|Il bacon a colazione, pranzo e cena", "🥩|Una bistecca al sangue", "🌭|Un würstel crudo", "🍳|Un uovo sul cofano", "🧈|Il burro sulla pelle", "🍫|Una scorta segreta di cioccolato", "🍬|Una caramella trovata in tasca nel 2009", "🍿|Il popcorn nei denti", "🥛|Il latte scaduto", "🍶|Il sakè della cena giapponese", "🍾|Uno champagne finto", "🚿|La doccia gelata", "🛁|Una vasca con i petali di rosa", "🧖|La sauna con gli sconosciuti", "🏊|La piscina comunale ad agosto", "🤿|Le pinne del 1995", "🛶|Un pedalò alla deriva", "⛵|Una barca a vela presa in prestito", "🚤|Un motoscafo noleggiato da ubriachi", "🏝️|Un'isola deserta con il tuo ex", "🗺️|Il navigatore che ti porta in un campo", "🚧|Un cantiere eterno", "🚇|La metro all'ora di punta", "🛺|Un risciò in Romagna", "🚜|Un trattore in tangenziale", "🏍️|Un motociclista con il marsupio", "🚲|Una bici senza sellino", "🛴|Un monopattino nel fosso", "🚁|Un elicottero sopra la discoteca", "✈️|Un volo low cost di 14 ore", "🛂|Il controllo passaporti", "💼|Un colloquio di lavoro in costume", "🖨️|La stampante dell'ufficio", "💻|La riunione su Zoom senza pantaloni", "📧|Una mail \"rispondi a tutti\"", "📊|Una presentazione PowerPoint di 200 slide", "🧑‍💼|Il capo che ti chiama di domenica", "☎️|Un call center alle 20:30", "🏦|Il direttore di banca", "💳|Un bancomat che si mangia la carta", "🪙|Una moneta da 2 centesimi", "🎫|Un biglietto della lotteria vincente nella lavatrice", "🧺|Una lavatrice con un calzino rosso", "🧹|Le pulizie di primavera", "🪣|Un secchio d'acqua gelida", "🧤|I guanti del chirurgo", "🩺|Il medico di base", "🩻|Una radiografia imbarazzante", "🩹|Un cerotto sui capezzoli", "💉|Un vaccino per cavalli", "🌡️|La febbre a 37.2 di un uomo", "🤧|Un raffreddore da 3 settimane", "😷|La mascherina di FFP2 del 2020", "🦴|Un osso di pollo", "🧬|Il DNA di mio zio", "🫀|Il cuore spezzato", "🫁|Un polmone da fumatore", "🦷|Un dente d'oro", "👁️|Un occhio di vetro", "🦻|L'apparecchio acustico della nonna", "👂|Un orecchio pieno di cerume", "👄|Le labbra rifatte", "💅|Le unghie finte lunghe 5 centimetri", "💇|Un taglio di capelli fatto in casa", "🧔‍♂️|Una barba con dentro la cena", "👨‍🦲|La calvizie precoce", "🪒|Un rasoio usa e getta", "🧴|Il deodorante della palestra", "💐|Un mazzo di fiori rubato al cimitero", "🌹|Una rosa del venditore ambulante", "🎁|Un regalo riciclato", "🎂|Una torta con 40 candeline", "🎈|Un palloncino a forma di pene", "🎊|Una festa di addio al nubilato", "🥳|Un compleanno a sorpresa per la persona sbagliata", "🪅|Una pentolaccia", "🎆|I fuochi d'artificio illegali", "🧨|Un petardo nel water", "🎇|Una stellina nel culo", "🧛|Un vampiro vegano", "🧜|Una sirena con l'alito di pesce", "🧞|Un genio della lampada sindacalizzato", "🧚|La fatina dei denti in crisi economica", "🎅|Babbo Natale in cassa integrazione", "🐰|Il coniglietto di Pasqua drogato", "👼|Un angelo custode in ferie", "😈|Il diavolo in persona", "🕵️|Un investigatore privato pagato dalla suocera", "🥷|Un ninja maldestro", "🦸|Un supereroe con la cistite", "🤖|Un robot aspirapolvere ribelle", "👾|Un virus nel telefono", "🧌|Un troll su Facebook", "💀|Uno scheletro nell'armadio", "🪦|La lapide con il selfie", "⚱️|Le ceneri del nonno nella credenza", "🛐|Un pellegrinaggio a piedi nudi", "📿|Il rosario della zia", "🕍|La processione del santo patrono", "🔔|Le campane alle 7 di domenica", "🧑‍🌾|Un contadino milionario", "🐄|Una mucca che muggisce in diretta", "🐖|Un maiale di nome Gianni", "🐑|Una pecora molto attraente", "🐐|Una capra che mangia il passaporto", "🦙|Un lama che sputa", "🐫|Un cammello in spiaggia", "🦒|Una giraffa con il torcicollo", "🐘|Un elefante in un negozio di cristalli", "🦏|Un rinoceronte in ritardo", "🦛|Un ippopotamo in bikini", "🐼|Un panda svogliato", "🐨|Un koala strafatto", "🦘|Un canguro con le tasche vuote", "🦥|Un bradipo alle Poste", "🐒|Una scimmia che lancia cacca", "🦍|Un gorilla al matrimonio", "🦁|Un leone vegetariano", "🐯|Una tigre in un'auto blu", "🐺|Un lupo solitario su Tinder", "🦊|Una volpe che ruba le ciabatte", "🦝|Un procione nel bidone", "🐻|Un orso in letargo dal 2019", "🐿️|Uno scoiattolo con le noci in bocca", "🦔|Un riccio in mutande", "🦇|Un pipistrello in camera da letto", "🦉|Un gufo che porta sfiga", "🦜|Un pappagallo che bestemmia", "🕊️|Una colomba che ti fa la cacca in testa", "🦢|Un cigno incazzato", "🐸|Una rana da baciare", "🦎|Una lucertola senza coda", "🐌|Una lumaca sul cuscino", "🪳|Uno scarafaggio in cucina", "🕷️|Un ragno nella doccia", "🐜|Le formiche nello zucchero", "🪰|Una mosca nel cocktail", "🐞|Una coccinella porta fortuna", "🦋|Le farfalle nello stomaco", "🐠|Nemo", "🐙|Un polpo con otto mani morte", "🦑|Un calamaro gigante", "🐳|Una balena spiaggiata", "🦈|Uno squalo a Cesenatico", "🐬|Un delfino molto intelligente", "🦭|Una foca che applaude", "🐻‍❄️|Un orso polare sudato", "🐣|Un pulcino appena nato", "🐔|Una gallina dalle uova d'oro", "🦃|Un tacchino che ha capito tutto", "🦚|Un pavone che se la tira", "🐦|Un uccellino che canta alle 4", "🥚|Un uovo di Pasqua senza sorpresa", "🍄|Un fungo sospetto", "🌵|Un cactus sulla sedia", "🌻|Un girasole triste", "🌳|Un albero genealogico complicato", "🌲|L'albero di Natale ad agosto", "🍂|Le foglie nella piscina", "🌪️|Un tornado di emozioni", "⛈️|Un temporale durante il matrimonio", "❄️|La neve a Palermo", "☀️|Un colpo di sole", "🌈|Un arcobaleno dopo la sbronza", "🌙|Una notte in bianco", "⭐|Una stella cadente", "🪐|Saturno contro", "🌍|La fine del mondo", "☄️|Un meteorite sul condominio", "🧭|Il senso dell'orientamento di mia madre", "🏔️|Una scalata in infradito", "🏕️|Un campeggio con le zanzare", "⛺|Una tenda bucata", "🏚️|Una casa infestata in affitto", "🏰|Un castello gonfiabile", "🗼|La Torre di Pisa raddrizzata", "🏟️|La curva dello stadio", "🎡|La ruota panoramica bloccata", "🎢|Le montagne russe dopo la piadina", "🎪|Un circo abusivo", "🎭|Una recita scolastica", "🎬|Un film d'autore di 4 ore", "🎮|Una partita a FIFA finita in rissa", "🎯|Una freccetta nel sedere", "🎳|Un bowling con le scarpe in affitto", "🎱|La palla 8", "🧩|Un puzzle con un pezzo mancante", "♟️|Una partita a scacchi con la morte", "🀄|La tombola di Natale", "🎰|La slot machine del bar", "🃏|Un jolly nella manica", "🎼|Il saggio di danza della cugina", "🎷|Un sassofono alle 3 di notte", "🥁|Un batterista vicino di casa", "🪗|La fisarmonica del nonno", "🎸|Un chitarrista che suona \"Wonderwall\"", "📻|Radio Maria", "📢|Un megafono in mano a un ubriaco", "🔊|La cassa bluetooth in spiaggia", "🎵|Il tormentone estivo per la 400ª volta", "💃|Il liscio romagnolo", "🕺|La macarena", "🪩|Una palla da discoteca", "🎤|Il karaoke di Mariah Carey", "🎧|Le cuffie del DJ", "🎛️|Il mixer rotto", "🌫️|Il fumo scenico", "💡|Le luci accese alla fine della serata", "🚨|La polizia che chiude la festa", "🛑|Il buttafuori che dice \"stasera no\"", "📝|Il nome in lista", "💳|Il tavolo da 1000 euro", "🍾|Una bottiglia con le stelline", "👑|Il privé", "🛋️|Un divanetto appiccicoso", "🧥|Il guardaroba perso", "🎫|Un braccialetto che non si toglie da 3 giorni", "👟|Le scarpe da ginnastica non ammesse", "👔|La camicia aperta fino all'ombelico", "🕶️|I Ray-Ban taroccati", "⌚|Un Rolex comprato in spiaggia", "💍|Un anello di fidanzamento nel tiramisù", "👗|Un vestito con ancora il cartellino", "👖|I jeans strappati di mia madre", "🩱|Un costume intero della nonna", "🩳|I pantaloncini troppo corti", "🧣|La sciarpa a giugno", "🧢|Un cappellino al contrario a 45 anni", "👒|Un cappello di paglia gigante", "🥿|Le ballerine con le vesciche", "🥾|Gli scarponi della naja", "👞|Le scarpe a punta", "🧦|I calzini di spugna bianchi", "🪭|Un ventaglio spagnolo", "👜|La borsa finta di Gucci", "💄|Il rossetto sui denti", "💋|Un succhiotto sul collo", "😴|Un pisolino di 14 ore", "🛌|Il letto disfatto da una settimana", "🛀|Un bagno di vergogna", "🧘‍♀️|Lo yoga della risata", "🏃|Una maratona per arrivare al bagno", "🚴|Lo spinning con il dopo sbronza", "🤸|Una ruota in pista", "🤾|Una pallonata in faccia", "⛹️|Il canestro della vita", "🏌️|Un golfista pensionato", "🏄|Un surfista a Rimini", "🏂|Lo snowboard a 50 anni", "🤺|Una sfida di scherma con i grissini", "🥋|Un karateka di 8 anni", "🥊|Un incontro di boxe tra zie", "🏆|La coppa del torneo di briscola", "🥇|La medaglia di partecipazione", "🎖️|Un premio fedeltà del supermercato", "📜|Un attestato di frequenza", "🗞️|Il giornale di ieri", "📖|Il diario segreto delle medie", "📚|I libri mai letti", "✏️|Una matita mordicchiata", "🖍️|Un murale sul muro di casa dei miei", "📐|Il compito di geometria", "🧮|Un pallottoliere", "🔬|Un esame del sangue a sorpresa", "🧪|Un esperimento finito male", "🧲|Una calamita da frigo di Medjugorje", "🔋|La batteria al 2%", "🔌|Un caricabatterie che funziona solo storto", "🖥️|Un computer del 2003", "⌨️|Un tasto Invio premuto troppo presto", "🖱️|Un mouse senza pile", "💾|Un floppy disk con i segreti di famiglia", "📸|Una foto con il flash in discoteca", "📹|Una videochiamata con la telecamera girata", "🔭|Un vicino con il binocolo", "🔍|La lente d'ingrandimento della zia", "🔐|La password del Wi-Fi scritta sul frigo", "🗝️|La chiave della cintura di castità", "🔨|Il martello di Thor", "🪚|Un seghetto da traforo", "🔧|Un idraulico con il sedere di fuori", "🪛|Un mobile IKEA con una vite in più", "🧰|La cassetta degli attrezzi di papà", "🪜|Una scala troppo corta", "🧱|Un muro in faccia", "🪤|Una trappola per topi nel cassetto", "🧯|Una crisi da spegnere", "🛢️|Il petrolio nel giardino della nonna", "⛽|La benzina a 2,50 euro", "🚗|Una Panda del '94", "🚐|Un camper parcheggiato davanti al mare", "🛻|Il furgoncino del gelataio", "🚑|L'ambulanza fuori dalla discoteca", "🚓|La pattuglia all'uscita del locale", "🚨|Il palloncino dell'alcoltest", "🚫|Il ritiro della patente", "🅿️|Un parcheggio in doppia fila", "🚥|Il semaforo rosso eterno", "🛣️|La A14 il sabato di agosto", "🗺️|La strada più lunga per tornare a casa", "⛱️|L'ombrellone in ultima fila", "🏖️|La sabbia nelle mutande", "🌊|L'acqua dell'Adriatico a 30 gradi", "🐚|Una conchiglia rubata", "🦀|Un granchio sull'alluce", "🪼|Una medusa nel costume", "🏄‍♂️|Un bagnino che ci prova", "🍦|Un ghiacciolo che cola", "🌽|La pannocchia del venditore in spiaggia", "🥥|Il cocco bello", "🧉|Un mojito senza menta", "🍋|Un limoncello della zia", "🍻|Una birra alla spina da un litro", "🥤|Un drink con la cannuccia di carta", "🍵|Una tisana drenante", "🫖|Il tè con la nonna inglese", "🥃|Un amaro dopo il cenone", "🧃|Un succo di frutta nella borsa", "🍽️|Il pranzo di Natale da 7 ore", "🥘|La paella del villaggio turistico", "🍲|La minestra della nonna", "🥗|Un'insalata triste", "🍜|Un ramen istantaneo alle 3", "🍣|Il sushi all you can eat", "🍱|Un bento dimenticato in macchina", "🥟|Un raviolo cinese alle 2 di notte", "🌮|Un taco che si spacca", "🌯|Un burrito gigante", "🍕|L'ultima fetta di pizza", "🍝|Gli spaghetti spezzati", "🫓|Una piadina con lo squacquerone", "🥖|Una baguette usata come spada", "🥐|Un cornetto vuoto", "🍩|Una ciambella del poliziotto", "🧁|Un cupcake al gusto sudore", "🎂|La torta di compleanno caduta", "🍮|Un budino che trema", "🍨|La coppa gelato del bar", "🍪|I biscotti della nonna", "🍫|Un cioccolatino al liquore", "🍯|Il miele sul corpo", "🫕|Una fonduta di formaggio", "🧆|Le polpette della suocera", "🍗|Un cosciotto di pollo", "🍖|Una grigliata di Ferragosto", "🦴|L'avanzo del cane", "🥫|Una scatoletta di tonno", "🧄|Un alito all'aglio", "🌶️|Un peperoncino calabrese", "🥑|L'avocado toast da 14 euro", "🥕|Una carota molto lunga", "🥥|Due noci di cocco", "🍍|Un ananas in testa", "🫐|I mirtilli sui denti", "🍓|Una fragola con la panna", "🍇|Un grappolo d'uva sulla bocca", "🍎|La mela di Biancaneve", "🍐|Una pera cotta", "🍋|Un limone spremuto in un occhio", "🥝|Un kiwi peloso", "🥭|Un mango maturo", "🍅|Un pomodoro lanciato sul palco", "🧅|Una cipolla che fa piangere", "🥔|Una patata bollente", "🫘|I fagioli della sera prima", "🥜|L'allergia alle arachidi", "🌰|Una castagna in testa", "🍞|Il pane raffermo", "🧀|Il formaggio con i vermi", "🥚|Le uova sode in gita", "🥓|La pancetta della suocera", "🍗|Il pollo del discount", "🐟|Il pesce del venerdì", "🍤|Un gamberone fuori stagione", "🦪|Un'ostrica sospetta", "🧂|Il sale al posto dello zucchero", "🍽️|Il conto diviso per undici", "💶|Le mance in monetine", "🏧|Il bancomat vuoto alle 4", "💸|Il mutuo dei miei", "🤑|Il cugino che vende integratori", "📉|Le criptovalute di mio zio", "💹|Un investimento in tulipani", "🏠|La casa al mare dei nonni", "🏡|Una villetta a schiera", "🏢|Il condominio con la portinaia", "🛎️|Il campanello alle 8 di domenica", "📮|La cassetta della posta piena di bollette", "📩|Una lettera d'amore del 2002", "💌|Un biglietto di San Valentino anonimo", "💘|Una cotta per il prof di ginnastica", "💞|Un amore estivo", "💔|Una rottura via SMS", "💍|Un matrimonio a Las Vegas", "👰|Una sposa in fuga", "🤵|Lo sposo che piange", "💒|Il ricevimento con 400 invitati", "🥂|Il brindisi del testimone", "🎁|La lista nozze su Amazon", "🍼|Un bebè in arrivo", "👶|Il primo dentino", "🧒|Un bambino che dice parolacce", "🧑|Un adolescente in crisi", "👨‍👩‍👧|Una famiglia del Mulino Bianco", "👵|La nonna sprint", "👴|Il nonno che rimorchia al centro anziani", "🧓|Un pensionato che commenta i cantieri", "🧑‍🦳|I capelli bianchi a 25 anni", "🧑‍🦰|Una rossa naturale", "👨‍🎤|Una rockstar fallita", "👩‍🎤|Una cantante neomelodica", "🧑‍🍳|Uno chef stellato in crisi", "🧑‍⚕️|Un medico che googla i sintomi", "🧑‍🏫|La supplente di matematica", "🧑‍⚖️|Un giudice di Forum", "🧑‍🚀|Un astronauta con la nausea", "🧑‍🔧|Un meccanico onesto", "🧑‍🌾|Un agricoltore influencer", "🧑‍💻|Un hacker di 12 anni", "🧑‍🎨|Un artista di strada molesto", "🧑‍✈️|Un pilota con la paura di volare", "👮‍♀️|Una vigilessa spietata", "💂|Una guardia inglese che ride", "👷|Un operaio che guarda il cantiere", "🤴|Un principe azzurro calvo", "👸|Una principessa con la barba", "🤶|Mamma Natale arrabbiata", "🦹|Il cattivo dei cartoni", "🧝|Un elfo sindacalista", "🧟‍♂️|Uno zombie a colazione", "🕴️|Un uomo misterioso in giacca e cravatta", "🧍|Un tipo strano fermo in un angolo", "🙋|Il secchione che alza la mano", "🤷|Una risposta a caso", "🤦‍♂️|Un facepalm collettivo", "🙇|Le scuse in ginocchio", "💁|Una commessa che ti ignora", "🙆|Un abbraccio non richiesto", "🤗|Gli abbracci della zia", "🤝|Una stretta di mano sudata", "👏|Un applauso quando atterra l'aereo", "🙌|Le braccia al cielo", "👊|Un pugno sul tavolo", "🤞|Le dita incrociate", "🤘|Le corna sul palco", "🖕|Il dito medio", "👋|Un saluto a un estraneo che salutava un altro", "💪|Un bicipite gonfiato", "🦵|Una gamba ingessata", "🦶|Un alluce valgo", "👣|Le impronte sul pavimento appena lavato", "🧠|Un cervello fritto", "🫦|Un morso sul labbro", "👀|Un'occhiata maliziosa", "😉|Un occhiolino fuori luogo", "😏|Un sorrisetto malizioso", "😬|Un sorriso con l'insalata nei denti", "🥺|Gli occhi da cucciolo", "😤|Una sfuriata in pubblico", "😱|Un urlo nella notte", "🥴|Uno sguardo da ubriaco", "😵|Un mancamento", "🤯|Un'esplosione di cervello", "🤐|Un segreto inconfessabile", "🤥|Una bugia bianca", "🤫|Un pettegolezzo succulento", "🫢|Una rivelazione scioccante", "😇|Un'aria da santarellino", "🥶|Il condizionatore a 16 gradi", "🥵|Una caldana improvvisa", "🤢|La nausea in traghetto", "🤒|Un'influenza strategica", "💤|Un collega che dorme in riunione", "🫠|Uno scioglimento emotivo", "😂|Una risata isterica", "🙃|L'ottimismo di mia madre"];
+
+// ================= utility =================
+function hash(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return ((h2>>>0)^(h1>>>0))>>>0}
+function rng(seed){let a=hash(seed);return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffled(n,seed){const r=rng(seed),a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ls={get(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function show(id){["home","setup","tv","join","seat","hand"].forEach(v=>document.getElementById("v-"+v).classList.toggle("hide",v!==id));closeModal();window.scrollTo(0,0);
+  if(id==="setup")document.getElementById("resumeBtn").classList.toggle("hide",!ls.get("sf_host"));
+  if(id==="join")document.getElementById("resumeHand").classList.toggle("hide",!ls.get("sf_hand"));}
+function modal(html){document.getElementById("modal").innerHTML=`<div class="modal"><div class="sheet">${html}</div></div>`}
+function closeModal(){document.getElementById("modal").innerHTML=""}
+
+// ================= codici numerici (piano B) =================
+const MOD=1000,MUL=919;let INV=1;for(let x=1;x<MOD;x++){if((MUL*x)%MOD===1){INV=x;break}}
+function encPos(pos,code){return String((pos*MUL+hash(code)%MOD)%MOD).padStart(3,"0")}
+function decPos(s,code){s=String(s).replace(/\D/g,"");if(s.length!==3)return -1;return((((+s-hash(code)%MOD)%MOD+MOD)%MOD)*INV)%MOD}
+function whiteAt(pos,code){const ord=shuffled(WHITE.length,code+"W");return WHITE[ord[pos%WHITE.length]]}
+function blackAt(r,code){const ord=shuffled(BLACK.length,code+"B");return BLACK[ord[r%BLACK.length]]}
+const sp=x=>{const i=String(x).indexOf("|");return i<0?["🃏",String(x)]:[x.slice(0,i),x.slice(i+1)]};
+const wc=x=>{const[e,t]=sp(x);return`<span class="emo">${e}</span><span class="wt">${esc(t)}</span>`};
+function fillBlack(b,w){const[be,bt]=sp(b),[we,wt]=sp(w);let ans=wt.replace(/[.!?]$/,"");if(bt.indexOf("____")>0&&!/^.[A-ZÀ-Ý]/.test(ans))ans=ans.charAt(0).toLowerCase()+ans.slice(1);return`<div class="bemo">${we}</div><div>${esc(bt).replace("____",`<span class="fill">${esc(ans)}</span>`)}</div>`}
+const blankBlack=b=>{const[e,t]=sp(b);return`<div class="bemo">${e}</div><div>${esc(t).replace("____","<span style='opacity:.6'>________</span>")}</div>`};
+function parseCode(c){const m=String(c).toUpperCase().replace(/\s/g,"").match(/^(\d{1,2})-?([A-Z0-9]{4})$/);if(!m)return null;const n=+m[1];if(n<3||n>20)return null;return{n,code:`${n}-${m[2]}`}}
+const HAND=11;
+const peerId=code=>"senzafiltro-v2-"+code.toLowerCase().replace(/[^a-z0-9]/g,"");
+const LIVE=typeof Peer!=="undefined";
+
+// ================= TAVOLO (TV) =================
+let names=ls.get("sf_names")||Array(11).fill("");
+let H=null,hostPeer=null,conns={},autoT=null;
+function renderNames(){document.getElementById("names").innerHTML=names.map((n,i)=>`<div class="nrow"><b>${i+1}</b><input value="${esc(n)}" placeholder="Nome giocatore ${i+1}" oninput="names[${i}]=this.value"></div>`).join("")}
+function addName(d){if(d>0&&names.length<20)names.push("");if(d<0&&names.length>3)names.pop();renderNames()}
+function createGame(){
+  const list=names.map((n,i)=>n.trim()||`Giocatore ${i+1}`);ls.set("sf_names",names);
+  const AL="ABCDEFGHJKLMNPQRSTUVWXYZ";let s="";for(let i=0;i<4;i++)s+=AL[Math.floor(Math.random()*AL.length)];
+  H={code:`${list.length}-${s}`,names:list,scores:list.map(()=>0),round:0,judge:0,played:{},used:[],phase:"lobby",order:[],winner:null};
+  saveH();show("tv");renderTV();startHost();
+}
+function resume(){H=ls.get("sf_host");if(H){show("tv");renderTV();startHost()}}
+function saveH(){ls.set("sf_host",H)}
+const N=()=>H.names.length;
+
+// --- rete (host) ---
+function startHost(){
+  if(!LIVE)return;
+  try{if(hostPeer)hostPeer.destroy()}catch(e){}
+  conns={};
+  hostPeer=new Peer(peerId(H.code));
+  hostPeer.on("open",()=>{H.live=true;renderTV()});
+  hostPeer.on("connection",c=>{
+    c.on("data",m=>onHostMsg(c,m));
+    c.on("close",()=>{for(const k in conns)if(conns[k]===c)delete conns[k];renderTV()});
+  });
+  hostPeer.on("error",e=>{
+    if(e&&e.type==="unavailable-id"){setTimeout(startHost,4000);return}
+    if(e&&(e.type==="network"||e.type==="server-error"||e.type==="socket-error")){H.live=false;renderTV();setTimeout(startHost,5000)}
+  });
+  hostPeer.on("disconnected",()=>{try{hostPeer.reconnect()}catch(e){}});
+}
+function onHostMsg(c,m){
+  if(!m||typeof m!=="object")return;
+  const seat=+m.seat;if(!(seat>=0&&seat<N()))return;
+  if(m.t==="hello"){conns[seat]=c;sendState(seat);renderTV();return}
+  if(m.t==="play"){const err=tryPlay(seat,+m.pos);try{c.send({t:"ack",pos:+m.pos,ok:!err,err})}catch(e){}
+    if(!err){renderTV()}}
+}
+function stateFor(seat){
+  const b=blackAt(H.round,H.code);
+  return{t:"state",phase:H.phase,round:H.round,black:b,judge:H.judge,judgeName:H.names[H.judge],me:seat,myName:H.names[seat],
+    played:H.played[seat]!=null,playedPos:H.played[seat]??null,count:Object.keys(H.played).length,need:N()-1,
+    winnerName:H.winner!=null?H.names[H.winner]:null,winText:H.winner!=null?whiteAt(H.played[H.winner],H.code):null,
+    score:H.scores[seat],rank:H.names.map((n,i)=>[n,H.scores[i]]).sort((a,b)=>b[1]-a[1]).slice(0,5)}
+}
+function sendState(seat){const c=conns[seat];if(c&&c.open){try{c.send(stateFor(seat))}catch(e){}}}
+function broadcast(){for(const s in conns)sendState(+s)}
+
+function tryPlay(i,pos){
+  if(H.phase!=="play")return"Aspetta il prossimo round.";
+  if(i===H.judge)return"Questo round sei il giudice.";
+  if(H.played[i]!=null)return"Hai già giocato questo round.";
+  if(!(pos>=0)||pos%N()!==i||pos>=MOD)return"Codice sbagliato, riprova.";
+  if(H.used.includes(pos))return"Questa carta è già stata giocata.";
+  H.played[i]=pos;H.used.push(pos);saveH();return null;
+}
+
+function renderTV(){
+  broadcast();
+  const el=document.getElementById("v-tv"),b=blackAt(H.round,H.code),online=Object.keys(conns).length;
+  const net=LIVE?(H.live?`<span class="chip">🟢 Live <b>${online}</b> telefoni</span>`:`<span class="chip">🟠 Connessione…</span>`):"";
+  const top=`<div class="tvtop"><div class="logo">SENZA <span>FILTRO</span></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${net}<span class="chip">Codice <b>${H.code}</b></span>${H.phase!=="lobby"?`<span class="chip">Round <b>${H.round+1}</b></span><span class="chip">⚖️ <b>${esc(H.names[H.judge])}</b></span>`:""}<button class="chip" style="cursor:pointer;color:#fff" onclick="menu()">☰ Menu</button></div></div>`;
+  const pl=(i)=>`<div class="pl ${H.phase==="play"?(i===H.judge?"judge":H.played[i]!=null?"done":""):""}"><span><span class="s">${i+1}</span> ${esc(H.names[i])}</span><span>${H.phase==="lobby"?(conns[i]?"🟢":"⚪️"):i===H.judge?"⚖️":H.played[i]!=null?"✅":"⏳"}</span></div>`;
+  if(H.phase==="lobby"){
+    el.innerHTML=top+`<div class="tvgrid"><div class="box" style="text-align:center;padding:4vh 2vw"><div class="mut" style="font-size:clamp(14px,1.8vw,24px)">Aprite il link → <b style="color:#fff">La mia mano</b> → codice:</div><div class="bigcode" style="margin:3vh 0">${H.code}</div><div class="mut" style="font-size:clamp(14px,1.8vw,24px)">poi scegliete il vostro numero 👉</div></div>
+    <div><div class="plist">${H.names.map((n,i)=>pl(i)).join("")}</div><button class="btn" style="margin-top:2vh" onclick="startRound()">Si gioca →</button></div></div>`;return;
+  }
+  if(H.phase==="play"){
+    const need=N()-1,done=Object.keys(H.played).length;
+    el.innerHTML=top+`<div class="tvgrid"><div><div class="bcard"><div>${blankBlack(b)}</div><div class="brand">Senza Filtro · ${done}/${need} risposte</div></div></div>
+    <div><div class="plist">${H.names.map((n,i)=>pl(i)).join("")}</div>
+    ${done>=need?`<div class="box" style="text-align:center;font-weight:800;font-size:clamp(16px,2vw,26px);margin-top:2vh">🎉 Hanno risposto tutti!</div>`:`<div class="box mut" style="text-align:center;margin-top:2vh;font-size:clamp(14px,1.6vw,20px)">⏳ Aspettiamo ancora <b style="color:#fff">${need-done}</b> ${need-done===1?"risposta":"risposte"}…</div>`}
+    <button class="btn ghost small" onclick="submitFlow()">⌨️ Inserisci un codice a mano</button></div></div>`;
+    if(done>=need&&!autoT)autoT=setTimeout(()=>{autoT=null;if(H.phase==="play"&&Object.keys(H.played).length>=N()-1)reveal()},1800);
+    return;
+  }
+  if(H.phase==="reveal"){
+    const tot=H.order.length,ri=H.ri||0;
+    if(ri<tot){
+      const s=H.order[ri];
+      el.innerHTML=top+`<div class="win"><div class="mut" style="font-size:clamp(14px,1.8vw,24px);margin-top:1vh">Risposta <b style="color:var(--acc2)">${ri+1}</b> di ${tot} · ⚖️ ${esc(H.names[H.judge])} ascolta…</div>
+      <div class="bcard" style="min-height:44vh;display:flex;flex-direction:column;justify-content:center">${fillBlack(b,whiteAt(H.played[s],H.code))}<div class="brand">Senza Filtro</div></div>
+      <div style="display:flex;gap:12px;max-width:700px;margin:0 auto">${ri>0?`<button class="btn ghost" onclick="stepR(-1)">← Indietro</button>`:""}<button class="btn y" onclick="stepR(1)">${ri+1<tot?"Prossima risposta →":"Vedi tutte e scegli →"}</button></div></div>`;
+      return;
+    }
+    el.innerHTML=top+`<div class="bcard" style="min-height:0;font-size:clamp(18px,2.6vw,38px)">${blankBlack(b)}</div>
+    <p class="mut" style="font-size:clamp(14px,1.6vw,22px);margin:2vh 0 0">⚖️ <b style="color:var(--acc2)">${esc(H.names[H.judge])}</b>, qual è la migliore? Tocca la carta vincente.</p>
+    <div class="answers">${H.order.map((s,i)=>`<div class="wcard" onclick="pickWinner(${s})"><span class="n">${i+1}</span>${wc(whiteAt(H.played[s],H.code))}</div>`).join("")}</div>
+    <button class="btn ghost" style="max-width:420px;margin:2vh auto 0" onclick="H.ri=0;saveH();renderTV()">↺ Rivedile una alla volta</button>`;return;
+  }
+  if(H.phase==="winner"){
+    const w=H.winner,rank=H.names.map((n,i)=>[n,H.scores[i]]).sort((a,b)=>b[1]-a[1]);
+    el.innerHTML=top+`<div class="win"><div style="font-family:'Archivo Black';font-size:clamp(22px,3.4vw,50px);color:var(--acc2);margin-top:2vh">🏆 ${esc(H.names[w])} +1</div>
+    <div class="bcard">${fillBlack(b,whiteAt(H.played[w],H.code))}<div class="brand">Senza Filtro</div></div>
+    <div class="score">${rank.map(([n,s])=>`<span class="chip">${esc(n)} <b>${s}</b></span>`).join("")}</div>
+    <button class="btn" style="max-width:520px;margin:3vh auto 0" onclick="nextRound()">Prossimo round →</button></div>`;
+  }
+}
+function startRound(){H.phase="play";H.played={};H.winner=null;saveH();renderTV()}
+function nextRound(){H.round++;H.judge=(H.judge+1)%N();startRound()}
+function reveal(){const seats=Object.keys(H.played).map(Number);for(let i=seats.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[seats[i],seats[j]]=[seats[j],seats[i]]}
+  H.order=seats;H.ri=0;H.phase="reveal";saveH();renderTV()}
+function stepR(d){H.ri=Math.max(0,(H.ri||0)+d);saveH();renderTV();window.scrollTo(0,0)}
+function pickWinner(s){modal(`<h2>Vince questa?</h2><div class="wcard" style="font-size:20px">${wc(whiteAt(H.played[s],H.code))}</div><button class="btn" onclick="confirmWin(${s})">Sì, punto!</button><button class="btn ghost" onclick="closeModal()">No, torna indietro</button>`)}
+function confirmWin(s){H.scores[s]++;H.winner=s;H.phase="winner";closeModal();saveH();renderTV()}
+function submitFlow(){
+  const avail=H.names.map((n,i)=>i).filter(i=>i!==H.judge&&H.played[i]==null);
+  modal(`<h2>Chi sei?</h2><div class="pick">${avail.map(i=>`<button onclick="askCode(${i})">${i+1} · ${esc(H.names[i])}</button>`).join("")}</div><button class="btn ghost" onclick="closeModal()">Annulla</button>`);
+}
+let typed="";
+function askCode(i){typed="";
+  modal(`<h2>${esc(H.names[i])}, digita il codice</h2><p class="small mut" style="margin-top:-6px">Le 3 cifre che vedi sul tuo telefono. Restano nascoste.</p>
+  <div class="bigcode" id="dots" style="letter-spacing:14px;min-height:1.1em">···</div><div class="err" id="ce" style="text-align:center"></div>
+  <div class="pad">${[1,2,3,4,5,6,7,8,9].map(d=>`<button onclick="key(${i},'${d}')">${d}</button>`).join("")}<button onclick="key(${i},'del')">⌫</button><button onclick="key(${i},'0')">0</button><button onclick="submitFlow()">✕</button></div>`)}
+function key(i,d){if(d==="del")typed=typed.slice(0,-1);else if(typed.length<3)typed+=d;
+  document.getElementById("dots").textContent=("●".repeat(typed.length)+"···").slice(0,3);
+  if(typed.length===3){const err=tryPlay(i,decPos(typed,H.code));
+    if(err){document.getElementById("ce").textContent=err;typed="";setTimeout(()=>{const x=document.getElementById("dots");if(x)x.textContent="···"},400);return}
+    modal(`<div style="text-align:center;padding:20px 0"><div style="font-size:60px">✅</div><h2>Carta giocata!</h2></div>`);setTimeout(()=>{closeModal();renderTV()},900)}}
+function menu(){modal(`<h2>Menu</h2>
+  <button class="btn ghost" onclick="closeModal();H.phase='lobby';saveH();renderTV()">Mostra codice e numeri</button>
+  ${H.phase==="play"?`<button class="btn ghost" onclick="skipBlack()">Cambia carta blu</button>${Object.keys(H.played).length>=2?`<button class="btn ghost" onclick="closeModal();reveal()">Qualcuno è sparito: rivela senza aspettare</button>`:""}`:""}
+  ${H.phase==="lobby"&&H.round>0?`<button class="btn ghost" onclick="closeModal();startRound()">Torna al round</button>`:""}
+  <button class="btn ghost" onclick="scores()">Classifica</button>
+  <button class="btn ghost" id="newg" onclick="newGame(this)">Nuova partita</button>
+  <button class="btn" onclick="closeModal()">Chiudi</button>`)}
+function newGame(b){if(b.dataset.ok){try{localStorage.removeItem('sf_host')}catch(e){}try{hostPeer&&hostPeer.destroy()}catch(e){}H=null;show('setup');renderNames()}else{b.dataset.ok=1;b.textContent='Tocca di nuovo per confermare'}}
+function skipBlack(){H.round+=BLACK.length>1?7:0;saveH();closeModal();renderTV()}
+function scores(){const rank=H.names.map((n,i)=>[n,H.scores[i]]).sort((a,b)=>b[1]-a[1]);
+  modal(`<h2>Classifica</h2>${rank.map(([n,s],i)=>`<div class="pl" style="margin:6px 0"><span>${i+1}. ${esc(n)}</span><b style="color:var(--acc2)">${s}</b></div>`).join("")}<button class="btn" onclick="closeModal()">Chiudi</button>`)}
+
+// ================= MANO (telefono giocatore) =================
+let P=null,S=null,pconn=null,ppeer=null,pending=null,retryT=null;
+function joinCode(){const p=parseCode(document.getElementById("jcode").value);const e=document.getElementById("jerr");
+  if(!p){e.textContent="Codice non valido (es. 11-KZPQ).";return}e.textContent="";
+  document.getElementById("seats").innerHTML=[...Array(p.n)].map((_,i)=>`<button onclick="sit('${p.code}',${p.n},${i})">${i+1}</button>`).join("");
+  show("seat")}
+function sit(code,n,seat){
+  const old=ls.get("sf_hand");
+  if(old&&old.code===code&&old.seat===seat)P=old;else P={code,n,seat,slots:[...Array(HAND).keys()],next:HAND};
+  ls.set("sf_hand",P);S=null;openHand()}
+function openHand(){P=P||ls.get("sf_hand");if(!P)return show("join");show("hand");renderHand();connectPlayer()}
+const posOf=k=>P.seat+P.n*k;
+
+function connectPlayer(){
+  if(!LIVE||!P)return;clearTimeout(retryT);
+  const go=()=>{
+    try{pconn&&pconn.close()}catch(e){}
+    pconn=ppeer.connect(peerId(P.code),{reliable:true});
+    pconn.on("open",()=>{pconn.send({t:"hello",seat:P.seat});renderHand()});
+    pconn.on("data",onPlayerMsg);
+    pconn.on("close",()=>{S=null;renderHand();retryT=setTimeout(go,3000)});
+    pconn.on("error",()=>{retryT=setTimeout(go,3000)});
+    setTimeout(()=>{if(pconn&&!pconn.open){retryT=setTimeout(go,1500)}},8000);
+  };
+  if(ppeer&&!ppeer.destroyed&&ppeer.open){go();return}
+  try{ppeer&&ppeer.destroy()}catch(e){}
+  ppeer=new Peer();
+  ppeer.on("open",go);
+  ppeer.on("error",e=>{if(e&&e.type==="peer-unavailable"){retryT=setTimeout(go,3000)}else{retryT=setTimeout(connectPlayer,5000)}});
+  ppeer.on("disconnected",()=>{try{ppeer.reconnect()}catch(e){}});
+}
+function onPlayerMsg(m){
+  if(!m||typeof m!=="object")return;
+  if(m.t==="state"){S=m;
+    // se il tavolo conferma una carta giocata che ho ancora in mano, la scarto
+    if(m.played&&m.playedPos!=null)discardPos(m.playedPos);
+    renderHand();return}
+  if(m.t==="ack"){if(m.ok){discardPos(m.pos);closeModal();toast("✅ Carta giocata!")}else{closeModal();toast("⚠️ "+(m.err||"Non giocata"))}pending=null;renderHand()}
+}
+function discardPos(pos){const i=P.slots.findIndex(k=>posOf(k)===pos);if(i>=0){P.slots[i]=P.next++;ls.set("sf_hand",P)}}
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+
+function renderHand(){
+  const live=!!(pconn&&pconn.open&&S);
+  const status=LIVE?(live?`<span class="chip" style="font-size:12px">🟢 Collegato</span>`:`<span class="chip" style="font-size:12px">🟠 Mi collego al tavolo…</span>`):"";
+  let head="";
+  if(live){
+    const amJudge=S.judge===P.seat;
+    if(S.phase==="lobby")head=`<div class="box">Ciao <b>${esc(S.myName)}</b>! Aspetta che il tavolo inizi la partita.</div>`;
+    else if(S.phase==="play")head=`<div class="bcard" style="font-size:19px;padding:18px">${blankBlack(S.black)}<div class="brand">${amJudge?"⚖️ Sei tu il giudice: non giochi, scegli tu sulla TV":S.played?"✅ Hai giocato · aspetta gli altri ("+S.count+"/"+S.need+")":"Tocca una carta per giocarla"}</div></div>`;
+    else if(S.phase==="reveal")head=`<div class="box">👀 Hanno risposto tutti! Guardate la TV: le risposte escono una alla volta e ${amJudge?"<b>tu</b> scegli":"<b>"+esc(S.judgeName)+"</b> sceglie"} la migliore.</div>`;
+    else if(S.phase==="winner")head=`<div class="box">🏆 Vince <b>${esc(S.winnerName)}</b> con <span class="wcard" style="display:block;margin-top:8px">${wc(S.winText)}</span>.<br><span class="small mut">I tuoi punti: <b style="color:var(--acc2)">${S.score}</b></span></div>`;
+  }
+  document.getElementById("v-hand").innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><button class="back" onclick="leaveHand()">← esci</button>${status}<span class="small mut">${P.code} · n° <b style="color:var(--acc2)">${P.seat+1}</b></span></div>
+  ${head||`<p class="small mut" style="margin-top:14px">Guarda la carta blu sulla TV e tocca la tua risposta. Se sei il giudice, questo round non giochi.</p>`}
+  <h2 style="margin-top:12px">La tua mano</h2>
+  <div class="hand">${P.slots.map((k,i)=>`<div class="wcard" onclick="play(${i})">${wc(whiteAt(posOf(k),P.code))}${live?"":`<span class="c">${encPos(posOf(k),P.code)}</span>`}</div>`).join("")}</div>`;
+}
+function leaveHand(){clearTimeout(retryT);try{pconn&&pconn.close()}catch(e){}pconn=null;S=null;show("home")}
+function play(i){const pos=posOf(P.slots[i]),text=whiteAt(pos,P.code),live=!!(pconn&&pconn.open&&S);
+  if(live){
+    if(S.phase!=="play"){toast("Aspetta: non è il momento di giocare");return}
+    if(S.judge===P.seat){toast("⚖️ Questo round sei il giudice");return}
+    if(S.played){toast("Hai già giocato questo round");return}
+    modal(`<div class="wcard" style="font-size:21px">${wc(text)}</div><button class="btn" id="pb" onclick="sendPlay(${pos})">🔥 Gioca questa</button><button class="btn ghost" onclick="closeModal()">Ci ripenso</button>`);return;
+  }
+  modal(`<div class="wcard" style="font-size:20px">${wc(text)}</div>
+  <p class="mut" style="text-align:center;margin:18px 0 6px">Non sei collegato: vai al telefono del tavolo, tocca <b style="color:#fff">Inserisci un codice</b> e digita:</p>
+  <div class="bigcode">${encPos(pos,P.code)}</div>
+  <button class="btn" onclick="discardPos(${pos});closeModal();renderHand()">Fatto, pesca una nuova carta</button><button class="btn ghost" onclick="closeModal()">Ci ripenso</button>`)}
+function sendPlay(pos){const b=document.getElementById("pb");if(b){b.disabled=true;b.textContent="Invio…"}
+  pending=pos;try{pconn.send({t:"play",seat:P.seat,pos})}catch(e){toast("Connessione persa, riprova");closeModal()}
+  setTimeout(()=>{if(pending===pos){pending=null;closeModal();toast("Nessuna risposta dal tavolo, riprova")}},6000)}
+
+// ================= avvio =================
+renderNames();
+document.getElementById("jcode").addEventListener("keydown",e=>{if(e.key==="Enter")joinCode()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&P&&!document.getElementById("v-hand").classList.contains("hide")&&!(pconn&&pconn.open))connectPlayer()});
+</script>
+</body>
+</html>
