@@ -30,7 +30,7 @@ Decisioni già prese con Ricky:
 - **Novità in stile X/Twitter**: post con ❤️ mi piace e 💬 risposte, #hashtag cliccabili, "🔥 Di tendenza" = hashtag più usati negli ultimi 30 giorni (a destra su computer, riga scorrevole in alto sul telefono). Ricky deve ancora dire come vuole le altre sezioni e i colori: chiedere/proporre.
 - Database: **Supabase** (account di Ricky, organizzazione "Pippeghi 24/7", progetto "Lilricky97's Project", ref `hiypieuddqkwefifiqqc` → URL `https://hiypieuddqkwefifiqqc.supabase.co`, regione eu-west).
 - `sito/installa.sql` = `schema.sql` + `storage.sql` in un file solo (da rigenerare se cambiano), per un unico copia-incolla dal telefono.
-- Accesso: **una password unica del gruppo**, poi ognuno sceglie il proprio nome. (Ricky deve ancora dire quale password.)
+- Accesso: **una password unica del gruppo** (impostata da Ricky in Supabase), poi ognuno sceglie il proprio nome.
 
 Stato:
 - ✅ `sito/schema.sql` – tabelle + funzioni RPC. Tutte le tabelle hanno RLS senza policy: si passa solo dalle funzioni `security definer` che controllano la password (`app_config.k='pw'`, hash bcrypt). Si può rieseguire più volte senza problemi.
@@ -44,11 +44,12 @@ Stato:
 - ✅ Test (tutti verdi):
   - `cd sito && npm i @electric-sql/pglite && node test-database.mjs` – database.
   - `node prova-locale.mjs` (finto Supabase su http://localhost:8787 col vero schema.sql in PGlite, password `prova`; `LAG=300` = rete lenta) e poi `node test-sito.mjs` – 6 telefoni finti con Playwright (103 controlli, compresa la modalità prova aperta come file): novità con foto, mi piace, risposte, hashtag e tendenze, cartelle, Secret Santa completo (iscrizioni, nome rubato, esclusioni, sorteggio, altro telefono, PIN dimenticato, letterina aggiornata, annulla e rifai). Riavvia `prova-locale.mjs` prima di ogni giro (i dati sono in memoria).
+- ✅ Supabase collegato: Ricky ha eseguito `installa.sql` (verificato dal vivo: `check_pw` risponde, `feed` senza password → PASSWORD_ERRATA, tabelle negate all'anon, bucket `foto` esiste). In `index.html` ci sono `SUPA_URL` e la chiave **anon** (JWT `eyJ…`, pubblica). La password del gruppo la conosce solo Ricky: io non la so e non devo chiederla.
+  Per i test la modalità prova è su `http://localhost:8787/prova` (`prova-locale.mjs` svuota URL e chiave).
 - ⏳ Da fare:
-  1. Ricky esegue `schema.sql` e `storage.sql` nel SQL Editor del progetto Supabase, poi imposta la password del gruppo (la scrive lui, non io):
-     `insert into app_config(k,v) values ('pw', extensions.crypt('PASSWORD', extensions.gen_salt('bf'))) on conflict (k) do update set v = excluded.v;`
-  2. Ricky mi dà **Project URL** e **chiave pubblica** (publishable/anon) da Project Settings → API → li metto in `SUPA_URL` / `SUPA_KEY`.
-  3. Test dal vivo (soprattutto Secret Santa con più persone) e pubblicazione: link `https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/main/sito/index.html` (serve il permesso di Ricky per mettere il sito su `main`) oppure GitHub Pages se Ricky lo attiva.
-- Anteprima attuale (modalità prova) per Ricky: `https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/claude/admiring-brown-om0cj1/sito/index.html`
+  1. Ricky prova il sito vero con la sua password (novità, foto, Secret Santa con più persone).
+  2. Link definitivo: chiedere a Ricky il permesso di mettere il sito su `main` (link `https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/main/sito/index.html`) oppure GitHub Pages se lo attiva.
+  3. Sezioni/colori: aspettare le richieste di Ricky. FantaSanremo ancora "in arrivo".
+- Link attuale del sito (ora collegato al database vero) per Ricky: `https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/claude/admiring-brown-om0cj1/sito/index.html`
 
 Mai inserire tu password o chiavi segrete: i login li fa Ricky. La chiave pubblica di Supabase può stare nel codice; la password del database e la service key no.

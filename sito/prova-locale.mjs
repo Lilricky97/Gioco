@@ -59,6 +59,13 @@ http.createServer(async (req, res) => {
       return send(res, 200, html, 'text/html; charset=utf-8')
     }
 
+    // la pagina in modalità prova (senza database), per i test
+    if (req.method === 'GET' && p === '/prova') {
+      const html = fs.readFileSync(new URL('index.html', DIR), 'utf8')
+        .replace(/const SUPA_URL = '[^']*'/, `const SUPA_URL = ''`).replace(/const SUPA_KEY = '[^']*'/, `const SUPA_KEY = ''`)
+      return send(res, 200, html, 'text/html; charset=utf-8')
+    }
+
     // funzioni del database
     const rpc = p.match(/^\/rest\/v1\/rpc\/(\w+)$/)
     if (rpc && req.method === 'POST') {

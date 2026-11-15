@@ -344,7 +344,7 @@ ok((await marco.textContent('#g-pw .err')).includes('cambiata'), 'password cambi
 
 // ---------------- MODALITÀ PROVA (sito senza database) ----------------
 const pr = await telefono('Prova')
-await pr.goto('file://' + new URL('./index.html', import.meta.url).pathname)
+await pr.goto(BASE + '/prova')
 ok((await pr.textContent('.demo-note')).includes('prova'), 'prova: avviso con la password di prova')
 await pr.fill('#g-in', 'LaMiaPasswordVera'); await pr.click('#g-pw [type=submit]'); await pr.waitForSelector('#g-pw .err:not([hidden])')
 ok((await pr.textContent('#g-pw .err:not([hidden])')).includes('modalità prova'), 'prova: con un\'altra password spiega che per ora è "prova"')
