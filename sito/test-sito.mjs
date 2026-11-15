@@ -651,6 +651,29 @@ await ricky.evaluate(() => { document.querySelector('#gl-f').dataset.segno = 'st
 await ricky.click('#gl-min'); await ricky.waitForSelector('#gl-pill')
 ok(await ricky.locator('#gl').isHidden() && ricky.url().endsWith('#gioco'), '‹ Sito: torno al sito, il gioco resta aperto dietro')
 await ricky.click('[data-tab=novita]'); await ricky.waitForSelector('#feed')
+// post in evidenza: solo l'amministratore, al massimo 3
+ok(await ricky.locator('#feed [data-pin]').count() === 0, 'senza PIN amministratore niente puntina 📌, nemmeno per Ricky')
+await ricky.evaluate(() => ping()); await ricky.click('#on-btn'); await ricky.waitForSelector('#gruppo [data-adm-open]')
+await ricky.click('#gruppo [data-adm-open]'); await ricky.fill('#adm-form [name=p]', '9999'); await ricky.click('#adm-form button')
+await ricky.waitForSelector('#gruppo [data-adm-lock]'); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
+await ricky.evaluate(() => loadFeed()); await ricky.waitForSelector('#feed [data-pin]')
+await marco.click('[data-tab=novita]'); await marco.waitForSelector('#feed .tw')
+ok(await marco.locator('#feed [data-pin]').count() === 0, 'chi non è amministratore non vede la puntina 📌')
+await ricky.click('#feed .tw:has-text("Il sito è online") [data-pin]'); await ricky.waitForSelector('.toast:has-text("Post fissato")')
+await ricky.waitForFunction(() => { const p = document.querySelector('#feed .tw'); return p.classList.contains('fisso') && p.textContent.includes('Il sito è online') && p.querySelector('.tw-fisso') })
+ok(true, 'post fissato: va in cima con "📌 In evidenza"')
+for (let n = 2; n <= 3; n++) {
+  await ricky.click('#feed .tw:not(.fisso) [data-pin] >> nth=0'); await ricky.waitForFunction(n => document.querySelectorAll('#feed .tw.fisso').length === n, n)
+}
+await ricky.click('#feed .tw:not(.fisso) [data-pin] >> nth=0'); await ricky.waitForSelector('.toast:has-text("al massimo 3")')
+ok(await ricky.locator('#feed .tw.fisso').count() === 3, 'il quarto no: al massimo 3 post in evidenza')
+await marco.evaluate(() => loadFeed()); await marco.waitForFunction(() => [...document.querySelectorAll('#feed .tw')].slice(0, 3).every(p => p.classList.contains('fisso')))
+ok(await marco.locator('#feed .tw.fisso').count() === 3 && await marco.locator('#feed .tw.fisso .tw-fisso').count() === 3 && await marco.locator('#feed [data-pin]').count() === 0, 'gli amici vedono i 3 post in evidenza in cima (senza puntina)')
+await shot(ricky, '37-in-evidenza')
+for (let n = 2; n >= 0; n--) { await ricky.click('#feed .tw.fisso [data-pin] >> nth=0'); await ricky.waitForFunction(n => document.querySelectorAll('#feed .tw.fisso').length === n, n) }
+ok(true, 'l\'amministratore li toglie dalla cima')
+await ricky.click('#on-btn'); await ricky.waitForSelector('#gruppo [data-adm-lock]'); await ricky.click('#gruppo [data-adm-lock]'); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
+
 // blocchi colorati nelle Novità: post azzurro, evento verde, Secret Santa rosso, sondaggio giallo, foto viola
 await ricky.evaluate(() => loadFeed()); await ricky.waitForSelector('#feed .tw.k-santa')
 const tipi = await ricky.evaluate(() => Object.fromEntries(['post', 'evento', 'santa', 'sondaggio', 'foto'].map(k => {
@@ -750,8 +773,10 @@ await pr.click('[data-tab=novita]'); await pr.waitForSelector('#feed .tw')
 ok((await pr.textContent('#trends-m')).includes('#capodanno2') && (await pr.textContent('#trends-m')).includes('#mare2'), 'prova: tendenze #capodanno e #mare')
 await pr.waitForFunction(() => [...document.querySelectorAll('#feed img')].every(i => i.complete && i.naturalWidth > 0))
 await shot(pr, '21-prova-novita')
-await pr.click('#feed [data-like]'); await pr.waitForFunction(() => document.querySelector('#feed [data-like]').classList.contains('on'))
-ok((await pr.textContent('#feed [data-like] span')) === '3', 'prova: mi piace (2 → 3)')
+ok((await pr.textContent('#feed .tw >> nth=0')).includes('In evidenza') && (await pr.textContent('#feed .tw >> nth=0')).includes('Benvenuti'), 'prova: il post di benvenuto è in evidenza, in cima')
+const mp = '#feed .tw:has-text("Stasera da me") [data-like]'
+await pr.click(mp); await pr.waitForFunction(s => document.querySelector(s.replace(':has-text("Stasera da me")', '')) && [...document.querySelectorAll('#feed .tw')].find(t => t.textContent.includes('Stasera da me')).querySelector('[data-like]').classList.contains('on'), mp)
+ok((await pr.textContent(mp + ' span')) === '3', 'prova: mi piace (2 → 3)')
 await pr.setInputFiles('#np-file', await immagini(pr, 1)); await pr.fill('#np-text', 'Foto di prova #test'); await pr.click('#np-go')
 await pr.waitForFunction(() => document.querySelectorAll('#feed .tw').length === 10)
 await pr.waitForFunction(() => document.querySelector('#feed .tw .pics img').naturalWidth > 0)
