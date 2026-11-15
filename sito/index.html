@@ -52,11 +52,13 @@ a{color:var(--menta)}
 .me{display:flex;align-items:center;gap:8px;min-width:0;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:4px 12px 4px 4px;font-weight:600;font-size:15px;max-width:44%}
 .me b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px + env(safe-area-inset-bottom))}
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
   background:rgba(10,15,36,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);
   padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
 .tabs button{position:relative;background:none;border:0;color:var(--muto2);font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 6px;cursor:pointer}
 .tabs .ico{display:block;width:24px;height:24px;transition:filter .2s,transform .2s}
+.tabs button span:last-child{max-width:100%;overflow:hidden;text-overflow:clip;white-space:nowrap}
+@media (max-width:379px){.tabs button{font-size:9px;letter-spacing:.03em}}
 .tabs svg{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tabs button:not(.on):hover{color:var(--muto)}
 .tabs button.on{color:var(--menta)}
@@ -99,6 +101,7 @@ select{appearance:none;-webkit-appearance:none;padding-right:36px;background-ima
 .err{color:var(--rosso);font-weight:600;font-size:14.5px;margin:10px 0 0}
 .av{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;color:var(--c);
   border:2px solid var(--c);box-shadow:0 0 10px -2px var(--c),inset 0 0 8px -3px var(--c);background:rgba(0,0,0,.25)}
+.av.xs{width:22px;height:22px;font-size:10px;border-width:1.5px}
 .av.s{width:30px;height:30px;font-size:13px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:rgba(255,255,255,.03);border-radius:6px;padding:7px 13px;font-weight:600;font-size:15px}
@@ -270,7 +273,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .gl-x{width:36px;height:36px;padding:0}
 .gl-t{font-family:"Archivo Black",Archivo,sans-serif;font-size:14px;color:#fafafa}.gl-t i{font-style:normal;color:#ff2e63}
 .gl iframe{flex:1;width:100%;border:0;background:#0a0a0c}
-.gl-pill{position:fixed;left:14px;bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));z-index:35;background:#ff2e63;color:#fff;border:0;border-radius:6px;padding:11px 16px;font-weight:600;font-size:14.5px;box-shadow:0 8px 26px -6px rgba(255,46,99,.7);cursor:pointer;animation:tin .2s ease-out}
+.gl-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));z-index:35;background:#ff2e63;color:#fff;border:0;border-radius:6px;padding:11px 16px;font-weight:600;font-size:14.5px;box-shadow:0 8px 26px -6px rgba(255,46,99,.7);cursor:pointer;animation:tin .2s ease-out}
 .steps{text-align:left;margin:18px 0 0;padding:0;list-style:none;counter-reset:s}
 .steps li{counter-increment:s;position:relative;padding:0 0 12px 40px;color:#d6d6de}
 .steps li::before{content:counter(s);position:absolute;left:0;top:-2px;width:28px;height:28px;border-radius:50%;background:#ffd60a;color:#111;font-weight:800;display:grid;place-items:center;font-size:14px}
@@ -320,17 +323,11 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .prs-n small{font-weight:500;color:var(--muto2);font-size:12.5px}
 .prs-s{display:flex;align-items:center;gap:6px;color:var(--muto);font-size:13.5px;white-space:nowrap}
 .prs-s.on{color:#3ddc84;font-weight:700}
+.prs-a{display:flex;align-items:center;gap:8px;flex:none}
+.adm-box{border-top:1px solid var(--line);margin-top:16px;padding-top:10px}
+.adm-box form{margin-top:8px}
 .x-side h3 .dot{vertical-align:2px;margin-right:2px}
 /* ---------- storie ---------- */
-.fab{position:fixed;right:14px;bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));z-index:35;width:62px;height:62px;border-radius:50%;border:0;padding:0;background:none;cursor:pointer}
-.fab::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--line);box-shadow:0 6px 20px -6px #000}
-.fab.nuove::before{background:conic-gradient(var(--rosa),var(--menta),var(--giallo),var(--rosa));animation:giro 2.8s linear infinite;box-shadow:0 0 18px -2px var(--rosa-g)}
-@keyframes giro{to{transform:rotate(1turn)}}
-.fab-in{position:absolute;inset:3px;border-radius:50%;overflow:hidden;background:var(--notte2);border:2px solid var(--notte);display:grid;place-items:center;color:var(--menta)}
-.fab-in img{width:100%;height:100%;object-fit:cover}
-.fab-in svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.fab-n{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;border-radius:11px;background:var(--rosa);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 6px;border:2px solid var(--notte)}
-.fab-n[hidden]{display:none}
 .st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:14px 8px;margin-top:14px}
 .st-p{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--testo)}
 .st-p .ring{position:relative;width:70px;height:70px;border-radius:50%;padding:3px;background:var(--line)}
@@ -354,10 +351,85 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .sv-img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
 .sv-cap{position:absolute;left:16px;right:16px;bottom:20px;text-align:center;font-weight:700;font-size:18px;background:rgba(0,0,0,.55);padding:10px 14px;border-radius:10px;overflow-wrap:anywhere}
 .sv-cap[hidden]{display:none}
-.sv-bot{display:flex;gap:10px;justify-content:center;padding:10px 14px calc(14px + env(safe-area-inset-bottom));min-height:24px}
+.sv-bot{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:10px 14px calc(14px + env(safe-area-inset-bottom));min-height:24px}
 .sv-bot .btn.ghost{color:#fff;border-color:rgba(255,255,255,.4)}
 .sv-bot .btn.ghost.rosso{color:var(--rosso);border-color:rgba(255,93,108,.5)}
 .sv-bot svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+.sv-bot .btn{text-transform:none;letter-spacing:.01em;font-size:14px}
+
+/* ---------- menu delle zone ---------- */
+.top-l{display:flex;align-items:center;gap:6px;min-width:0}
+.menu-btn{flex:none;width:42px;height:42px;margin-left:-8px;border:0;background:none;color:var(--testo);display:grid;place-items:center;cursor:pointer;border-radius:8px}
+.menu-btn svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.menu-btn.on{color:var(--menta);filter:drop-shadow(0 0 6px var(--menta-g))}
+.mz-ov{align-items:stretch;justify-content:flex-start}
+.mz{width:min(90vw,380px);height:100%;overflow:auto;background:linear-gradient(180deg,#0d1433,#070b1d);border-right:1px solid var(--line);box-shadow:20px 0 60px -20px #000;
+  padding:calc(14px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));transform:translateX(-100%);transition:transform .22s ease-out}
+.mz-ov.in .mz{transform:none}
+.mz-top{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.mz-me{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.mz-me b{font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mz-me .link{padding:4px 0;font-size:13.5px}
+.mz-x{flex:none;width:40px;height:40px;border:0;background:rgba(255,255,255,.05);color:var(--testo);border-radius:8px;font-size:18px;cursor:pointer}
+.mz-k{font-family:"Bebas Neue",sans-serif;letter-spacing:.3em;font-size:17px;color:var(--menta);text-shadow:0 0 10px var(--menta-g);margin:18px 0 10px}
+.mz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mz-z{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:14px 12px;color:var(--testo);cursor:pointer;min-height:118px;min-width:0;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.mz-z .ico{display:block;width:28px;height:28px;color:var(--rosa);filter:drop-shadow(0 0 6px var(--rosa-g))}
+.mz-z svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mz-z b{font-family:"Bebas Neue",sans-serif;font-weight:400;font-size:clamp(20px,6.6vw,25px);letter-spacing:.04em;line-height:1;margin-top:4px}
+.mz-z small{color:var(--muto);font-size:12.5px;line-height:1.3}
+.mz-z.on{border-color:var(--menta);box-shadow:0 0 18px -6px var(--menta-g),inset 0 0 14px -8px var(--menta-g)}
+.mz-z.on .ico{color:var(--menta);filter:drop-shadow(0 0 6px var(--menta-g))}
+.mz-grp{display:flex;align-items:center;gap:10px;width:100%;margin-top:14px;background:rgba(61,220,132,.06);border:1px solid rgba(61,220,132,.3);border-radius:8px;padding:13px 14px;color:var(--testo);font-weight:600;cursor:pointer;text-align:left}
+.mz-grp span{flex:1}
+.mz-grp b{color:#3ddc84;font-size:14px}
+/* ---------- barra in basso: solo Novità e Storie ---------- */
+.tabs button{flex-direction:row;justify-content:center;gap:10px;font-size:12px;padding:12px 0}
+.tabs .tab-n{min-width:20px;height:20px;border-radius:10px;background:var(--rosa);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 6px;letter-spacing:0;box-shadow:0 0 10px var(--rosa-g)}
+.tabs .tab-n[hidden]{display:none}
+.tabs button.nuove .ico{color:var(--rosa);filter:drop-shadow(0 0 6px var(--rosa))}
+/* ---------- pagina storie ---------- */
+.stc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.stc{position:relative;aspect-ratio:9/15;border-radius:10px;overflow:hidden;border:0;padding:0;cursor:pointer;background:var(--campo);color:#fff;text-align:left}
+.stc>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.stc::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 30%,transparent 55%,rgba(0,0,0,.8))}
+.stc-ring{position:absolute;top:10px;left:10px;z-index:1;border-radius:50%;padding:3px;background:var(--line)}
+.stc.nuove .stc-ring{background:conic-gradient(var(--rosa),var(--menta),var(--giallo),var(--rosa))}
+.stc-ring .av{border:2px solid #000;box-shadow:none;background:#000}
+.stc-n{position:absolute;left:10px;right:10px;bottom:10px;z-index:1;display:flex;flex-direction:column;line-height:1.2}
+.stc-n b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stc-n small{color:rgba(255,255,255,.75);font-size:12px}
+.stc.nuove{box-shadow:0 0 0 2px var(--rosa),0 0 20px -4px var(--rosa-g)}
+.stc.add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(70,245,192,.05);border:1.5px dashed rgba(70,245,192,.5);text-align:center;padding:10px}
+.stc.add::after{display:none}
+.stc-plus{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:34px;font-weight:300;color:#05261b;background:var(--menta);box-shadow:0 0 18px var(--menta-g);line-height:1}
+.stc.add b{font-family:"Bebas Neue",sans-serif;font-weight:400;font-size:24px;letter-spacing:.04em;color:var(--menta)}
+.stc.add small{color:var(--muto);font-size:12px}
+
+/* ---------- sondaggi ---------- */
+.poll .tw-h{margin-bottom:6px}
+.pmenu svg{width:20px;height:20px;fill:currentColor;stroke:none}
+.pq{font-size:19px;margin:6px 0 2px;overflow-wrap:anywhere}
+.ph{color:var(--muto);font-size:13.5px;margin-bottom:8px}
+.po{display:flex;gap:12px;align-items:flex-start;width:100%;background:none;border:0;padding:9px 0;text-align:left;cursor:pointer;color:var(--testo)}
+.po[disabled]{cursor:default}
+.po-c{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--muto2);display:grid;place-items:center;margin-top:1px;transition:background .15s,border-color .15s}
+.po-c.sq{border-radius:6px}
+.po.on .po-c{background:var(--menta);border-color:var(--menta);color:#05261b;box-shadow:0 0 10px var(--menta-g)}
+.po-c svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.po-b{flex:1;min-width:0}
+.po-t{display:flex;align-items:center;gap:8px;font-weight:600}
+.po-t>span:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.po-av{display:flex;padding-left:6px}
+.po-av .av{margin-left:-6px;background:var(--card)}
+.po-t b{min-width:18px;text-align:right;color:var(--muto)}
+.po-bar{display:block;height:6px;border-radius:3px;background:var(--campo);margin-top:7px;overflow:hidden}
+.po-bar i{display:block;height:100%;border-radius:3px;background:#5d6bb0;transition:width .3s}
+.po.on .po-bar i{background:var(--menta);box-shadow:0 0 8px var(--menta-g)}
+.poll.chiuso{opacity:.85}
+.pf{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);margin-top:8px;padding-top:8px;color:var(--muto);font-size:14px}
+.pf .link{color:var(--menta);text-decoration:none;font-weight:700;padding:6px 0}
+.np-opt{margin-bottom:8px}
 
 /* ---------- fantasanremo ---------- */
 .soon{text-align:center;padding:34px 18px}
@@ -393,6 +465,10 @@ const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, 
 const MSG = {
   RETE: 'Niente connessione. Controlla internet e riprova.',
   PASSWORD_ERRATA: 'Password del gruppo sbagliata.',
+  SEI_STATO_RIMOSSO: 'Sei stato rimosso dal gruppo.',
+  NOME_BLOCCATO: 'Questo nome è stato rimosso dal gruppo.',
+  PIN_ADMIN_ERRATO: 'PIN amministratore sbagliato.',
+  ADMIN_NON_IMPOSTATO: 'Il PIN amministratore non è ancora stato impostato (lo fa Ricky da Supabase).',
   PASSWORD_PROVA: 'Il sito è ancora in modalità prova, quindi per ora la password è "prova". La password vera del gruppo funzionerà appena il sito è collegato al database.',
   NOME_VUOTO: 'Scrivi un nome.',
   POST_VUOTO: 'Scrivi qualcosa o aggiungi una foto 🙂',
@@ -409,7 +485,13 @@ const MSG = {
   NOME_NON_TROVATO: 'Nome non trovato.',
   POST_NON_TROVATO: 'Questo post non esiste più.',
   FOTO_NON_TROVATA: 'Questa foto non esiste più.',
+  STORIA_SCADUTA: 'Questa storia è scaduta (sono passate 24 ore).',
   VOTO_NON_VALIDO: 'Voto non valido.',
+  DOMANDA_VUOTA: 'Scrivi la domanda.',
+  SERVONO_2_RISPOSTE: 'Servono almeno 2 risposte diverse.',
+  TROPPE_RISPOSTE: 'Al massimo 12 risposte.',
+  SONDAGGIO_CHIUSO: 'Il sondaggio è chiuso.',
+  SONDAGGIO_NON_TROVATO: 'Questo sondaggio non esiste più.',
   STESSA_PERSONA: 'Scegli due persone diverse.',
   FOTO_ILLEGGIBILE: 'Questa foto non si riesce ad aprire. Prova a sceglierne un\'altra (o fai uno screenshot).',
   NO_DB: 'Il database va aggiornato: ricopia installa.sql nel SQL Editor di Supabase e premi Run.',
@@ -433,7 +515,11 @@ function headers(extra) {
 async function rpc(fn, args = {}) {
   if (DEMO) {
     try { return await demoDB().rpc(fn, Object.assign({ p_pw: S.pw }, args)); }
-    catch (e) { if (e.message === 'PASSWORD_ERRATA' && fn !== 'check_pw') logout('Password sbagliata: inseriscila di nuovo.'); throw e; }
+    catch (e) {
+      if (e.message === 'PASSWORD_ERRATA' && fn !== 'check_pw') logout('Password sbagliata: inseriscila di nuovo.');
+      if (e.message === 'SEI_STATO_RIMOSSO') { S.me = null; store.del('me'); store.del('admin'); logout(MSG.SEI_STATO_RIMOSSO); }
+      throw e;
+    }
   }
   let r;
   try {
@@ -446,6 +532,7 @@ async function rpc(fn, args = {}) {
     if (d && d.code === 'PGRST202') throw err('NO_DB');
     const c = (d && d.message) || ('HTTP ' + r.status);
     if (c === 'PASSWORD_ERRATA' && fn !== 'check_pw') { logout('La password del gruppo è cambiata: inseriscila di nuovo.'); }
+    if (c === 'SEI_STATO_RIMOSSO') { S.me = null; store.del('me'); store.del('admin'); logout(MSG.SEI_STATO_RIMOSSO); }
     throw err(c);
   }
   return d;
@@ -698,33 +785,50 @@ function logout(avviso) {
 
 // ===================== STRUTTURA =====================
 const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
-const TABS = [
-  { id: 'novita', t: 'Novità', f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
-  { id: 'foto', t: 'Foto', f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
-  { id: 'gioco', t: 'Gioco', f: viewGioco, ico: svg('<rect x="4" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 9.2 12.7)"/><path d="m14.6 5.4 3.7.7a2 2 0 0 1 1.6 2.3l-2 11a2 2 0 0 1-2.3 1.6l-3.2-.6"/>') },
-  { id: 'santa', t: 'Santa', f: viewSanta, ico: svg('<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20h14v-7.5M12 8.5V20M12 8.5C10.6 5.3 7 4.6 7 6.8 7 8.3 9.6 8.5 12 8.5zm0 0c1.4-3.2 5-3.9 5-1.7 0 1.5-2.6 1.7-5 1.7z"/>') },
-  { id: 'fanta', t: 'Sanremo', f: viewFanta, ico: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>') }
+// tutte le zone del sito (menu ☰); in basso solo Novità e Storie
+const ZONE = [
+  { id: 'novita', t: 'Novità', d: 'Post, risposte e #tendenze', f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
+  { id: 'storie', t: 'Storie', d: 'Foto che durano 24 ore', f: viewStorie, ico: svg('<circle cx="12" cy="12" r="8.5" stroke-dasharray="4.2 2.4"/><path d="M12 8.5v7M8.5 12h7"/>') },
+  { id: 'foto', t: 'Foto', d: 'Le cartelle del gruppo', f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
+  { id: 'sondaggi', t: 'Sondaggi', d: 'Vota e fai votare', f: viewSondaggi, ico: svg('<path d="M4 6.5h9M4 12h16M4 17.5h6"/><circle cx="17" cy="6.5" r="1.4"/><circle cx="13.5" cy="17.5" r="1.4"/>') },
+  { id: 'gioco', t: 'Gioco', d: 'Senza Filtro', f: viewGioco, ico: svg('<rect x="4" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 9.2 12.7)"/><path d="m14.6 5.4 3.7.7a2 2 0 0 1 1.6 2.3l-2 11a2 2 0 0 1-2.3 1.6l-3.2-.6"/>') },
+  { id: 'santa', t: 'Secret Santa', d: 'I regali di Natale', f: viewSanta, ico: svg('<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20h14v-7.5M12 8.5V20M12 8.5C10.6 5.3 7 4.6 7 6.8 7 8.3 9.6 8.5 12 8.5zm0 0c1.4-3.2 5-3.9 5-1.7 0 1.5-2.6 1.7-5 1.7z"/>') },
+  { id: 'fanta', t: 'Fanta Sanremo', d: 'In arrivo', f: viewFanta, ico: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>') }
 ];
+const BARRA = ['novita', 'storie'];
+const ICO_MENU = svg('<path d="M4 7h16M4 12h16M4 17h10"/>');
 function start() {
-  $('#app').innerHTML = `<header class="top"><button class="logo" data-go="#novita">${insegna()}</button>
-    <div class="top-r"><button class="on-btn" id="on-btn" hidden aria-label="Chi è online"><i class="dot"></i><b>0</b><span>online</span></button>
-    <button class="me" id="me-btn">${avatar(S.me, 's')}<b>${esc(S.me)}</b></button></div></header>
+  $('#app').innerHTML = `<header class="top"><div class="top-l"><button class="menu-btn" id="menu-btn" aria-label="Zone del sito">${ICO_MENU}</button><button class="logo" data-go="#novita">${insegna()}</button></div>
+    <div class="top-r"><button class="on-btn" id="on-btn" hidden aria-label="Chi è online"><i class="dot"></i><b>0</b><span>online</span></button></div></header>
     ${DEMO ? '<div class="demo-bar">🧪 MODALITÀ PROVA · dati finti, si azzerano se ricarichi</div>' : ''}
     <main class="view" id="view"></main>
-    <nav class="tabs">${TABS.map(t => `<button data-go="#${t.id}" data-tab="${t.id}"><span class="ico">${t.ico}</span><span>${t.t}</span></button>`).join('')}</nav>
-    <button class="fab" id="fab" aria-label="Storie"><span class="fab-in">${ICO_CAM}</span><b class="fab-n" hidden></b></button>`;
+    <nav class="tabs">${BARRA.map(id => zona(id)).map(t => `<button data-go="#${t.id}" data-tab="${t.id}"><span class="ico">${t.ico}</span><span>${t.t}</span>${t.id === 'storie' ? '<b class="tab-n" hidden></b>' : ''}</button>`).join('')}</nav>`;
   $('#on-btn').onclick = apriGruppo;
-  $('#fab').onclick = apriStorie;
-  $('#me-btn').onclick = () => sheet(`<div class="row" style="margin-bottom:12px">${avatar(S.me)}<h3 style="margin:0">Ciao ${esc(S.me)} 👋</h3></div>
-      <p class="muto">Sei entrato su ${esc(NOME)} con questo nome. Quello che scrivi appare a nome tuo.</p>
-      <div class="col" style="margin-top:16px"><button class="btn ghost wide" data-a="gruppo">Chi c'è nel gruppo</button><button class="btn ghost wide" data-a="nome">Cambia nome</button><button class="btn ghost rosso wide" data-a="esci">Esci (chiederà di nuovo la password)</button><button class="btn wide" data-close>Chiudi</button></div>`,
-    (s, close) => {
-      s.querySelector('[data-a=gruppo]').onclick = () => { close(); setTimeout(apriGruppo, 200); };
-      s.querySelector('[data-a=nome]').onclick = () => { close(); renderChiSei(); };
-      s.querySelector('[data-a=esci]').onclick = () => { close(); logout(); };
-    });
+  $('#menu-btn').onclick = apriMenu;
   clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); loadStorie(); } }, 45000);
   route(); ping(); loadStorie();
+}
+const zona = id => ZONE.find(z => z.id === id);
+// menu delle zone: pannello da sinistra con riquadri al neon + il proprio profilo
+function apriMenu() {
+  const c = cur(), attiva = (c.sec === 'post' || c.sec === 'tag') ? 'novita' : c.sec;
+  const ov = document.createElement('div'); ov.className = 'ov mz-ov';
+  const on = (S.people || []).filter(p => p.online).length;
+  ov.innerHTML = `<nav class="mz" aria-label="Zone del sito">
+    <div class="mz-top">${avatar(S.me)}<div class="mz-me"><b>${esc(S.me)}</b><span><button class="link" data-a="nome">Cambia nome</button> · <button class="link" data-a="esci">Esci</button></span></div><button class="mz-x" data-close aria-label="Chiudi">✕</button></div>
+    <div class="mz-k">Zone del sito</div>
+    <div class="mz-grid">${ZONE.map(z => `<button class="mz-z ${z.id === attiva ? 'on' : ''}" data-zona="${z.id}"><span class="ico">${z.ico}</span><b>${esc(z.t)}</b><small>${esc(z.d)}</small></button>`).join('')}</div>
+    <button class="mz-grp" data-a="gruppo"><i class="dot"></i><span>Chi c'è nel gruppo</span>${S.people ? `<b>${on} online</b>` : ''}</button>
+  </nav>`;
+  document.body.appendChild(ov); document.body.classList.add('noscroll');
+  requestAnimationFrame(() => ov.classList.add('in'));
+  const chiudi = () => { ov.classList.remove('in'); setTimeout(() => { ov.remove(); sblocca(); }, 200); };
+  ov.addEventListener('click', e => { if (e.target === ov) chiudi(); });
+  ov.querySelector('[data-close]').onclick = chiudi;
+  ov.querySelectorAll('[data-zona]').forEach(b => b.onclick = () => { const h = '#' + b.dataset.zona; if (location.hash === h || (!location.hash && h === '#novita')) chiudi(); else location.hash = h; });
+  ov.querySelector('[data-a=gruppo]').onclick = () => { chiudi(); setTimeout(apriGruppo, 220); };
+  ov.querySelector('[data-a=nome]').onclick = () => { chiudi(); renderChiSei(); };
+  ov.querySelector('[data-a=esci]').onclick = () => { chiudi(); logout(); };
 }
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
@@ -732,8 +836,9 @@ function route() {
   const c = cur(), inGioco = c.sec === 'gioco' && c.arg === 'gioca';
   if (inGioco) { giocoLayer().hidden = false; document.body.classList.add('noscroll'); } else if ($('#gl')) $('#gl').hidden = true;
   drawPill();
-  const t = (c.sec === 'post' || c.sec === 'tag') ? TABS[0] : (TABS.find(x => x.id === c.sec) || TABS[0]);
+  const t = (c.sec === 'post' || c.sec === 'tag') ? ZONE[0] : (zona(c.sec) || ZONE[0]);
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t.id));
+  const mb = $('#menu-btn'); if (mb) mb.classList.toggle('on', !BARRA.includes(t.id));
   const v = $('#view'); S.refresh = null; v.innerHTML = ''; v.className = 'view' + (t.id === 'novita' ? ' wide' : ''); window.scrollTo(0, 0);
   if (c.sec === 'post') return viewPost(c.arg);
   if (c.sec === 'tag') return viewNovita(c.arg);
@@ -1031,20 +1136,21 @@ function votaFoto(f, val) {
   votoInCoda('f' + f.id, f, val, v => rpc('photo_vote', { p_photo: f.id, p_name: S.me, p_val: v }), () => dipingiVoti(f, 'lb'), () => Object.values(S.album).some(l => l.includes(f)));
 }
 // commenti a una foto dell'album
-function commentiFoto(f, aggiorna) {
+// finestra dei commenti, uguale per foto e storie
+function commentiSheet({ elenco, aggiungi, elimina, conta, chiuso, max = 1000 }) {
   sheet(`<h3>Commenti</h3><div class="cm" id="fc-list"><div class="loading">Carico</div></div>
-    <form class="rp cm-form" id="fc-form" novalidate>${avatar(S.me, 's')}<textarea id="fc-text" rows="1" maxlength="1000" placeholder="Scrivi un commento…"></textarea><button class="btn sm" type="submit">Invia</button></form>
+    <form class="rp cm-form" id="fc-form" novalidate>${avatar(S.me, 's')}<textarea id="fc-text" rows="1" maxlength="${max}" placeholder="Scrivi un commento…"></textarea><button class="btn sm" type="submit">Invia</button></form>
     <div class="row end"><button class="btn ghost" data-close>Chiudi</button></div>`, (s, close) => {
     const list = s.querySelector('#fc-list'), ta = s.querySelector('#fc-text');
     ta.oninput = () => autoGrow(ta);
     const load = async () => {
       try {
-        const L = await rpc('photo_comments', { p_photo: f.id });
-        f.comments = L.length; if (aggiorna) aggiorna();
+        const L = await elenco();
+        if (conta) conta(L.length);
         list.innerHTML = L.length ? L.map(c => `<div class="tw reply">${avatar(c.author, 's')}<div class="tw-b"><div class="tw-h"><b>${esc(c.author)}</b><span>· ${esc(quando(c.created_at))}</span>${same(c.author, S.me) ? `<button class="icon del" data-cdel="${esc(c.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div><div class="tw-t">${richText(c.body)}</div></div></div>`).join('')
           : '<p class="muto">Ancora nessun commento. Scrivi il primo!</p>';
         list.querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
-          try { await rpc('photo_comment_del', { p_id: b.dataset.cdel, p_author: S.me }); toast('Commento eliminato'); load(); } catch (e) { toast(msg(e), 'err'); }
+          try { await elimina(b.dataset.cdel); toast('Commento eliminato'); load(); } catch (e) { toast(msg(e), 'err'); }
         });
       } catch (e) { list.innerHTML = `<p class="err">${esc(msg(e))}</p>`; }
     };
@@ -1052,11 +1158,20 @@ function commentiFoto(f, aggiorna) {
       e.preventDefault(); const b = e.target.querySelector('button'), body = ta.value.trim();
       if (!body) return toast('Scrivi il commento 🙂');
       b.disabled = true;
-      try { await rpc('photo_comment_add', { p_photo: f.id, p_author: S.me, p_body: body }); ta.value = ''; autoGrow(ta); await load(); }
+      try { await aggiungi(body); ta.value = ''; autoGrow(ta); await load(); }
       catch (ex) { toast(msg(ex), 'err'); } finally { b.disabled = false; }
     };
     load();
-  }, () => { if (S.refresh && cur().sec === 'foto') S.refresh(); });
+  }, chiuso);
+}
+function commentiFoto(f, aggiorna) {
+  commentiSheet({
+    elenco: () => rpc('photo_comments', { p_photo: f.id }),
+    aggiungi: body => rpc('photo_comment_add', { p_photo: f.id, p_author: S.me, p_body: body }),
+    elimina: id => rpc('photo_comment_del', { p_id: id, p_author: S.me }),
+    conta: n => { f.comments = n; if (aggiorna) aggiorna(); },
+    chiuso: () => { if (S.refresh && cur().sec === 'foto') S.refresh(); }
+  });
 }
 function drawAlbum(id) {
   const a = (S.albums || []).find(x => x.id === id), ph = S.album[id] || [];
@@ -1100,6 +1215,123 @@ async function addToAlbum(id, files) {
   } finally { S.busy--; set(''); }
   if (ko) toast(`${ok} caricate, ${ko} non riuscite. ${msg(last)}`, 'err'); else toast(ok === 1 ? 'Foto caricata 📸' : `${ok} foto caricate 📸`);
   if (cur().arg === id && S.refresh) S.refresh();
+}
+
+// ===================== SONDAGGI (stile WhatsApp) =====================
+const ICO_SPUNTA = svg('<path d="m5 12.5 4.5 4.5L19 7.5"/>');
+const ICO_PUNTINI = svg('<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>');
+function viewSondaggi() {
+  $('#view').innerHTML = `<h1 class="neon m">Sondaggi</h1>
+    <button class="btn wide" id="pl-new">+ Nuovo sondaggio</button>
+    <div id="polls" style="margin-top:16px"><div class="loading">Carico i sondaggi</div></div>`;
+  $('#pl-new').onclick = nuovoSondaggio;
+  if (S.polls) drawPolls();
+  S.refresh = loadPolls; loadPolls();
+}
+async function loadPolls() {
+  try { S.polls = await rpc('polls_list'); S.noPolls = false; if (cur().sec === 'sondaggi') drawPolls(); }
+  catch (e) { if (e.message === 'NO_DB') S.noPolls = true; const el = $('#polls'); if (el && !S.polls) el.innerHTML = errBox(e); }
+}
+function pollHTML(p) {
+  const persone = new Set(p.options.flatMap(o => o.voters.map(n => n.toLowerCase()))).size;
+  return `<article class="card poll ${p.closed ? 'chiuso' : ''}" data-poll="${esc(p.id)}">
+    <div class="tw-h">${avatar(p.author, 's')}<b>${esc(p.author)}</b><span>· ${esc(quando(p.created_at))}</span>${same(p.author, S.me) ? `<button class="icon del pmenu" data-pmenu aria-label="Opzioni del sondaggio">${ICO_PUNTINI}</button>` : ''}</div>
+    <h3 class="pq">${esc(p.question)}</h3>
+    <div class="ph">${p.closed ? 'Sondaggio chiuso' : p.multi ? 'Puoi scegliere più risposte' : 'Scegli una risposta'}</div>
+    ${p.options.map(o => {
+      const on = o.voters.some(n => same(n, S.me)), pc = persone ? Math.round(o.voters.length / persone * 100) : 0;
+      return `<button class="po ${on ? 'on' : ''}" data-opt="${esc(o.id)}" ${p.closed ? 'disabled' : ''}>
+        <span class="po-c ${p.multi ? 'sq' : ''}">${on ? ICO_SPUNTA : ''}</span>
+        <span class="po-b"><span class="po-t"><span>${esc(o.label)}</span><span class="po-av">${o.voters.slice(-3).map(n => avatar(n, 'xs')).join('')}</span><b>${o.voters.length}</b></span>
+        <span class="po-bar"><i style="width:${pc}%"></i></span></span></button>`;
+    }).join('')}
+    <div class="pf"><span>${persone ? `${persone} ${persone === 1 ? 'persona ha' : 'persone hanno'} votato` : 'Ancora nessun voto'}</span>${persone ? '<button class="link" data-pvoti>Vedi voti</button>' : ''}</div>
+  </article>`;
+}
+function wirePoll(el) {
+  if (!el) return;
+  const p = (S.polls || []).find(x => x.id === el.dataset.poll); if (!p) return;
+  el.querySelectorAll('[data-opt]').forEach(b => b.onclick = () => votaSondaggio(p, b.dataset.opt));
+  const v = el.querySelector('[data-pvoti]'); if (v) v.onclick = () => votiSondaggio(p);
+  const m = el.querySelector('[data-pmenu]'); if (m) m.onclick = () => menuSondaggio(p);
+}
+function drawPolls() {
+  const el = $('#polls'); if (!el || !S.polls) return;
+  const sig = JSON.stringify(S.polls) + S.me; if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  if (!S.polls.length) { el.innerHTML = `<div class="empty">Nessun sondaggio per ora.<br>Creane uno e fai votare il gruppo!</div>`; return; }
+  el.innerHTML = S.polls.map(pollHTML).join('');
+  el.querySelectorAll('[data-poll]').forEach(wirePoll);
+}
+function ridisegnaPoll(p) {
+  const el = document.querySelector(`[data-poll="${p.id}"]`); if (!el) return;
+  el.outerHTML = pollHTML(p); wirePoll(document.querySelector(`[data-poll="${p.id}"]`));
+  const box = $('#polls'); if (box) box.dataset.sig = '';
+}
+// tocco su una risposta: si vede subito, poi il database conferma (i tocchi veloci partono in fila)
+function votaSondaggio(p, optId) {
+  if (p.closed) return;
+  const o = p.options.find(x => x.id === optId); if (!o) return;
+  if (o.voters.some(n => same(n, S.me))) o.voters = o.voters.filter(n => !same(n, S.me));
+  else { if (!p.multi) p.options.forEach(x => { x.voters = x.voters.filter(n => !same(n, S.me)); }); o.voters.push(S.me); }
+  ridisegnaPoll(p);
+  const q = S.vq['poll' + p.id] || (S.vq['poll' + p.id] = { n: 0, p: Promise.resolve() });
+  q.n++;
+  q.p = q.p.then(async () => {
+    try { const nuovo = await rpc('poll_vote', { p_poll: p.id, p_option: optId, p_name: S.me }); if (q.n === 1 && nuovo) { Object.assign(p, nuovo); ridisegnaPoll(p); } }
+    catch (e) { toast(msg(e), 'err'); if (q.n === 1) loadPolls(); }
+    finally { q.n--; }
+  });
+}
+function votiSondaggio(p) {
+  sheet(`<h3>${esc(p.question)}</h3>${p.options.map(o => `<div class="grp-k">${esc(o.label)} · ${o.voters.length}</div>${o.voters.map(n => `<div class="prs">${avatar(n, 's')}<span class="prs-n">${esc(n)}</span></div>`).join('') || '<p class="hint" style="margin:0 0 6px">Nessun voto.</p>'}`).join('')}
+    <div class="row end"><button class="btn" data-close>Ok</button></div>`);
+}
+function menuSondaggio(p) {
+  sheet(`<h3>${esc(p.question)}</h3><div class="col" style="margin-top:14px"><button class="btn ghost wide" data-a="chiudi">${p.closed ? 'Riapri il sondaggio' : 'Chiudi il sondaggio'}</button>
+    <button class="btn ghost rosso wide" data-a="del">Elimina il sondaggio</button><button class="btn wide" data-close>Annulla</button></div>`, (s, close) => {
+    s.querySelector('[data-a=chiudi]').onclick = async () => {
+      close();
+      try { await rpc('poll_close', { p_poll: p.id, p_author: S.me, p_closed: !p.closed }); toast(p.closed ? 'Sondaggio riaperto' : 'Sondaggio chiuso'); await loadPolls(); } catch (e) { toast(msg(e), 'err'); }
+    };
+    s.querySelector('[data-a=del]').onclick = async () => {
+      close();
+      if (!await ask('Eliminare il sondaggio?', 'Spariscono anche tutti i voti.', 'Elimina', true)) return;
+      try { await rpc('poll_del', { p_poll: p.id, p_author: S.me }); toast('Sondaggio eliminato'); await loadPolls(); } catch (e) { toast(msg(e), 'err'); }
+    };
+  });
+}
+function nuovoSondaggio() {
+  if (S.noPolls) return info('Sondaggi', `<p>${esc(MSG.NO_DB)}</p>`);
+  sheet(`<form id="np-form" novalidate><h3>Nuovo sondaggio</h3>
+    <label>Domanda<input name="q" maxlength="200" placeholder="Fai una domanda" autocomplete="off"></label>
+    <label>Risposte</label><div id="np-opts" style="margin-top:6px"></div>
+    <button type="button" class="link" id="np-add">+ Aggiungi risposta</button>
+    <label class="check"><input type="checkbox" name="multi"> Consenti più risposte</label>
+    <p class="err" hidden></p>
+    <div class="row end"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn" type="submit">Crea</button></div></form>`, (s, close) => {
+    const box = s.querySelector('#np-opts'), piu = s.querySelector('#np-add');
+    const aggiungi = fuoco => {
+      if (box.children.length >= 12) return;
+      const i = document.createElement('input'); i.maxLength = 100; i.className = 'np-opt'; i.autocomplete = 'off'; i.placeholder = 'Risposta ' + (box.children.length + 1);
+      i.oninput = () => { if (i === box.lastElementChild && i.value.trim()) aggiungi(); };   // come WhatsApp: scrivi nell'ultima e ne compare un'altra
+      box.appendChild(i); if (fuoco) i.focus(); piu.hidden = box.children.length >= 12;
+    };
+    aggiungi(); aggiungi();
+    piu.onclick = () => aggiungi(true);
+    const f = s.querySelector('form'), e = f.querySelector('.err'), b = f.querySelector('[type=submit]');
+    setTimeout(() => f.elements.q.focus(), 250);
+    f.onsubmit = async ev => {
+      ev.preventDefault(); e.hidden = true;
+      const q = f.elements.q.value.trim(), opts = [...box.querySelectorAll('input')].map(i => i.value.trim()).filter(Boolean);
+      try {
+        if (!q) throw err('DOMANDA_VUOTA');
+        if (new Set(opts.map(o => o.toLowerCase())).size < 2) throw err('SERVONO_2_RISPOSTE');
+        b.disabled = true;
+        await rpc('poll_create', { p_author: S.me, p_question: q, p_options: opts, p_multi: f.elements.multi.checked });
+        close(); toast('Sondaggio creato'); await loadPolls();
+      } catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; }
+    };
+  });
 }
 
 // ===================== GIOCO =====================
@@ -1414,25 +1646,55 @@ async function ping() {
   catch (e) { if (e.message === 'NO_DB') S.noPresenza = true; return; }
   drawOnline();
 }
-function personaHTML(p, conIscrizione) {
+function personaHTML(p, conIscrizione, azione) {
   const stato = p.online ? '<i class="dot"></i>online' : esc(p.last_seen ? 'visto ' + quando(p.last_seen) : 'mai visto online');
-  return `<div class="prs">${avatar(p.name, 's')}<span class="prs-n">${esc(p.name)}${same(p.name, S.me) ? ' <small>(tu)</small>' : ''}${conIscrizione ? `<small class="prs-i">iscritto ${esc(quando(p.created_at))}</small>` : ''}</span><span class="prs-s ${p.online ? 'on' : ''}">${stato}</span></div>`;
+  return `<div class="prs">${avatar(p.name, 's')}<span class="prs-n">${esc(p.name)}${same(p.name, S.me) ? ' <small>(tu)</small>' : ''}${conIscrizione ? `<small class="prs-i">iscritto ${esc(quando(p.created_at))}</small>` : ''}</span>${azione || `<span class="prs-s ${p.online ? 'on' : ''}">${stato}</span>`}</div>`;
 }
+const adminPin = () => store.get('admin');
 function gruppoHTML() {
   if (S.noPresenza) return '<p class="muto">Per vedere chi è online bisogna aggiornare il database: ricopia <b>installa.sql</b> nel SQL Editor di Supabase e premi Run (non cancella niente).</p>';
-  const ppl = S.people || [], on = ppl.filter(p => p.online);
+  const tuttiConRimossi = S.people || [], ppl = tuttiConRimossi.filter(p => !p.banned), rimossi = tuttiConRimossi.filter(p => p.banned), on = ppl.filter(p => p.online), adm = !!adminPin();
   const tutti = ppl.slice().sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
+  const kick = p => adm && !same(p.name, S.me) ? `<span class="prs-a"><span class="prs-s ${p.online ? 'on' : ''}">${p.online ? '<i class="dot"></i>' : ''}</span><button class="btn ghost rosso xs" data-kick="${esc(p.name)}">Rimuovi</button></span>` : '';
   return `<div class="grp-k"><i class="dot"></i>Online ora · ${on.length}</div>${on.map(p => personaHTML(p)).join('') || '<p class="hint">Nessuno online in questo momento.</p>'}
-    <div class="grp-k">Tutti gli iscritti · ${ppl.length}</div>${tutti.map(p => personaHTML(p, true)).join('')}`;
+    <div class="grp-k">Tutti gli iscritti · ${ppl.length}</div>${tutti.map(p => personaHTML(p, true, kick(p))).join('')}
+    ${adm && rimossi.length ? `<div class="grp-k">Rimossi · ${rimossi.length}</div>${rimossi.map(p => personaHTML(p, false, `<button class="btn ghost xs" data-unkick="${esc(p.name)}">Riammetti</button>`)).join('')}` : ''}
+    <div class="adm-box">${adm
+      ? `<p class="hint" style="margin:0">🔓 Sei amministratore: puoi rimuovere qualcuno dal gruppo.</p><button class="link" data-adm-lock>Blocca</button>`
+      : `<button class="link" data-adm-open>🔒 Area amministratore</button><form class="row" id="adm-form" hidden novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN amministratore"><button class="btn sm" type="submit">Sblocca</button></form><p class="err" id="adm-err" hidden></p>`}</div>`;
 }
 function drawOnline() {
-  const ppl = S.people || [], on = ppl.filter(p => p.online);
+  const ppl = (S.people || []).filter(p => !p.banned), on = ppl.filter(p => p.online);
   const b = $('#on-btn'); if (b) { b.hidden = !S.people; b.querySelector('b').textContent = on.length; }
   const d = $('#online-d'); if (d) d.innerHTML = on.map(p => personaHTML(p)).join('') || '<p class="hint" style="margin:0">Nessuno online.</p>';
-  const g = $('#gruppo'); if (g) g.innerHTML = gruppoHTML();
+  const g = $('#gruppo'); if (g && !g.querySelector('#adm-form:not([hidden])')) g.innerHTML = gruppoHTML();
+}
+async function kick(nome, rimuovi) {
+  if (rimuovi && !await ask(`Rimuovere ${nome} dal gruppo?`, `Esce subito dal sito e non può più rientrare con questo nome. I suoi post restano.<br><br>Per tenerlo fuori del tutto cambia anche la password del gruppo e dilla solo agli altri.`, 'Rimuovi', true)) return;
+  try { await rpc('member_kick', { p_admin: adminPin(), p_name: nome, p_ban: rimuovi }); toast(rimuovi ? `${nome} è stato rimosso dal gruppo` : `${nome} può rientrare`); }
+  catch (e) { if (e.message === 'PIN_ADMIN_ERRATO') store.del('admin'); toast(msg(e), 'err'); }
+  await ping();
 }
 function apriGruppo() {
-  sheet(`<h3>Il gruppo</h3><div id="gruppo">${S.people || S.noPresenza ? gruppoHTML() : '<div class="loading">Carico</div>'}</div><div class="row end"><button class="btn" data-close>Chiudi</button></div>`);
+  sheet(`<h3>Il gruppo</h3><div id="gruppo">${S.people || S.noPresenza ? gruppoHTML() : '<div class="loading">Carico</div>'}</div><div class="row end"><button class="btn" data-close>Chiudi</button></div>`, s => {
+    s.addEventListener('click', e => {
+      const t = e.target.closest('[data-kick],[data-unkick],[data-adm-open],[data-adm-lock]'); if (!t) return;
+      if (t.dataset.kick) kick(t.dataset.kick, true);
+      else if (t.dataset.unkick) kick(t.dataset.unkick, false);
+      else if (t.hasAttribute('data-adm-open')) { const f = s.querySelector('#adm-form'); f.hidden = false; t.hidden = true; f.elements.p.focus(); }
+      else { store.del('admin'); drawOnline(); }
+    });
+    s.addEventListener('submit', async e => {
+      if (e.target.id !== 'adm-form') return; e.preventDefault();
+      const pin = e.target.elements.p.value.trim(), er = s.querySelector('#adm-err'); er.hidden = true;
+      try {
+        const r = await rpc('admin_check', { p_admin: pin });
+        if (!r.set) throw err('ADMIN_NON_IMPOSTATO');
+        if (!r.ok) throw err('PIN_ADMIN_ERRATO');
+        store.set('admin', pin); e.target.hidden = true; drawOnline();
+      } catch (ex) { er.textContent = msg(ex); er.hidden = false; }
+    });
+  });
   ping();
 }
 
@@ -1460,32 +1722,30 @@ function gruppiStorie() {
     return g;
   }).sort((a, b) => (b.mio - a.mio) || (b.nuove - a.nuove) || (a.ultima < b.ultima ? 1 : -1));
 }
+// il numerino sulla voce "Storie" in basso = persone con storie nuove
 function drawFab() {
-  const f = $('#fab'); if (!f) return;
-  const gs = gruppiStorie(), nuove = gs.filter(g => g.nuove), top = nuove[0] || gs.find(g => !g.mio) || gs[0];
-  f.classList.toggle('nuove', nuove.length > 0);
-  const last = top ? top.items[top.items.length - 1] : null;
-  f.querySelector('.fab-in').innerHTML = last ? img(last.path) : ICO_CAM;
-  const n = f.querySelector('.fab-n'); n.hidden = !nuove.length; n.textContent = nuove.length;
+  const nuove = gruppiStorie().filter(g => g.nuove).length, n = $('.tab-n'), t = $('[data-tab=storie]');
+  if (n) { n.hidden = !nuove; n.textContent = nuove; }
+  if (t) t.classList.toggle('nuove', nuove > 0);
 }
-function apriStorie() {
-  if (S.noStorie) return info('Storie', '<p>Per usare le storie bisogna aggiornare il database: ricopia <b>installa.sql</b> nel SQL Editor di Supabase e premi Run (non cancella niente).</p>');
-  sheet(`<div id="st-hub"></div><input type="file" id="st-file" accept="image/*" hidden><div class="row end"><button class="btn ghost" data-close>Chiudi</button></div>`, (s, close) => {
-    S.closeHub = close;
-    $('#st-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) { close(); componiStoria(f); } };
-    drawHub();
-  }, () => { S.closeHub = null; });
-  loadStorie();
+function viewStorie() {
+  $('#view').innerHTML = `<h1 class="neon">Storie</h1><p class="intro">Foto che spariscono dopo 24 ore.</p>
+    <div id="st-hub"><div class="loading">Carico le storie</div></div><input type="file" id="st-file" accept="image/*" hidden>`;
+  $('#st-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) componiStoria(f); };
+  if (S.storie || S.noStorie) drawHub();
+  S.refresh = loadStorie; loadStorie();
 }
 function drawHub() {
   const el = $('#st-hub'); if (!el) return;
-  const gs = gruppiStorie();
-  el.innerHTML = `<h3>Storie <span class="muto" style="font-weight:500">· spariscono dopo 24 ore</span></h3>
-    <div class="st-grid"><button class="st-p st-add" id="st-add"><span class="ring"><span class="in">${avatar(S.me)}</span><b class="plus">+</b></span><span class="nm">Aggiungi</span></button>
-    ${gs.map((g, i) => `<button class="st-p ${g.nuove ? 'nuove' : ''}" data-g="${i}"><span class="ring"><span class="in">${img(g.items[g.items.length - 1].path)}</span></span><span class="nm">${g.mio ? 'La tua' : esc(g.author)}</span></button>`).join('')}</div>
-    ${gs.length ? '' : '<p class="muto" style="margin-top:14px">Nessuna storia nelle ultime 24 ore. Pubblica la prima!</p>'}`;
+  if (S.noStorie) { el.innerHTML = `<div class="empty">${esc(MSG.NO_DB)}</div>`; return; }
+  if (!S.storie) return;
+  const gs = gruppiStorie(), sig = JSON.stringify(gs) + [...visti()].length; if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  el.innerHTML = `<div class="stc-grid"><button class="stc add" id="st-add"><span class="stc-plus">+</span><b>Crea storia</b><small>Dalla galleria o fotocamera</small></button>
+    ${gs.map((g, i) => { const u = g.items[g.items.length - 1]; return `<button class="stc ${g.nuove ? 'nuove' : ''}" data-g="${i}">${img(u.path)}<span class="stc-ring">${avatar(g.author, 's')}</span>
+      <span class="stc-n"><b>${g.mio ? 'La tua storia' : esc(g.author)}</b><small>${esc(quando(u.created_at))}${g.items.length > 1 ? ' · ' + g.items.length + ' foto' : ''}</small></span></button>`; }).join('')}</div>
+    ${gs.length ? '' : '<p class="muto" style="margin-top:16px">Nessuna storia nelle ultime 24 ore. Pubblica la prima!</p>'}`;
   $('#st-add').onclick = () => $('#st-file').click();
-  el.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { if (S.closeHub) S.closeHub(); guardaStorie(gs, +b.dataset.g); });
+  el.querySelectorAll('[data-g]').forEach(b => b.onclick = () => guardaStorie(gs, +b.dataset.g));
 }
 function componiStoria(file) {
   const url = URL.createObjectURL(file);
@@ -1525,7 +1785,7 @@ function guardaStorie(gs, gi) {
   const riprendi = () => setTimeout(play, 230);
   const pausa = () => { if (!va) return; va = false; acc += performance.now() - t0; cancelAnimationFrame(raf); };
   const key = e => { if (e.key === 'Escape') chiudi(); if (e.key === 'ArrowRight') avanti(); if (e.key === 'ArrowLeft') indietro(); };
-  const chiudi = () => { va = false; cancelAnimationFrame(raf); el.remove(); sblocca(); drawFab(); document.removeEventListener('keydown', key); };
+  const chiudi = () => { va = false; cancelAnimationFrame(raf); el.remove(); sblocca(); drawFab(); drawHub(); document.removeEventListener('keydown', key); };
   const avanti = () => { const G = gs[g]; if (i < G.items.length - 1) i++; else if (g < gs.length - 1) { g++; i = 0; } else return chiudi(); mostra(); };
   const indietro = () => { if (i > 0) i--; else if (g > 0) { g--; i = gs[g].items.length - 1; } mostra(); };
   const mostra = () => {
@@ -1534,7 +1794,20 @@ function guardaStorie(gs, gi) {
     el.querySelector('.sv-bars').innerHTML = G.items.map((_, k) => `<i><b style="width:${k < i ? 100 : 0}%"></b></i>`).join('');
     el.querySelector('.sv-who').innerHTML = `${avatar(G.author, 's')}<b>${esc(G.author)}</b><span>${esc(quando(s.created_at))}</span>`;
     const cap = el.querySelector('.sv-cap'); cap.textContent = s.caption || ''; cap.hidden = !s.caption;
-    el.querySelector('.sv-bot').innerHTML = G.mio ? `<button class="btn ghost sm" id="sv-viste">${ICO_EYE} Visto da ${s.views ? s.views.length : 0}</button><button class="btn ghost rosso sm" id="sv-del">Elimina</button>` : '';
+    const etichetta = () => `${ICO.rep}<span>${s.comments ? s.comments + (s.comments == 1 ? ' commento' : ' commenti') : 'Commenta'}</span>`;
+    el.querySelector('.sv-bot').innerHTML = `<button class="btn ghost sm" id="sv-com">${etichetta()}</button>` +
+      (G.mio ? `<button class="btn ghost sm" id="sv-viste">${ICO_EYE}<span>Visto da ${s.views ? s.views.length : 0}</span></button><button class="btn ghost rosso sm" id="sv-del" aria-label="Elimina la storia">${ICO.del}</button>` : '');
+    el.querySelector('#sv-com').onclick = () => {
+      pausa();
+      commentiSheet({
+        max: 500,
+        elenco: () => rpc('story_comments', { p_story: s.id }),
+        aggiungi: body => rpc('story_comment_add', { p_story: s.id, p_author: S.me, p_body: body }),
+        elimina: id => rpc('story_comment_del', { p_id: id, p_author: S.me }),
+        conta: n => { s.comments = n; const b = el.querySelector('#sv-com'); if (b) b.innerHTML = etichetta(); },
+        chiuso: riprendi
+      });
+    };
     im.onload = play; im.onerror = () => setTimeout(avanti, 800); im.src = pub(s.path);
     if (im.complete && im.naturalWidth) play();
     segnaVista(s.id);
@@ -1577,7 +1850,7 @@ function guardaStorie(gs, gi) {
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: [], stories: [], views: [], pcomments: [], pvotes: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
@@ -1594,6 +1867,7 @@ function creaDemo() {
     .forEach(([name, iscr, visto]) => D.members.push({ name, created_at: t(iscr), last_seen: visto == null ? null : t(visto) }));
   [['Giulia', 180, '☕', 'Colazione'], ['Giulia', 50, '🐶', 'Buongiorno da Pippo', 'Il nuovo arrivato 🐶'], ['Marco', 360, '🏋️', 'Palestra']]
     .forEach(([author, min, emo, scritta, caption], i) => D.stories.push({ id: uid(), author, path: fotoFinta(i + 10, emo, scritta, 720, 1280, 'storia'), caption: caption || '', created_at: t(min) }));
+  D.scomments.push({ id: uid(), story_id: D.stories[1].id, author: 'Sara', body: 'Che cucciolo!! 😍', created_at: t(30) });
   // --- contenuti di esempio ---
   const al = uid(); D.albums.push({ id: al, name: 'Sabato al mare (prova)', created_by: 'Giulia', created_at: t(60 * 30) });
   const fs = [['🏖️', 'Spiaggia'], ['🍕', 'Pizzata'], ['🌅', 'Tramonto'], ['🍹', 'Aperitivo'], ['🎉', 'Festa']].map(([e, s], i) => fotoFinta(i, e, s));
@@ -1609,12 +1883,16 @@ function creaDemo() {
   [[p1, 'Giulia'], [p1, 'Sara'], [p2, 'Marco'], [p2, 'Anna'], [p2, 'Luca'], [p4, 'Anna'], [p5, 'Marco'], [p4, 'Sara', -1]].forEach(([post, name, val]) => D.likes.push({ post, name, val: val || 1 }));
   [[p1, 'Luca', 'Ci sono! Porto le patatine', 20], [p4, 'Anna', 'Da me va bene, ma il cotechino lo porti tu 😄', 60 * 40], [p4, 'Marco', '#Capodanno da Anna, deciso!', 60 * 39]]
     .forEach(([post_id, author, body, m]) => D.replies.push({ id: uid(), post_id, author, body, created_at: t(m) }));
+  const sond = (author, question, multi, min, opts) => D.polls.push({ id: uid(), author, question, multi, closed: false, created_at: t(min), options: opts.map(([label, voters]) => ({ id: uid(), label, voters })) });
+  sond('Giulia', 'Che giorni siete liberi per la cena di Natale?', true, 60 * 26, [['Venerdì 19', ['Giulia', 'Sara']], ['Sabato 20', ['Giulia', 'Marco', 'Luca', 'Anna']], ['Domenica 21', ['Marco']]]);
+  sond('Anna', 'Dove facciamo Capodanno?', false, 120, [['Casa di Anna', ['Anna', 'Luca', 'Marco']], ['Montagna', ['Giulia']], ["Mare d'inverno", ['Sara']]]);
   D.ss.push({ id: uid(), name: 'Natale 2026 (prova)', budget: '30 €', gift_date: 'cena del 20 dicembre', organizer: 'Marco', admin_pin: '0000', status: 'open', drawn_at: null, created_at: t(60 * 5), pairs: null, excl: [['Marco', 'Sara']],
     people: [['Marco', '1111', 'Un libro giallo 📚'], ['Giulia', '2222', 'Una tazza gigante per il tè'], ['Sara', '3333', ''], ['Luca', '4444', 'Calzini assurdi 🧦']].map(([name, pin, wish]) => ({ id: uid(), name, pin, wish })) });
   // --- le stesse funzioni del database vero ---
   const pwOk = x => String(x || '').trim().toLowerCase() === D.pw;
   const need = a => { if (!pwOk(a.p_pw)) throw err('PASSWORD_ERRATA'); };
   // voto generico (stesse regole di post_vote / photo_vote nel database)
+  const ADMIN = '0000';   // PIN amministratore in prova
   const vota = (a, L, k, id, nome, val, esiste, errore) => {
     need(a); const n = clean(nome, 30); if (!n) throw err('NOME_VUOTO'); if (val !== 1 && val !== -1) throw err('VOTO_NON_VALIDO'); if (!esiste()) throw err(errore);
     const i = L.findIndex(x => x[k] === id && same(x.name, n)), prima = i >= 0 ? L[i].val : 0; if (i >= 0) L.splice(i, 1);
@@ -1627,24 +1905,33 @@ function creaDemo() {
   const togli = (e, p) => { e.people = e.people.filter(x => x !== p); e.excl = e.excl.filter(x => !x.includes(p.name)); };
   const F = {
     check_pw: a => pwOk(a.p_pw),
-    members_list: a => { need(a); return D.members.map(m => m.name).sort(alfa); },
-    member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!D.members.some(m => m.name === n)) D.members.push({ name: n, created_at: t(0), last_seen: null }); },
+    members_list: a => { need(a); return D.members.filter(m => !m.banned).map(m => m.name).sort(alfa); },
+    admin_check: a => { need(a); return { set: true, ok: a.p_admin === ADMIN }; },
+    member_kick: a => { need(a); if (a.p_admin !== ADMIN) throw err('PIN_ADMIN_ERRATO'); const m = D.members.find(x => same(x.name, clean(a.p_name, 30))); if (!m) throw err('NOME_NON_TROVATO'); m.banned = a.p_ban !== false; },
+    member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (D.members.some(m => same(m.name, n) && m.banned)) throw err('NOME_BLOCCATO'); if (!D.members.some(m => m.name === n)) D.members.push({ name: n, created_at: t(0), last_seen: null }); },
     presenza: a => {
       need(a); const n = clean(a.p_name, 30), ora = t(0);
       D.members.forEach(m => { if (m.name === 'Giulia' || m.name === 'Marco') m.last_seen = ora; });   // amici finti sempre online
-      if (n) { const m = D.members.find(x => same(x.name, n)); if (m) m.last_seen = ora; else D.members.push({ name: n, created_at: ora, last_seen: ora }); }
+      if (n) { const m = D.members.find(x => same(x.name, n)); if (m && m.banned) throw err('SEI_STATO_RIMOSSO'); if (m) m.last_seen = ora; else D.members.push({ name: n, created_at: ora, last_seen: ora }); }
       const lim = Date.now() - 150000;
-      return D.members.map(m => ({ name: m.name, created_at: m.created_at, last_seen: m.last_seen, online: !!m.last_seen && new Date(m.last_seen) > lim }))
+      return D.members.map(m => ({ name: m.name, created_at: m.created_at, last_seen: m.last_seen, online: !m.banned && !!m.last_seen && new Date(m.last_seen) > lim, banned: !!m.banned }))
         .sort((x, y) => (x.last_seen || '') < (y.last_seen || '') ? 1 : -1);
     },
     stories_list: a => {
       need(a); const lim = Date.now() - 864e5;
       return D.stories.filter(s => new Date(s.created_at) > lim).sort((x, y) => x.created_at < y.created_at ? -1 : 1)
-        .map(s => ({ id: s.id, author: s.author, path: s.path, caption: s.caption, created_at: s.created_at, views: same(s.author, a.p_name || '') ? D.views.filter(v => v.story === s.id).map(v => v.name) : null }));
+        .map(s => ({ id: s.id, author: s.author, path: s.path, caption: s.caption, created_at: s.created_at, views: same(s.author, a.p_name || '') ? D.views.filter(v => v.story === s.id).map(v => v.name) : null, comments: D.scomments.filter(c => c.story_id === s.id).length }));
     },
     story_add: a => { need(a); const p = clean(a.p_path, 300); if (!p) throw err('POST_VUOTO'); const id = uid(); D.stories.push({ id, author: clean(a.p_author, 30), path: p, caption: clean(a.p_caption, 150), created_at: t(0) }); return id; },
     story_seen: a => { need(a); const n = clean(a.p_name, 30), s = D.stories.find(x => x.id === a.p_id); if (n && s && !same(s.author, n) && !D.views.some(v => v.story === s.id && same(v.name, n))) D.views.push({ story: s.id, name: n }); },
-    story_del: a => { need(a); D.stories = D.stories.filter(s => !(s.id === a.p_id && s.author === a.p_author)); },
+    story_del: a => { need(a); D.stories = D.stories.filter(s => !(s.id === a.p_id && s.author === a.p_author)); D.scomments = D.scomments.filter(c => D.stories.some(s => s.id === c.story_id)); },
+    story_comments: a => { need(a); return D.scomments.filter(c => c.story_id === a.p_story).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(c => ({ id: c.id, author: c.author, body: c.body, created_at: c.created_at })); },
+    story_comment_add: a => {
+      need(a); const b = clean(a.p_body, 500); if (!b) throw err('POST_VUOTO');
+      const st = D.stories.find(x => x.id === a.p_story); if (!st || new Date(st.created_at) < Date.now() - 864e5) throw err('STORIA_SCADUTA');
+      const id = uid(); D.scomments.push({ id, story_id: a.p_story, author: clean(a.p_author, 30), body: b, created_at: t(0) }); return id;
+    },
+    story_comment_del: a => { need(a); D.scomments = D.scomments.filter(c => !(c.id === a.p_id && c.author === a.p_author)); },
     feed: a => { need(a); return D.posts.slice().sort(desc).slice(0, 150).map(p => Object.assign({}, p, { likes: D.likes.filter(l => l.post === p.id && l.val === 1).map(l => l.name), dislikes: D.likes.filter(l => l.post === p.id && l.val === -1).map(l => l.name), replies: D.replies.filter(r => r.post_id === p.id).length })); },
     post_add: a => { need(a); const b = clean(a.p_body, 4000), ph = (a.p_photos || []).slice(0, 20); if (!b && !ph.length) throw err('POST_VUOTO'); const id = uid(); D.posts.push({ id, author: clean(a.p_author, 30), body: b, photos: ph, created_at: t(0) }); return id; },
     post_del: a => { need(a); D.posts = D.posts.filter(p => !(p.id === a.p_id && p.author === a.p_author)); const ok = new Set(D.posts.map(p => p.id)); D.likes = D.likes.filter(l => ok.has(l.post)); D.replies = D.replies.filter(r => ok.has(r.post_id)); },
@@ -1667,6 +1954,24 @@ function creaDemo() {
     photo_add: a => { need(a); D.photos.push({ id: uid(), album_id: a.p_album, path: clean(a.p_path, 300), author: clean(a.p_author, 30), created_at: t(0) }); },
     photo_del: a => { need(a); D.photos = D.photos.filter(f => f.id !== a.p_id); D.pcomments = D.pcomments.filter(c => c.photo_id !== a.p_id); D.pvotes = D.pvotes.filter(v => v.photo !== a.p_id); },
     album_del: a => { need(a); if (D.photos.some(f => f.album_id === a.p_album)) throw err('ALBUM_NON_VUOTO'); D.albums = D.albums.filter(x => x.id !== a.p_album); },
+    polls_list: a => { need(a); return D.polls.slice().sort(desc).slice(0, 100); },
+    poll_create: a => {
+      need(a); const q = clean(a.p_question, 200); if (!q) throw err('DOMANDA_VUOTA');
+      const visti = new Set(), opts = [];
+      for (const x of (a.p_options || [])) { const o = clean(x, 100); if (o && !visti.has(o.toLowerCase())) { visti.add(o.toLowerCase()); opts.push(o); } }
+      if (opts.length < 2) throw err('SERVONO_2_RISPOSTE'); if (opts.length > 12) throw err('TROPPE_RISPOSTE');
+      const id = uid(); D.polls.push({ id, author: clean(a.p_author, 30), question: q, multi: !!a.p_multi, closed: false, created_at: t(0), options: opts.map(label => ({ id: uid(), label, voters: [] })) }); return id;
+    },
+    poll_vote: a => {
+      need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO');
+      const p = D.polls.find(x => x.id === a.p_poll); if (!p) throw err('SONDAGGIO_NON_TROVATO'); if (p.closed) throw err('SONDAGGIO_CHIUSO');
+      const o = p.options.find(x => x.id === a.p_option); if (!o) throw err('SONDAGGIO_NON_TROVATO');
+      if (o.voters.some(v => same(v, n))) o.voters = o.voters.filter(v => !same(v, n));
+      else { if (!p.multi) p.options.forEach(x => { x.voters = x.voters.filter(v => !same(v, n)); }); o.voters.push(n); }
+      return p;
+    },
+    poll_close: a => { need(a); const p = D.polls.find(x => x.id === a.p_poll && x.author === a.p_author); if (p) p.closed = a.p_closed !== false; },
+    poll_del: a => { need(a); D.polls = D.polls.filter(x => !(x.id === a.p_poll && x.author === a.p_author)); },
     ss_list: a => { need(a); return D.ss.slice().sort(desc).map(e => ({ id: e.id, name: e.name, budget: e.budget, gift_date: e.gift_date, organizer: e.organizer, status: e.status, drawn_at: e.drawn_at, created_at: e.created_at, people: e.people.map(p => p.name).sort(alfa), excl: e.excl.map(x => x.slice()) })); },
     ss_create: a => {
       need(a); if (!clean(a.p_name, 80)) throw err('NOME_VUOTO'); if (!pinOk(a.p_admin_pin)) throw err('PIN_NON_VALIDO');

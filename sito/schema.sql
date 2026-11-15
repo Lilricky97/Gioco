@@ -15,6 +15,7 @@ create table if not exists members (
 );
 
 alter table members add column if not exists last_seen timestamptz;   -- per sapere chi è online
+alter table members add column if not exists banned boolean not null default false;   -- rimosso dal gruppo (kick)
 
 create table if not exists stories (            -- foto che spariscono dopo 24 ore
   id uuid primary key default gen_random_uuid(),
@@ -29,6 +30,14 @@ create table if not exists story_views (        -- chi ha visto ogni storia
   name text not null,
   seen_at timestamptz not null default now(),
   primary key (story_id, name)
+);
+
+create table if not exists story_comments (     -- commenti alle storie (spariscono con la storia)
+  id uuid primary key default gen_random_uuid(),
+  story_id uuid not null references stories(id) on delete cascade,
+  author text not null,
+  body text not null,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists posts (
@@ -87,6 +96,30 @@ create table if not exists photo_votes (        -- mi piace / non mi piace sulle
   primary key (photo_id, name)
 );
 
+create table if not exists polls (              -- sondaggi stile WhatsApp
+  id uuid primary key default gen_random_uuid(),
+  author text not null,
+  question text not null,
+  multi boolean not null default false,          -- true = si possono scegliere più risposte
+  closed boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists poll_options (
+  id uuid primary key default gen_random_uuid(),
+  poll_id uuid not null references polls(id) on delete cascade,
+  pos int not null,
+  label text not null
+);
+
+create table if not exists poll_votes (
+  poll_id uuid not null references polls(id) on delete cascade,
+  option_id uuid not null references poll_options(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  primary key (option_id, name)
+);
+
 create table if not exists ss_events (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -126,6 +159,7 @@ alter table app_config enable row level security;
 alter table members   enable row level security;
 alter table stories     enable row level security;
 alter table story_views enable row level security;
+alter table story_comments enable row level security;
 alter table posts     enable row level security;
 alter table post_likes   enable row level security;
 alter table post_replies enable row level security;
@@ -133,6 +167,9 @@ alter table albums    enable row level security;
 alter table photos    enable row level security;
 alter table photo_comments enable row level security;
 alter table photo_votes enable row level security;
+alter table polls        enable row level security;
+alter table poll_options enable row level security;
+alter table poll_votes   enable row level security;
 alter table ss_events enable row level security;
 alter table ss_people enable row level security;
 alter table ss_excl   enable row level security;
@@ -151,6 +188,12 @@ begin
   if not _ok(p_pw) then raise exception 'PASSWORD_ERRATA'; end if;
 end $$;
 
+-- PIN amministratore (app_config k='admin'): lo imposta Ricky dal SQL Editor, come la password
+create or replace function _admin_ok(p_admin text) returns boolean
+language sql stable security definer set search_path = public, extensions as $$
+  select exists (select 1 from app_config where k = 'admin' and v = extensions.crypt(coalesce(p_admin,''), v));
+$$;
+
 create or replace function _clean(t text, maxlen int) returns text
 language sql immutable as $$ select left(btrim(coalesce(t,'')), maxlen) $$;
 
@@ -162,7 +205,7 @@ create or replace function members_list(p_pw text) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
 begin
   perform _need(p_pw);
-  return coalesce((select json_agg(name order by lower(name)) from members), '[]'::json);
+  return coalesce((select json_agg(name order by lower(name)) from members where not banned), '[]'::json);
 end $$;
 
 create or replace function member_add(p_pw text, p_name text) returns void
@@ -171,6 +214,7 @@ declare n text := _clean(p_name, 30);
 begin
   perform _need(p_pw);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'NOME_BLOCCATO'; end if;
   insert into members(name) values (n) on conflict do nothing;
 end $$;
 
@@ -181,11 +225,31 @@ declare n text := _clean(p_name, 30);
 begin
   perform _need(p_pw);
   if n <> '' then
+    if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'SEI_STATO_RIMOSSO'; end if;
     update members set last_seen = now() where lower(name) = lower(n);
     if not found then insert into members(name, last_seen) values (n, now()) on conflict (name) do update set last_seen = now(); end if;
   end if;
   return coalesce((select json_agg(json_build_object('name', name, 'created_at', created_at, 'last_seen', last_seen,
-      'online', coalesce(last_seen > now() - interval '150 seconds', false)) order by last_seen desc nulls last, lower(name)) from members), '[]'::json);
+      'online', coalesce(last_seen > now() - interval '150 seconds', false) and not banned, 'banned', banned) order by last_seen desc nulls last, lower(name)) from members), '[]'::json);
+end $$;
+
+-- amministratore: controlla il PIN (set = esiste un PIN, ok = è giusto)
+create or replace function admin_check(p_pw text, p_admin text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return json_build_object('set', exists (select 1 from app_config where k = 'admin'), 'ok', _admin_ok(p_admin));
+end $$;
+
+-- rimuove (p_ban = true) o riammette (false) una persona; i suoi post restano
+create or replace function member_kick(p_pw text, p_admin text, p_name text, p_ban boolean) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  if not exists (select 1 from app_config where k = 'admin') then raise exception 'ADMIN_NON_IMPOSTATO'; end if;
+  if not _admin_ok(p_admin) then raise exception 'PIN_ADMIN_ERRATO'; end if;
+  update members set banned = coalesce(p_ban, true) where lower(name) = lower(_clean(p_name, 30));
+  if not found then raise exception 'NOME_NON_TROVATO'; end if;
 end $$;
 
 -- ---------- storie (24 ore) ----------
@@ -196,7 +260,8 @@ begin
   return coalesce((select json_agg(x order by x.created_at) from (
     select s.id, s.author, s.path, s.caption, s.created_at,
       case when lower(s.author) = lower(coalesce(p_name, '')) then   -- chi l'ha vista: solo per l'autore
-        coalesce((select json_agg(v.name order by v.seen_at) from story_views v where v.story_id = s.id), '[]'::json) end as views
+        coalesce((select json_agg(v.name order by v.seen_at) from story_views v where v.story_id = s.id), '[]'::json) end as views,
+      (select count(*) from story_comments c where c.story_id = s.id) as comments
     from stories s where s.created_at > now() - interval '24 hours') x), '[]'::json);
 end $$;
 
@@ -220,6 +285,32 @@ begin
   if exists (select 1 from stories where id = p_id and lower(author) <> lower(n)) then
     insert into story_views(story_id, name) values (p_id, n) on conflict do nothing;
   end if;
+end $$;
+
+create or replace function story_comments(p_pw text, p_story uuid) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(row_to_json(c) order by c.created_at)
+    from (select id, author, body, created_at from story_comments where story_id = p_story) c), '[]'::json);
+end $$;
+
+create or replace function story_comment_add(p_pw text, p_story uuid, p_author text, p_body text) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; b text := _clean(p_body, 500);
+begin
+  perform _need(p_pw);
+  if b = '' then raise exception 'POST_VUOTO'; end if;
+  if not exists (select 1 from stories where id = p_story and created_at > now() - interval '24 hours') then raise exception 'STORIA_SCADUTA'; end if;
+  insert into story_comments(story_id, author, body) values (p_story, _clean(p_author, 30), b) returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function story_comment_del(p_pw text, p_id uuid, p_author text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from story_comments where id = p_id and author = p_author;
 end $$;
 
 create or replace function story_del(p_pw text, p_id uuid, p_author text) returns void
@@ -410,6 +501,77 @@ begin
   perform _need(p_pw);
   if exists (select 1 from photos where album_id = p_album) then raise exception 'ALBUM_NON_VUOTO'; end if;
   delete from albums where id = p_album;
+end $$;
+
+-- ---------- SONDAGGI ----------
+create or replace function _poll_json(p_id uuid) returns json
+language sql stable security definer set search_path = public, extensions as $$
+  select json_build_object('id', p.id, 'author', p.author, 'question', p.question, 'multi', p.multi, 'closed', p.closed, 'created_at', p.created_at,
+    'options', coalesce((select json_agg(json_build_object('id', o.id, 'label', o.label,
+        'voters', coalesce((select json_agg(v.name order by v.created_at) from poll_votes v where v.option_id = o.id), '[]'::json)) order by o.pos)
+      from poll_options o where o.poll_id = p.id), '[]'::json))
+  from polls p where p.id = p_id;
+$$;
+
+create or replace function polls_list(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(_poll_json(x.id) order by x.created_at desc)
+    from (select id, created_at from polls order by created_at desc limit 100) x), '[]'::json);
+end $$;
+
+create or replace function poll_create(p_pw text, p_author text, p_question text, p_options text[], p_multi boolean) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; q text := _clean(p_question, 200); opts text[]; o text; i int := 0;
+begin
+  perform _need(p_pw);
+  if q = '' then raise exception 'DOMANDA_VUOTA'; end if;
+  select array_agg(t order by k) into opts from (
+    select distinct on (lower(_clean(t, 100))) _clean(t, 100) as t, k
+    from unnest(coalesce(p_options, '{}')) with ordinality as u(t, k)
+    where _clean(t, 100) <> '' order by lower(_clean(t, 100)), k) z;
+  if coalesce(array_length(opts, 1), 0) < 2 then raise exception 'SERVONO_2_RISPOSTE'; end if;
+  if array_length(opts, 1) > 12 then raise exception 'TROPPE_RISPOSTE'; end if;
+  insert into polls(author, question, multi) values (_clean(p_author, 30), q, coalesce(p_multi, false)) returning id into new_id;
+  foreach o in array opts loop
+    i := i + 1; insert into poll_options(poll_id, pos, label) values (new_id, i, o);
+  end loop;
+  return new_id;
+end $$;
+
+-- tocco su una risposta: la mette o la toglie (con risposta unica, toglie le altre). Restituisce il sondaggio aggiornato
+create or replace function poll_vote(p_pw text, p_poll uuid, p_option uuid, p_name text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); pl polls%rowtype;
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  select * into pl from polls where id = p_poll;
+  if not found then raise exception 'SONDAGGIO_NON_TROVATO'; end if;
+  if pl.closed then raise exception 'SONDAGGIO_CHIUSO'; end if;
+  if not exists (select 1 from poll_options where id = p_option and poll_id = p_poll) then raise exception 'SONDAGGIO_NON_TROVATO'; end if;
+  if exists (select 1 from poll_votes where option_id = p_option and lower(name) = lower(n)) then
+    delete from poll_votes where option_id = p_option and lower(name) = lower(n);
+  else
+    if not pl.multi then delete from poll_votes where poll_id = p_poll and lower(name) = lower(n); end if;
+    insert into poll_votes(poll_id, option_id, name) values (p_poll, p_option, n) on conflict do nothing;
+  end if;
+  return _poll_json(p_poll);
+end $$;
+
+create or replace function poll_close(p_pw text, p_poll uuid, p_author text, p_closed boolean) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  update polls set closed = coalesce(p_closed, true) where id = p_poll and author = p_author;
+end $$;
+
+create or replace function poll_del(p_pw text, p_poll uuid, p_author text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from polls where id = p_poll and author = p_author;
 end $$;
 
 -- ---------- SECRET SANTA ----------
@@ -611,9 +773,10 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, presenza, stories_list, story_add, story_seen, story_del, feed, post_add, post_del, post_like, post_vote, post_thread,
+grant execute on function check_pw, members_list, member_add, presenza, admin_check, member_kick, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread,
   reply_add, reply_del, albums_list, album_create,
-  album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
+  album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
+  polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
   ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin to anon, authenticated;
-revoke execute on function _ok, _need, _ss_admin from anon, authenticated;
-revoke execute on function _ok, _need, _ss_admin from public;
+revoke execute on function _ok, _need, _ss_admin, _poll_json, _admin_ok from anon, authenticated;
+revoke execute on function _ok, _need, _ss_admin, _poll_json, _admin_ok from public;

@@ -6,7 +6,7 @@
 //  Uso (dalla cartella sito/):
 //    npm i @electric-sql/pglite
 //    node prova-locale.mjs            → apri http://localhost:8787
-//  Password del gruppo per la prova: "prova" (cambiala con PW=...)
+//  Password del gruppo per la prova: "prova" (cambiala con PW=...), PIN amministratore 9999 (ADMIN=...)
 //  LAG=300 node prova-locale.mjs      → simula una rete lenta (ms)
 // ============================================================
 import http from 'node:http'
@@ -25,6 +25,7 @@ const db = await PGlite.create({ extensions: { pgcrypto } })
 await db.exec('create role anon; create role authenticated;')
 await db.exec(fs.readFileSync(new URL('schema.sql', DIR), 'utf8'))
 await db.query(`insert into app_config(k,v) values ('pw', extensions.crypt($1, extensions.gen_salt('bf')))`, [PW])
+await db.query(`insert into app_config(k,v) values ('admin', extensions.crypt($1, extensions.gen_salt('bf')))`, [process.env.ADMIN || '9999'])   // PIN amministratore per la prova
 
 // tipi degli argomenti di ogni funzione pubblica (come fa PostgREST)
 const FN = {}
