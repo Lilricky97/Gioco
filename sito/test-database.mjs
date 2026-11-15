@@ -3,7 +3,7 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto'
 import fs from 'fs'
 const db = await PGlite.create({ extensions: { pgcrypto } })
 await db.exec(`create role anon; create role authenticated;`)
-await db.exec(fs.readFileSync('/home/claude/hub/schema.sql','utf8'))
+await db.exec(fs.readFileSync(new URL('./schema.sql', import.meta.url),'utf8'))
 await db.exec(`insert into app_config(k,v) values ('pw', extensions.crypt('cocorico', extensions.gen_salt('bf')))`)
 const q = async (sql, p=[]) => (await db.query(sql, p)).rows
 const one = async (sql,p)=> Object.values((await q(sql,p))[0])[0]
@@ -54,4 +54,22 @@ for(const n of ['A','B','C']) await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev2,n
 await q('select ss_set_excl($1,$2,$3,$4)',[PW,ev2,'1234',JSON.stringify([['A','B']])])
 ok((await err('select ss_draw($1,$2,$3)',[PW,ev2,'1234']))?.includes('ESCLUSIONI_IMPOSSIBILI'),'esclusioni impossibili segnalate')
 ok((await err('select ss_draw($1,$2,$3)',[PW,ev2,'1234']))!==null,'—')
+// organizzatore: controllo PIN e nuovo PIN a chi lo dimentica
+ok(await one('select ss_admin_check($1,$2,$3)',[PW,ev,'1234'])===true,'PIN organizzatore giusto riconosciuto')
+ok(await one('select ss_admin_check($1,$2,$3)',[PW,ev,'9999'])===false,'PIN organizzatore sbagliato rifiutato')
+ok((await err('select ss_reset_pin($1,$2,$3,$4,$5)',[PW,ev,'9999','Marco','4321']))?.includes('PIN_ORGANIZZATORE_ERRATO'),'nuovo PIN senza PIN organizzatore bloccato')
+await q('select ss_reset_pin($1,$2,$3,$4,$5)',[PW,ev,'1234','marco','4321'])
+ok((await err('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Marco','1001']))?.includes('PIN_ERRATO'),'dopo il reset il vecchio PIN non va più')
+const rv2 = await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,'MARCO','4321']); ok(rv2.to===rv.to && rv2.me==='Marco','col nuovo PIN (e nome in maiuscolo) vede lo stesso abbinamento')
+// nomi con maiuscole diverse = stessa persona
+const ev3 = await one('select ss_create($1,$2,$3,$4,$5,$6)',[PW,'Maiuscole','','','Ricky','1234'])
+await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev3,'Giulia','1111','a'])
+ok((await err('select ss_join($1,$2,$3,$4,$5)',[PW,ev3,'giulia','2222','b']))?.includes('NOME_GIA_PRESO'),'"giulia" non può rubare il posto a "Giulia"')
+await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev3,'Luca','3333',''])
+await q('select ss_set_excl($1,$2,$3,$4)',[PW,ev3,'1234',JSON.stringify([['Giulia','Luca']])])
+await q('select ss_kick($1,$2,$3,$4)',[PW,ev3,'1234','LUCA'])
+const l3 = (await one('select ss_list($1)',[PW])).find(e=>e.id===ev3)
+ok(l3.people.length===1 && l3.excl.length===0,'tolto Luca: sparisce anche dalle esclusioni')
+await q('select ss_leave($1,$2,$3,$4)',[PW,ev3,'giulia','1111'])
+ok((await one('select ss_list($1)',[PW])).find(e=>e.id===ev3).people.length===0,'Giulia esce col suo PIN')
 console.log(fails? `\n${fails} TEST FALLITI` : '\nTUTTI I TEST OK')

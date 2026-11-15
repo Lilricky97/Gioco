@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0f24">
+<title>Il Covo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;500;600;700;800&family=Yellowtail&display=swap" rel="stylesheet">
+<style>
+:root{
+  --notte:#0a0f24;--notte2:#10183a;--card:#131b40;--campo:#0b1230;--line:#273368;
+  --rosa:#ff3ea5;--rosa-g:rgba(255,62,165,.55);--menta:#46f5c0;--menta-g:rgba(70,245,192,.45);
+  --giallo:#ffd86b;--rosso:#ff5d6c;--testo:#eef1ff;--muto:#9aa3cf;--muto2:#6c76a8;
+  --r:18px;--bar:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;color:var(--testo);font:16px/1.45 Outfit,system-ui,-apple-system,sans-serif}
+html{background:var(--notte)}
+body{min-height:100vh;min-height:100dvh;background:
+  radial-gradient(700px 420px at -10% -5%,rgba(255,62,165,.17),transparent 60%),
+  radial-gradient(700px 520px at 110% 105%,rgba(70,245,192,.11),transparent 60%),var(--notte);background-attachment:fixed}
+body.noscroll{overflow:hidden}
+button{font:inherit;color:inherit}
+h2,h3,h4{margin:0 0 10px;line-height:1.2}
+h2{font-size:22px}h3{font-size:18px}h4{font-size:15px;color:var(--giallo);letter-spacing:.02em}
+p{margin:0 0 10px}
+a{color:var(--menta)}
+.muto{color:var(--muto)}.small{font-size:14px}
+.hint{color:var(--muto);font-size:14px;margin:6px 0 0}
+
+/* ---------- insegna al neon ---------- */
+.neon{font-family:Yellowtail,cursive;font-weight:400;font-size:46px;line-height:1.05;margin:10px 0 16px;color:#fff;
+  text-shadow:0 0 3px #fff,0 0 10px var(--rosa),0 0 22px var(--rosa),0 0 44px var(--rosa)}
+.neon.m{text-shadow:0 0 3px #fff,0 0 10px var(--menta),0 0 22px var(--menta),0 0 44px var(--menta)}
+.neon.sm{font-size:38px;word-break:break-word}
+@keyframes flick{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.35}}
+.flick{animation:flick 7s infinite}
+@media (prefers-reduced-motion:reduce){.flick,.rv-name{animation:none!important}}
+
+/* ---------- struttura ---------- */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:calc(8px + env(safe-area-inset-top)) 16px 8px;background:rgba(10,15,36,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(39,51,104,.6)}
+.logo{font-family:Yellowtail,cursive;font-size:32px;line-height:1;color:#fff;background:none;border:0;padding:4px 0;
+  text-shadow:0 0 3px #fff,0 0 9px var(--rosa),0 0 20px var(--rosa)}
+.me{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:15px;max-width:55%}
+.me b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px + env(safe-area-inset-bottom))}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
+  background:rgba(10,15,36,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+.tabs button{position:relative;background:none;border:0;color:var(--muto2);font-weight:600;font-size:11.5px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 6px;cursor:pointer}
+.tabs .ico{font-size:23px;line-height:1;filter:grayscale(.7) opacity(.7);transition:filter .2s,transform .2s}
+.tabs button.on{color:var(--menta)}
+.tabs button.on .ico{filter:drop-shadow(0 0 6px var(--menta-g));transform:translateY(-1px)}
+.tabs button.on::before{content:"";position:absolute;top:-5px;left:28%;right:28%;height:3px;border-radius:3px;background:var(--menta);box-shadow:0 0 10px var(--menta)}
+
+/* ---------- elementi ---------- */
+.card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)),var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 14px}
+.btn{appearance:none;-webkit-appearance:none;border:0;border-radius:999px;background:var(--rosa);color:#22001a;font-weight:700;font-size:16px;line-height:1.1;
+  padding:13px 20px;min-height:48px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center;
+  box-shadow:0 6px 22px -8px var(--rosa-g);transition:transform .08s,opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.ghost{background:transparent;color:var(--menta);border:1.5px solid rgba(70,245,192,.5);box-shadow:none}
+.btn.danger{background:var(--rosso);color:#2a0006}
+.btn.ghost.rosso{color:var(--rosso);border-color:rgba(255,93,108,.5);background:transparent}
+.btn.sm{font-size:14.5px;padding:9px 15px;min-height:40px}
+.btn.xs{font-size:13.5px;padding:6px 12px;min-height:34px}
+.btn.big{font-size:19px;padding:17px 22px;min-height:60px}
+.btn.wide{width:100%}
+.link{background:none;border:0;color:var(--muto);text-decoration:underline;font-size:14.5px;padding:10px 2px;cursor:pointer}
+.icon{background:none;border:0;font-size:18px;padding:6px 8px;cursor:pointer;border-radius:10px;color:var(--muto)}
+.row{display:flex;gap:10px;align-items:center}.row.end{justify-content:flex-end}.row.wrap{flex-wrap:wrap}.row.top{align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:10px}
+label{display:block;font-weight:600;font-size:14px;color:var(--muto);margin:14px 0 0}
+label>input,label>textarea,label>select{margin-top:6px}
+input,textarea,select{width:100%;background:var(--campo);border:1.5px solid var(--line);color:var(--testo);border-radius:14px;padding:12px 14px;font:16px/1.4 Outfit,system-ui,sans-serif;outline:none}
+textarea{resize:none}
+input::placeholder,textarea::placeholder{color:var(--muto2)}
+input:focus,textarea:focus,select:focus{border-color:var(--menta);box-shadow:0 0 0 3px rgba(70,245,192,.16)}
+select{appearance:none;-webkit-appearance:none;padding-right:36px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2346f5c0' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.pin{-webkit-text-security:disc;letter-spacing:.3em;font-size:20px}
+.check{display:flex;align-items:center;gap:10px;color:var(--testo);font-weight:500}
+.check input{width:22px;height:22px;margin:0;accent-color:var(--menta)}
+.err{color:var(--rosso);font-weight:600;font-size:14.5px;margin:10px 0 0}
+.av{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;color:var(--c);
+  border:2px solid var(--c);box-shadow:0 0 10px -2px var(--c),inset 0 0 8px -3px var(--c);background:rgba(0,0,0,.25)}
+.av.s{width:30px;height:30px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:rgba(255,255,255,.03);border-radius:999px;padding:7px 13px;font-weight:600;font-size:15px}
+.chip.on{border-color:var(--menta);color:var(--menta);box-shadow:0 0 12px -4px var(--menta)}
+button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
+.pill{display:inline-block;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700}
+.pill.rosa{background:rgba(255,62,165,.15);color:var(--rosa);border:1px solid rgba(255,62,165,.4)}
+.pill.menta{background:rgba(70,245,192,.12);color:var(--menta);border:1px solid rgba(70,245,192,.4)}
+.loading{color:var(--muto);text-align:center;padding:34px 0}
+.loading::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+.empty{text-align:center;color:var(--muto);padding:30px 12px;line-height:1.6}
+.empty .btn{margin-top:12px}
+.back{background:none;border:0;color:var(--menta);font-weight:600;font-size:16px;padding:10px 0 2px;cursor:pointer}
+.prog{margin:12px 0 0;font-weight:600;font-size:14.5px;color:var(--menta)}
+.pbar{height:6px;border-radius:6px;background:var(--campo);margin-top:6px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--menta);box-shadow:0 0 10px var(--menta);transition:width .3s}
+.intro{color:var(--muto);margin:-6px 0 16px}
+
+/* ---------- ingresso ---------- */
+.gate{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;max-width:440px;margin:0 auto;padding:30px 18px calc(30px + env(safe-area-inset-bottom))}
+.sign{font-family:Yellowtail,cursive;font-size:76px;line-height:1;text-align:center;color:#fff;margin:0 0 6px;
+  text-shadow:0 0 4px #fff,0 0 12px var(--rosa),0 0 26px var(--rosa),0 0 52px var(--rosa),0 0 80px var(--rosa)}
+.tag{text-align:center;font-weight:700;letter-spacing:.32em;font-size:12px;color:var(--menta);text-shadow:0 0 10px var(--menta-g);margin:0 0 28px}
+.or{text-align:center;color:var(--muto2);font-size:14px;margin:16px 0 0}
+.gate .card{padding:20px}
+.gate .btn.wide{margin-top:16px}
+
+/* ---------- novità ---------- */
+.composer .row{align-items:flex-start}
+.composer textarea{min-height:48px;max-height:300px;border-radius:14px}
+.composer .row.end{margin-top:12px}
+.prev{display:flex;gap:8px;flex-wrap:wrap}
+.prev:not(:empty){margin-top:12px}
+.prev div{position:relative;width:74px;height:74px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.prev img{width:100%;height:100%;object-fit:cover}
+.prev button{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(10,15,36,.85);color:#fff;font-size:13px;line-height:24px;padding:0;cursor:pointer}
+.post header{display:flex;align-items:center;gap:10px}
+.who{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.who span{color:var(--muto);font-size:13.5px}
+.post .body{margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:16.5px}
+.pics{display:grid;gap:3px;margin:12px -16px -16px;border-radius:0 0 var(--r) var(--r);overflow:hidden}
+.pic{position:relative;display:block;border:0;padding:0;background:var(--campo);aspect-ratio:1;cursor:zoom-in;overflow:hidden}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.pics.n1 .pic{aspect-ratio:auto}.pics.n1 img{height:auto;max-height:560px;object-fit:cover}
+.pics.n2,.pics.n4{grid-template-columns:1fr 1fr}
+.pics.n3{grid-template-columns:2fr 1fr}.pics.n3 .pic:first-child{grid-row:span 2;aspect-ratio:auto}
+.more{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,15,36,.6);font-weight:800;font-size:28px;color:#fff}
+
+/* ---------- foto ---------- */
+.albums{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.album{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:0;overflow:hidden;cursor:pointer}
+.album .cover{aspect-ratio:1;background:var(--campo);display:grid;place-items:center;font-size:44px}
+.album .cover img{width:100%;height:100%;object-fit:cover;display:block}
+.album .t{display:block;padding:10px 12px 0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.album .n{display:block;padding:0 12px 12px;color:var(--muto);font-size:13.5px}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin:16px -16px 0}
+.pgrid .pic{border-radius:0}
+@media (min-width:560px){.pgrid{margin:16px 0 0;border-radius:12px;overflow:hidden}}
+
+/* ---------- visore foto ---------- */
+.lb{position:fixed;inset:0;z-index:60;background:rgba(4,6,16,.97);display:flex;flex-direction:column;color:#fff}
+.lb-top,.lb-bot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
+.lb-top{padding-top:calc(10px + env(safe-area-inset-top))}
+.lb-bot{padding-bottom:calc(14px + env(safe-area-inset-bottom));flex-wrap:wrap}
+.lb-n{font-weight:600;color:var(--muto)}
+.lb-x{font-size:24px;color:#fff;background:rgba(255,255,255,.08);border-radius:50%;width:44px;height:44px;border:0;cursor:pointer}
+.lb-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;touch-action:pan-y pinch-zoom}
+.lb-img{max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-select:none}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:64px;border:0;background:rgba(255,255,255,.07);color:#fff;font-size:34px;cursor:pointer}
+.lb-prev{left:0;border-radius:0 14px 14px 0}.lb-next{right:0;border-radius:14px 0 0 14px}
+.lb-cap{color:var(--muto);font-size:14.5px}
+.lb-act{display:flex;gap:8px}
+
+/* ---------- finestre ---------- */
+.ov{position:fixed;inset:0;z-index:70;background:rgba(3,5,15,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .18s}
+.ov.in{opacity:1}
+.sheet{width:100%;max-width:560px;background:var(--notte2);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;
+  padding:22px 18px calc(22px + env(safe-area-inset-bottom));max-height:90vh;max-height:90dvh;overflow:auto;transform:translateY(40px);transition:transform .2s}
+.ov.in .sheet{transform:none}
+.sheet .row.end{margin-top:18px}
+.toast{position:fixed;left:50%;bottom:calc(var(--bar) + 20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;width:max-content;max-width:calc(100% - 32px);
+  background:#0f1738;border:1.5px solid var(--menta);border-radius:14px;padding:12px 16px;font-weight:600;box-shadow:0 0 26px -6px var(--menta-g);animation:tin .2s ease-out}
+.toast.err{border-color:var(--rosso);box-shadow:0 0 26px -6px rgba(255,93,108,.6)}
+@keyframes tin{from{opacity:0;transform:translate(-50%,10px)}}
+
+/* ---------- gioco ---------- */
+.game{text-align:center;padding:26px 18px;background:radial-gradient(120% 80% at 50% 0%,rgba(255,46,99,.18),transparent 60%),#0d0d12;border-color:#2a2a33}
+.sf{font-family:"Archivo Black",Outfit,sans-serif;font-size:42px;line-height:.95;letter-spacing:-.01em;margin:6px 0 14px;color:#fafafa}
+.sf span{color:#ff2e63}
+.game p{color:#c9c9d3}
+.game .btn{background:#ff2e63;color:#fff;box-shadow:0 8px 26px -8px rgba(255,46,99,.7)}
+.steps{text-align:left;margin:18px 0 0;padding:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;position:relative;padding:0 0 12px 40px;color:#d6d6de}
+.steps li::before{content:counter(s);position:absolute;left:0;top:-2px;width:28px;height:28px;border-radius:50%;background:#ffd60a;color:#111;font-weight:800;display:grid;place-items:center;font-size:14px}
+
+/* ---------- secret santa ---------- */
+.ss-item{display:block;width:100%;text-align:left;cursor:pointer}
+.ss-item .t{font-weight:700;font-size:18px;margin:0 0 6px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muto);font-size:14.5px;margin:0 0 10px}
+.ss-title{font-weight:800;font-size:22px;margin:0 0 8px}
+.count{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 7px;border-radius:13px;background:var(--campo);color:var(--menta);font-size:14px;margin-left:4px;vertical-align:2px}
+.reveal{text-align:center;padding:6px 0 4px}
+.rv-k{color:var(--muto);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
+.rv-name{font-family:Yellowtail,cursive;font-size:clamp(44px,15vw,68px);line-height:1.1;margin:6px 0 16px;color:#fff;overflow-wrap:anywhere;
+  text-shadow:0 0 5px #fff,0 0 14px var(--menta),0 0 30px var(--menta),0 0 60px var(--menta);animation:acc 1.3s ease-out both}
+@keyframes acc{0%{opacity:0;filter:blur(8px)}25%{opacity:.9;filter:none}32%{opacity:.15}42%{opacity:1}52%{opacity:.35}62%,100%{opacity:1}}
+.letter{text-align:left;background:var(--campo);border:1.5px dashed rgba(255,216,107,.45);border-radius:14px;padding:14px;margin:0 0 14px}
+.letter .h{color:var(--giallo);font-weight:700;margin:0 0 6px}
+.letter p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.drum{animation:drum .35s ease-in-out infinite alternate}
+@keyframes drum{to{transform:scale(1.04)}}
+.checks{list-style:none;padding:0;margin:10px 0 0}
+.checks li{padding:4px 0}
+.adm summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.adm summary::-webkit-details-marker{display:none}
+.adm summary::after{content:"›";font-size:24px;color:var(--muto);transition:transform .2s}
+.adm[open] summary::after{transform:rotate(90deg)}
+.adm-sec{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(39,51,104,.5)}
+.prow:last-child{border-bottom:0}
+.prow b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow span{display:flex;gap:6px;flex:none}
+.excl{display:flex;justify-content:space-between;align-items:center;background:var(--campo);border-radius:12px;padding:6px 6px 6px 12px;margin:0 0 6px;font-weight:600}
+.exadd{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:10px}
+.exadd .btn{grid-column:1/-1}
+
+/* ---------- fantasanremo ---------- */
+.soon{text-align:center;padding:34px 18px}
+.soon .mic{font-size:64px;filter:drop-shadow(0 0 16px var(--rosa-g))}
+.soon .neon{font-size:54px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ===================== IMPOSTAZIONI =====================
+const SUPA_URL = '';   // "Project URL" di Supabase, es. https://abcdefgh.supabase.co
+const SUPA_KEY = '';   // chiave PUBBLICA (publishable / anon). Mai la secret/service key!
+const NOME = 'Il Covo';
+const GIOCO_URL = 'https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/68a1fb1/index.html';
+// =========================================================
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const same = (a, b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+const store = {
+  get(k, d = null) { try { const v = localStorage.getItem('covo_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('covo_' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('covo_' + k); } catch (e) {} }
+};
+const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, album: {}, ss: null,
+  draft: { text: '', files: [] }, ui: { rev: {}, adm: {} }, mine: {}, busy: 0, refresh: null };
+
+// ---------- messaggi d'errore in italiano ----------
+const MSG = {
+  RETE: 'Niente connessione. Controlla internet e riprova.',
+  PASSWORD_ERRATA: 'Password del gruppo sbagliata.',
+  NOME_VUOTO: 'Scrivi un nome.',
+  POST_VUOTO: 'Scrivi qualcosa o aggiungi una foto 🙂',
+  ALBUM_NON_VUOTO: 'La cartella ha ancora delle foto: prima eliminale.',
+  PIN_NON_VALIDO: 'Il PIN deve avere da 4 a 8 cifre (solo numeri).',
+  PIN_DIVERSI: 'I due PIN non coincidono.',
+  PIN_ERRATO: 'PIN sbagliato.',
+  PIN_ORGANIZZATORE_ERRATO: 'PIN organizzatore sbagliato.',
+  NOME_GIA_PRESO: 'C\'è già qualcuno iscritto con questo nome (con un altro PIN). Se sei tu, entra col tuo PIN; se no, usa un nome diverso, es. "Marco B."',
+  SORTEGGIO_GIA_FATTO: 'Il sorteggio è già stato fatto.',
+  SERVONO_ALMENO_3: 'Servono almeno 3 partecipanti per il sorteggio.',
+  ESCLUSIONI_IMPOSSIBILI: 'Con queste esclusioni il sorteggio è impossibile: togline qualcuna.',
+  EVENTO_NON_TROVATO: 'Questo Secret Santa non esiste più.',
+  NOME_NON_TROVATO: 'Nome non trovato.',
+  STESSA_PERSONA: 'Scegli due persone diverse.',
+  FOTO_ILLEGGIBILE: 'Questa foto non si riesce ad aprire. Prova a sceglierne un\'altra (o fai uno screenshot).',
+  NO_DB: 'Il database non è ancora pronto (manca schema.sql su Supabase).',
+  NO_FOTO: 'Lo spazio foto non è pronto (manca storage.sql su Supabase).',
+  LENTO: 'Il server ci ha messo troppo. Riprova.'
+};
+function msg(e) {
+  const c = (e && e.message) || String(e);
+  if (MSG[c]) return MSG[c];
+  if (/timeout|canceling statement/i.test(c)) return MSG.LENTO;
+  return 'Errore: ' + c;
+}
+const err = code => new Error(code);
+
+// ---------- collegamento a Supabase ----------
+function headers(extra) {
+  const h = Object.assign({ apikey: SUPA_KEY }, extra);
+  if (SUPA_KEY.startsWith('eyJ')) h.Authorization = 'Bearer ' + SUPA_KEY;
+  return h;
+}
+async function rpc(fn, args = {}) {
+  let r;
+  try {
+    r = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: headers({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(Object.assign({ p_pw: S.pw }, args)) });
+  } catch (e) { throw err('RETE'); }
+  const t = await r.text(); let d = null;
+  try { d = t ? JSON.parse(t) : null; } catch (e) {}
+  if (!r.ok) {
+    if (d && d.code === 'PGRST202') throw err('NO_DB');
+    const c = (d && d.message) || ('HTTP ' + r.status);
+    if (c === 'PASSWORD_ERRATA' && fn !== 'check_pw') { logout('La password del gruppo è cambiata: inseriscila di nuovo.'); }
+    throw err(c);
+  }
+  return d;
+}
+const okPath = p => typeof p === 'string' && /^[a-z0-9_\-\/]+\.jpg$/i.test(p) && !p.includes('..');
+const pub = p => `${SUPA_URL}/storage/v1/object/public/foto/${p}`;
+const thumb = p => pub(p.replace(/\.jpg$/i, '_t.jpg'));
+function img(p, full) {
+  if (!okPath(p)) return '';
+  return `<img loading="lazy" decoding="async" src="${esc(full ? pub(p) : thumb(p))}" data-full="${esc(pub(p))}" alt="">`;
+}
+// se manca la miniatura, mostra la foto grande
+document.addEventListener('error', e => {
+  const t = e.target;
+  if (t && t.tagName === 'IMG' && t.dataset.full && t.src !== t.dataset.full) t.src = t.dataset.full;
+}, true);
+
+function uid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = b[6] & 15 | 64; b[8] = b[8] & 63 | 128;
+  const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+async function decodeImg(file) {
+  if (window.createImageBitmap) {
+    try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) {}
+  }
+  return await new Promise((ok, ko) => {
+    const u = URL.createObjectURL(file), i = new Image();
+    i.onload = () => ok(i); i.onerror = () => ko(err('FOTO_ILLEGGIBILE')); i.src = u;
+  });
+}
+function toJpeg(im, max, q) {
+  const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, k = Math.min(1, max / Math.max(w, h));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+  return new Promise((ok, ko) => c.toBlob(b => b ? ok(b) : ko(err('FOTO_ILLEGGIBILE')), 'image/jpeg', q));
+}
+async function putFile(path, blob) {
+  for (let tent = 1; ; tent++) {
+    let r;
+    try {
+      r = await fetch(`${SUPA_URL}/storage/v1/object/foto/${path}`, { method: 'POST', headers: headers({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false' }), body: blob });
+    } catch (e) { if (tent < 3) { await new Promise(z => setTimeout(z, 1200 * tent)); continue; } throw err('RETE'); }
+    if (r.ok) return;
+    const t = await r.text();
+    if (/row-level security|bucket not found/i.test(t)) throw err('NO_FOTO');
+    if (r.status >= 500 && tent < 3) { await new Promise(z => setTimeout(z, 1200 * tent)); continue; }
+    let m = t; try { m = JSON.parse(t).message || t; } catch (e) {}
+    throw err('caricamento foto non riuscito (' + r.status + ') ' + m);
+  }
+}
+// ridimensiona (max 1600px) + miniatura (640px) e carica; restituisce il percorso
+async function uploadOne(folder, file) {
+  const im = await decodeImg(file);
+  try {
+    const big = await toJpeg(im, 1600, .82), small = await toJpeg(im, 640, .74);
+    const id = uid(), path = `${folder}/${id}.jpg`;
+    await putFile(`${folder}/${id}_t.jpg`, small);
+    await putFile(path, big);
+    return path;
+  } finally { if (im.close) im.close(); }
+}
+
+// ---------- piccole utilità di interfaccia ----------
+const COL = ['#ff3ea5', '#46f5c0', '#ffd86b', '#a78bff', '#4cc9ff', '#ff8a4c'];
+function avatar(n, cls = '') {
+  let h = 0; for (const c of String(n)) h = (h * 31 + c.codePointAt(0)) >>> 0;
+  return `<span class="av ${cls}" style="--c:${COL[h % COL.length]}">${esc(([...String(n).trim()][0] || '?').toUpperCase())}</span>`;
+}
+function quando(ts) {
+  const d = new Date(ts), now = new Date(), s = (now - d) / 1000;
+  if (s < 60) return 'adesso';
+  if (s < 3600) return Math.floor(s / 60) + ' min fa';
+  const hm = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const dd = Math.round((day(now) - day(d)) / 864e5);
+  if (dd === 0) return 'oggi alle ' + hm;
+  if (dd === 1) return 'ieri alle ' + hm;
+  return d.toLocaleDateString('it-IT', Object.assign({ day: 'numeric', month: 'short' }, d.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}));
+}
+function linkify(t) {
+  const re = /https?:\/\/[^\s<>"']+[^\s<>"'.,;:!?)\]]/g; let out = '', last = 0, m;
+  while ((m = re.exec(t))) { out += esc(t.slice(last, m.index)) + `<a href="${esc(m[0])}" target="_blank" rel="noopener">${esc(m[0])}</a>`; last = m.index + m[0].length; }
+  return out + esc(t.slice(last));
+}
+function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight + 3, 300) + 'px'; }
+let toastT;
+function toast(t, kind) {
+  document.querySelectorAll('.toast').forEach(x => x.remove()); clearTimeout(toastT);
+  const el = document.createElement('div'); el.className = 'toast' + (kind ? ' ' + kind : ''); el.textContent = t;
+  document.body.appendChild(el); toastT = setTimeout(() => el.remove(), kind === 'err' ? 5000 : 3000);
+}
+function errBox(e) { return `<div class="empty">😕 ${esc(msg(e))}<br><button class="btn ghost sm" data-retry>Riprova</button></div>`; }
+function progHTML(i, n) { return `Carico la foto ${Math.min(i + 1, n)} di ${n}…<div class="pbar"><i style="width:${Math.round(i / n * 100)}%"></i></div>`; }
+function cur() { const [sec, arg] = (location.hash.slice(1) || 'novita').split('/'); return { sec, arg: arg || '' }; }
+
+// finestra dal basso
+function sheet(html, mount, onClose) {
+  const ov = document.createElement('div'); ov.className = 'ov';
+  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  document.body.appendChild(ov); document.body.classList.add('noscroll');
+  requestAnimationFrame(() => ov.classList.add('in'));
+  let chiuso = false;
+  const close = () => {
+    if (chiuso) return; chiuso = true; ov.classList.remove('in');
+    setTimeout(() => { ov.remove(); if (!document.querySelector('.ov,.lb')) document.body.classList.remove('noscroll'); }, 180);
+    onClose && onClose();
+  };
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelectorAll('[data-close]').forEach(b => b.onclick = close);
+  mount && mount(ov.querySelector('.sheet'), close);
+  return close;
+}
+function ask(title, text, okLabel = 'Ok', danger = false) {
+  return new Promise(res => {
+    sheet(`<h3>${esc(title)}</h3>${text ? `<p class="muto">${text}</p>` : ''}<div class="row end"><button class="btn ghost" data-close>Annulla</button><button class="btn ${danger ? 'danger' : ''}" data-ok>${esc(okLabel)}</button></div>`,
+      (s, close) => { s.querySelector('[data-ok]').onclick = () => { res(true); close(); }; }, () => res(false));
+  });
+}
+function info(title, html) {
+  sheet(`<h3>${esc(title)}</h3><div>${html}</div><div class="row end"><button class="btn" data-close>Ok</button></div>`);
+}
+// finestra con modulo: fields = [{k,label,type,value,ph,max,opts}]
+function formSheet({ title, intro = '', fields, ok, submit }) {
+  const f = fields.map(x => {
+    if (x.type === 'check') return `<label class="check"><input type="checkbox" name="${x.k}" ${x.value ? 'checked' : ''}> ${esc(x.label)}</label>`;
+    let inp;
+    if (x.type === 'area') inp = `<textarea name="${x.k}" rows="4" maxlength="${x.max || 1000}" placeholder="${esc(x.ph || '')}">${esc(x.value || '')}</textarea>`;
+    else if (x.type === 'select') inp = `<select name="${x.k}">${x.opts.map(o => `<option ${same(o, x.value || '') ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+    else if (x.type === 'pin') inp = `<input name="${x.k}" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="••••" value="${esc(x.value || '')}">`;
+    else inp = `<input name="${x.k}" maxlength="${x.max || 60}" autocomplete="off" placeholder="${esc(x.ph || '')}" value="${esc(x.value || '')}">`;
+    return `<label>${esc(x.label)}${inp}</label>${x.hint ? `<p class="hint">${x.hint}</p>` : ''}`;
+  }).join('');
+  sheet(`<form novalidate><h3>${esc(title)}</h3>${intro}${f}<p class="err" hidden></p><div class="row end"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn" type="submit">${esc(ok)}</button></div></form>`,
+    (s, close) => {
+      const form = s.querySelector('form'), e = s.querySelector('.err'), b = form.querySelector('[type=submit]');
+      const first = form.querySelector('input:not([type=checkbox]),textarea,select'); if (first && first.tagName !== 'SELECT') setTimeout(() => first.focus(), 250);
+      form.onsubmit = async ev => {
+        ev.preventDefault(); const v = {};
+        fields.forEach(x => { const el = form.elements[x.k]; v[x.k] = x.type === 'check' ? el.checked : el.value.trim(); });
+        b.disabled = true; e.hidden = true;
+        try { await submit(v); close(); } catch (ex) { e.textContent = msg(ex); e.hidden = false; } finally { b.disabled = false; }
+      };
+    });
+}
+// visore foto a schermo intero
+function lightbox(paths, start, opt = {}) {
+  let i = start;
+  const el = document.createElement('div'); el.className = 'lb';
+  el.innerHTML = `<div class="lb-top"><span class="lb-n"></span><button class="lb-x" aria-label="Chiudi">✕</button></div>
+    <div class="lb-stage"><img class="lb-img" alt=""></div>
+    <button class="lb-nav lb-prev" aria-label="Precedente">‹</button><button class="lb-nav lb-next" aria-label="Successiva">›</button>
+    <div class="lb-bot"><span class="lb-cap"></span><span class="lb-act"><a class="btn ghost sm lb-o" target="_blank" rel="noopener">Originale ↗</a>${opt.onDelete ? '<button class="btn ghost rosso sm lb-del">Elimina</button>' : ''}</span></div>`;
+  document.body.appendChild(el); document.body.classList.add('noscroll');
+  const im = el.querySelector('.lb-img');
+  const show = () => {
+    im.src = pub(paths[i]); el.querySelector('.lb-o').href = pub(paths[i]);
+    el.querySelector('.lb-n').textContent = paths.length > 1 ? `${i + 1} / ${paths.length}` : '';
+    el.querySelector('.lb-cap').textContent = opt.caption ? opt.caption(i) : '';
+    el.querySelector('.lb-prev').hidden = i === 0; el.querySelector('.lb-next').hidden = i === paths.length - 1;
+    [paths[i - 1], paths[i + 1]].forEach(p => { if (p) new Image().src = pub(p); });
+  };
+  const go = d => { const n = i + d; if (n >= 0 && n < paths.length) { i = n; show(); } };
+  const close = () => { el.remove(); document.removeEventListener('keydown', key); if (!document.querySelector('.ov,.lb')) document.body.classList.remove('noscroll'); };
+  const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(-1); if (e.key === 'ArrowRight') go(1); };
+  document.addEventListener('keydown', key);
+  el.querySelector('.lb-x').onclick = close;
+  el.querySelector('.lb-prev').onclick = () => go(-1); el.querySelector('.lb-next').onclick = () => go(1);
+  let x0 = null, y0 = 0;
+  el.addEventListener('touchstart', e => { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } else x0 = null; }, { passive: true });
+  el.addEventListener('touchend', e => {
+    if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1); else if (dy > 110 && Math.abs(dy) > Math.abs(dx)) close();
+  });
+  if (opt.onDelete) el.querySelector('.lb-del').onclick = async () => { if (await opt.onDelete(i)) close(); };
+  show();
+}
+
+// ===================== INGRESSO =====================
+function renderNoConfig() {
+  $('#app').innerHTML = `<main class="gate"><div class="sign flick">${esc(NOME)}</div><div class="tag">IL POSTO DEL GRUPPO</div>
+    <section class="card"><h2>Quasi pronto 🔧</h2><p class="muto">Il sito non è ancora collegato al database: mancano l'indirizzo di Supabase e la chiave pubblica.</p></section></main>`;
+}
+function renderLogin(avviso) {
+  $('#app').innerHTML = `<main class="gate"><div class="sign flick">${esc(NOME)}</div><div class="tag">IL POSTO DEL GRUPPO</div>
+    <form class="card" id="g-pw" novalidate>
+      ${avviso ? `<p class="err" style="margin:0 0 6px">${esc(avviso)}</p>` : ''}
+      <label style="margin-top:0">Password del gruppo<input id="g-in" type="password" autocomplete="current-password" enterkeyhint="go"></label>
+      <p class="err" hidden></p>
+      <button class="btn wide" type="submit">Entra</button>
+    </form>
+    <p class="muto small" style="text-align:center">Non la sai? Chiedila nel gruppo 😉</p></main>`;
+  const f = $('#g-pw'), e = f.querySelector('p.err[hidden]'), b = f.querySelector('button');
+  f.onsubmit = async ev => {
+    ev.preventDefault(); const pw = $('#g-in').value;
+    if (!pw) return;
+    b.disabled = true; e.hidden = true;
+    try {
+      const ok = await rpc('check_pw', { p_pw: pw });
+      if (!ok) throw err('PASSWORD_ERRATA');
+      S.pw = pw; store.set('pw', pw);
+      S.me ? start() : renderChiSei();
+    } catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; }
+  };
+}
+async function renderChiSei() {
+  $('#app').innerHTML = `<main class="gate"><div class="sign">${esc(NOME)}</div><section class="card" id="g-who"><div class="loading">Un attimo</div></section></main>`;
+  let members;
+  try { members = await rpc('members_list'); } catch (ex) { if (S.pw) $('#g-who').innerHTML = errBox(ex); return; }
+  const box = $('#g-who');
+  box.innerHTML = `<h2>Chi sei?</h2>
+    ${members.length ? `<p class="muto">Tocca il tuo nome:</p><div class="chips">${members.map(n => `<button class="chip" data-n="${esc(n)}">${avatar(n, 's')} ${esc(n)}</button>`).join('')}</div><div class="or">— oppure —</div>` : ''}
+    <form id="g-name" novalidate><label>${members.length ? 'Sono nuovo, mi chiamo' : 'Come ti chiami?'}<input name="n" maxlength="30" autocomplete="nickname" placeholder="Il tuo nome" enterkeyhint="go"></label>
+    <p class="err" hidden></p><button class="btn wide" type="submit">Entra</button></form>
+    ${S.me ? `<button class="link" id="g-back">Annulla</button>` : ''}`;
+  box.querySelectorAll('[data-n]').forEach(c => c.onclick = () => setMe(c.dataset.n));
+  if ($('#g-back')) $('#g-back').onclick = start;
+  const f = $('#g-name'), e = f.querySelector('.err'), b = f.querySelector('button');
+  box.addEventListener('click', ev => { if (ev.target.matches('[data-retry]')) renderChiSei(); });
+  f.onsubmit = async ev => {
+    ev.preventDefault(); const n = f.n.value.trim().slice(0, 30);
+    if (!n) { e.textContent = msg(err('NOME_VUOTO')); e.hidden = false; return; }
+    const gia = members.find(m => same(m, n));
+    if (gia) return setMe(gia);
+    b.disabled = true; e.hidden = true;
+    try { await rpc('member_add', { p_name: n }); setMe(n); } catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; }
+  };
+}
+function setMe(n) { S.me = n; store.set('me', n); start(); }
+function logout(avviso) {
+  S.pw = null; store.del('pw'); S.feed = S.albums = S.ss = null; S.album = {};
+  document.querySelectorAll('.ov,.lb').forEach(x => x.remove()); document.body.classList.remove('noscroll');
+  renderLogin(avviso);
+}
+
+// ===================== STRUTTURA =====================
+const TABS = [
+  { id: 'novita', ico: '✨', t: 'Novità', f: viewNovita },
+  { id: 'foto', ico: '📸', t: 'Foto', f: viewFoto },
+  { id: 'gioco', ico: '🃏', t: 'Gioco', f: viewGioco },
+  { id: 'santa', ico: '🎅', t: 'Santa', f: viewSanta },
+  { id: 'fanta', ico: '🎤', t: 'Fanta', f: viewFanta }
+];
+function start() {
+  $('#app').innerHTML = `<header class="top"><button class="logo flick" data-go="#novita">${esc(NOME)}</button>
+    <button class="me" id="me-btn">${avatar(S.me, 's')}<b>${esc(S.me)}</b></button></header>
+    <main class="view" id="view"></main>
+    <nav class="tabs">${TABS.map(t => `<button data-go="#${t.id}" data-tab="${t.id}"><span class="ico">${t.ico}</span><span>${t.t}</span></button>`).join('')}</nav>`;
+  $('#me-btn').onclick = () => sheet(`<div class="row" style="margin-bottom:12px">${avatar(S.me)}<h3 style="margin:0">Ciao ${esc(S.me)} 👋</h3></div>
+      <p class="muto">Sei entrato nel ${esc(NOME)} con questo nome. Quello che scrivi appare a nome tuo.</p>
+      <div class="col" style="margin-top:16px"><button class="btn ghost wide" data-a="nome">Cambia nome</button><button class="btn ghost rosso wide" data-a="esci">Esci (chiederà di nuovo la password)</button><button class="btn wide" data-close>Chiudi</button></div>`,
+    (s, close) => {
+      s.querySelector('[data-a=nome]').onclick = () => { close(); renderChiSei(); };
+      s.querySelector('[data-a=esci]').onclick = () => { close(); logout(); };
+    });
+  route();
+}
+function route() {
+  if (!S.pw || !S.me || !$('#view')) return;
+  document.querySelectorAll('.ov,.lb').forEach(x => x.remove()); document.body.classList.remove('noscroll');
+  const c = cur(), t = TABS.find(x => x.id === c.sec) || TABS[0];
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t.id));
+  S.refresh = null; $('#view').innerHTML = ''; window.scrollTo(0, 0);
+  t.f(c.arg);
+}
+window.addEventListener('hashchange', route);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.pw && S.me && S.refresh) S.refresh(); });
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]');
+  if (g) {
+    e.preventDefault();
+    if (location.hash === g.dataset.go || (!location.hash && g.dataset.go === '#novita')) { window.scrollTo({ top: 0, behavior: 'smooth' }); S.refresh && S.refresh(); }
+    else location.hash = g.dataset.go;
+    return;
+  }
+  if (e.target.closest('#view [data-retry]')) S.refresh && S.refresh();
+});
+window.addEventListener('beforeunload', e => { if (S.busy) { e.preventDefault(); e.returnValue = ''; } });
+
+// ===================== NOVITÀ =====================
+function viewNovita() {
+  $('#view').innerHTML = `<h1 class="neon">Novità</h1>
+    <section class="card composer">
+      <div class="row">${avatar(S.me)}<textarea id="np-text" rows="1" maxlength="4000" placeholder="Cosa c'è di nuovo, ${esc(S.me)}?"></textarea></div>
+      <div class="prev" id="np-prev"></div>
+      <div class="row end">
+        <label class="btn ghost sm" style="margin:0;color:var(--menta)">📷 Foto<input type="file" id="np-file" accept="image/*" multiple hidden></label>
+        <button class="btn sm" id="np-go">Pubblica</button>
+      </div>
+      <div class="prog" id="np-prog" hidden></div>
+    </section>
+    <div id="feed"><div class="loading">Carico le novità</div></div>`;
+  const ta = $('#np-text'); ta.value = S.draft.text; autoGrow(ta);
+  ta.oninput = () => { S.draft.text = ta.value; autoGrow(ta); };
+  $('#np-file').onchange = e => {
+    for (const f of e.target.files) if (S.draft.files.length < 20) S.draft.files.push({ file: f, url: URL.createObjectURL(f) });
+    e.target.value = ''; drawPreviews();
+  };
+  $('#np-go').onclick = publish;
+  drawPreviews();
+  if (S.busy) { $('#np-go').disabled = true; }
+  if (S.feed) drawFeed();
+  S.refresh = loadFeed; loadFeed();
+}
+function drawPreviews() {
+  const el = $('#np-prev'); if (!el) return;
+  el.innerHTML = S.draft.files.map((f, i) => `<div><img src="${esc(f.url)}" alt=""><button data-rm="${i}" aria-label="Togli">✕</button></div>`).join('');
+  el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { const [f] = S.draft.files.splice(+b.dataset.rm, 1); URL.revokeObjectURL(f.url); drawPreviews(); });
+}
+async function publish() {
+  const text = S.draft.text.trim(), files = S.draft.files.slice();
+  if (!text && !files.length) return toast(MSG.POST_VUOTO);
+  const btn = $('#np-go'), prog = $('#np-prog'); btn.disabled = true; S.busy++;
+  try {
+    const paths = [];
+    for (let i = 0; i < files.length; i++) {
+      const p = $('#np-prog'); if (p) { p.hidden = false; p.innerHTML = progHTML(i, files.length); }
+      paths.push(await uploadOne('novita', files[i].file));
+    }
+    await rpc('post_add', { p_author: S.me, p_body: text, p_photos: paths });
+    files.forEach(f => URL.revokeObjectURL(f.url)); S.draft = { text: '', files: [] };
+    const ta = $('#np-text'); if (ta) { ta.value = ''; autoGrow(ta); } drawPreviews();
+    toast('Pubblicato ✨');
+    await loadFeed();
+  } catch (e) { toast(msg(e), 'err'); }
+  finally { S.busy--; const b = $('#np-go'); if (b) b.disabled = false; const p = $('#np-prog'); if (p) p.hidden = true; }
+}
+async function loadFeed() {
+  try { S.feed = await rpc('feed'); if (cur().sec === 'novita' || !location.hash) drawFeed(); }
+  catch (e) { const el = $('#feed'); if (el && !S.feed) el.innerHTML = errBox(e); }
+}
+function pics(p) {
+  const ph = (p.photos || []).filter(okPath); if (!ph.length) return '';
+  const n = ph.length;
+  return `<div class="pics n${Math.min(n, 4)}">${ph.slice(0, 4).map((x, i) => `<button class="pic" data-post="${esc(p.id)}" data-i="${i}">${img(x, n === 1)}${i === 3 && n > 4 ? `<span class="more">+${n - 4}</span>` : ''}</button>`).join('')}</div>`;
+}
+function drawFeed() {
+  const el = $('#feed'); if (!el || !S.feed) return;
+  const sig = JSON.stringify(S.feed) + S.me; if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  if (!S.feed.length) { el.innerHTML = `<div class="empty">Ancora niente qui.<br>Scrivi la prima novità! ✨</div>`; return; }
+  el.innerHTML = S.feed.map(p => `<article class="card post">
+      <header>${avatar(p.author)}<div class="who"><b>${esc(p.author)}</b><span>${esc(quando(p.created_at))}</span></div>
+      ${same(p.author, S.me) ? `<button class="icon" data-del="${esc(p.id)}" aria-label="Elimina">🗑️</button>` : ''}</header>
+      ${p.body ? `<div class="body">${linkify(p.body)}</div>` : ''}${pics(p)}</article>`).join('');
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    if (!await ask('Eliminare questa novità?', 'Sparisce per tutti.', 'Elimina', true)) return;
+    const p = S.feed.find(x => x.id === b.dataset.del);
+    try { await rpc('post_del', { p_id: b.dataset.del, p_author: p ? p.author : S.me }); toast('Eliminata'); await loadFeed(); } catch (e) { toast(msg(e), 'err'); }
+  });
+  el.querySelectorAll('[data-post]').forEach(b => b.onclick = () => {
+    const p = S.feed.find(x => x.id === b.dataset.post); if (!p) return;
+    lightbox(p.photos.filter(okPath), +b.dataset.i, { caption: () => `${p.author} · ${quando(p.created_at)}` });
+  });
+}
+
+// ===================== FOTO =====================
+function viewFoto(arg) {
+  if (arg) return viewAlbum(arg);
+  $('#view').innerHTML = `<h1 class="neon m">Foto</h1>
+    <button class="btn wide" id="al-new">📁 Nuova cartella</button>
+    <div id="albums"><div class="loading">Carico le cartelle</div></div>`;
+  $('#al-new').onclick = () => formSheet({ title: 'Nuova cartella', ok: 'Crea',
+    fields: [{ k: 'n', label: 'Nome della cartella', ph: 'es. Capodanno 2026', max: 60 }],
+    submit: async v => {
+      if (!v.n) throw err('NOME_VUOTO');
+      const id = await rpc('album_create', { p_name: v.n, p_author: S.me });
+      await loadAlbums(); location.hash = '#foto/' + id;
+    } });
+  if (S.albums) drawAlbums();
+  S.refresh = loadAlbums; loadAlbums();
+}
+async function loadAlbums() {
+  try { S.albums = await rpc('albums_list'); if (cur().sec === 'foto' && !cur().arg) drawAlbums(); }
+  catch (e) { const el = $('#albums'); if (el && !S.albums) el.innerHTML = errBox(e); }
+}
+function drawAlbums() {
+  const el = $('#albums'); if (!el) return;
+  const sig = JSON.stringify(S.albums); if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  if (!S.albums.length) { el.innerHTML = `<div class="empty">Nessuna cartella.<br>Creane una e carica le prime foto 📸</div>`; return; }
+  el.innerHTML = `<div class="albums">${S.albums.map(a => `<button class="album" data-go="#foto/${esc(a.id)}">
+      <div class="cover">${a.cover && okPath(a.cover) ? img(a.cover) : '📁'}</div><span class="t">${esc(a.name)}</span><span class="n">${a.n} ${a.n == 1 ? 'foto' : 'foto'} · ${esc(a.created_by)}</span></button>`).join('')}</div>`;
+}
+function viewAlbum(id) {
+  $('#view').innerHTML = `<button class="back" data-go="#foto">‹ Cartelle</button>
+    <div id="al-head"><h1 class="neon m sm">&nbsp;</h1></div>
+    <label class="btn wide" style="margin:0;color:#22001a">📷 Aggiungi foto<input type="file" id="al-file" accept="image/*" multiple hidden></label>
+    <div class="prog" id="al-prog" hidden></div>
+    <div id="al-grid"><div class="loading">Carico le foto</div></div>
+    <div id="al-foot"></div>`;
+  $('#al-file').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) addToAlbum(id, fs); };
+  if (S.album[id]) drawAlbum(id);
+  const load = async () => {
+    try {
+      const [als, ph] = await Promise.all([rpc('albums_list'), rpc('album_photos', { p_album: id })]);
+      S.albums = als; S.album[id] = ph; if (cur().sec === 'foto' && cur().arg === id) drawAlbum(id);
+    } catch (e) { const el = $('#al-grid'); if (el && !S.album[id]) el.innerHTML = errBox(e); }
+  };
+  S.refresh = load; load();
+}
+function drawAlbum(id) {
+  const a = (S.albums || []).find(x => x.id === id), ph = S.album[id] || [];
+  const head = $('#al-head'), grid = $('#al-grid'), foot = $('#al-foot'); if (!grid) return;
+  if (!a && S.albums) { $('#view').innerHTML = `<button class="back" data-go="#foto">‹ Cartelle</button><div class="empty">Questa cartella non esiste più.</div>`; return; }
+  if (a) head.innerHTML = `<h1 class="neon m sm">${esc(a.name)}</h1><p class="muto" style="margin-top:-8px">${ph.length} foto · creata da ${esc(a.created_by)}</p>`;
+  const sig = JSON.stringify(ph); if (grid.dataset.sig === sig) return; grid.dataset.sig = sig;
+  grid.innerHTML = ph.length ? `<div class="pgrid">${ph.map((f, i) => `<button class="pic" data-i="${i}">${img(f.path)}</button>`).join('')}</div>`
+    : `<div class="empty">Cartella vuota.<br>Tocca “Aggiungi foto” per caricare le prime.</div>`;
+  foot.innerHTML = ph.length ? '' : `<div style="text-align:center"><button class="btn ghost rosso sm" id="al-del">Elimina cartella</button></div>`;
+  grid.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
+    const list = (S.album[id] || []).filter(f => okPath(f.path));
+    lightbox(list.map(f => f.path), +b.dataset.i, {
+      caption: i => `${list[i].author} · ${quando(list[i].created_at)}`,
+      onDelete: async i => {
+        if (!await ask('Eliminare questa foto?', 'Sparisce dalla cartella per tutti.', 'Elimina', true)) return false;
+        try { await rpc('photo_del', { p_id: list[i].id }); toast('Foto eliminata'); S.refresh && S.refresh(); return true; } catch (e) { toast(msg(e), 'err'); return false; }
+      } });
+  });
+  const del = $('#al-del');
+  if (del) del.onclick = async () => {
+    if (!await ask('Eliminare la cartella?', `“${esc(a ? a.name : '')}” è vuota: verrà tolta.`, 'Elimina', true)) return;
+    try { await rpc('album_del', { p_album: id }); toast('Cartella eliminata'); S.albums = null; location.hash = '#foto'; } catch (e) { toast(msg(e), 'err'); }
+  };
+}
+async function addToAlbum(id, files) {
+  S.busy++; let ok = 0, ko = 0, last;
+  const set = h => { const p = $('#al-prog'); if (p && cur().arg === id) { p.hidden = !h; p.innerHTML = h || ''; } };
+  try {
+    for (let i = 0; i < files.length; i++) {
+      set(progHTML(i, files.length));
+      try {
+        const path = await uploadOne('album/' + id, files[i]);
+        await rpc('photo_add', { p_album: id, p_path: path, p_author: S.me }); ok++;
+        if (i % 3 === 2 && cur().arg === id && S.refresh) S.refresh();
+      } catch (e) { ko++; last = e; if (['NO_FOTO', 'PASSWORD_ERRATA', 'NO_DB'].includes(e.message)) break; }
+    }
+  } finally { S.busy--; set(''); }
+  if (ko) toast(`${ok} caricate, ${ko} non riuscite. ${msg(last)}`, 'err'); else toast(ok === 1 ? 'Foto caricata 📸' : `${ok} foto caricate 📸`);
+  if (cur().arg === id && S.refresh) S.refresh();
+}
+
+// ===================== GIOCO =====================
+function viewGioco() {
+  $('#view').innerHTML = `<h1 class="neon">Gioco</h1>
+    <section class="card game">
+      <div class="sf">SENZA<br><span>FILTRO</span></div>
+      <p>Il nostro party game: carte senza pietà, con i nomi di tutti noi dentro.</p>
+      <a class="btn big wide" href="${esc(GIOCO_URL)}" target="_blank" rel="noopener">🃏 Gioca ora</a>
+      <ol class="steps">
+        <li>Un telefono fa da <b>tavolo</b>: tocca “Nuova partita” e, se puoi, mettilo in TV.</li>
+        <li>Scegli il mazzo: 🔥 porno, 💀 black humor o tutto insieme.</li>
+        <li>Gli altri aprono il gioco sul proprio telefono e entrano col <b>codice</b> della partita.</li>
+        <li>A turno c'è un giudice: tutti giocano la carta più cattiva, vince la migliore.</li>
+      </ol>
+    </section>`;
+}
+
+// ===================== SECRET SANTA =====================
+function viewSanta(arg) {
+  if (arg) return viewEvento(arg);
+  $('#view').innerHTML = `<h1 class="neon">Secret Santa</h1>
+    <p class="intro">Ognuno pesca a chi fare il regalo. Nessuno vede gli abbinamenti degli altri, nemmeno chi organizza.</p>
+    <button class="btn wide" id="ss-new">🎅 Nuovo Secret Santa</button>
+    <div id="ss-list" style="margin-top:16px"><div class="loading">Carico</div></div>`;
+  $('#ss-new').onclick = newSS;
+  if (S.ss) drawSSList();
+  S.refresh = loadSS; loadSS();
+}
+async function loadSS() {
+  try {
+    S.ss = await rpc('ss_list'); const c = cur();
+    if (c.sec === 'santa') c.arg ? drawEvento() : drawSSList();
+  } catch (e) { const el = $('#ss-list') || $('#ev'); if (el && !S.ss) el.innerHTML = errBox(e); }
+}
+function drawSSList() {
+  const el = $('#ss-list'); if (!el) return;
+  const sig = JSON.stringify(S.ss); if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  if (!S.ss.length) { el.innerHTML = `<div class="empty">Nessun Secret Santa per ora.<br>Creane uno e invita il gruppo! 🎁</div>`; return; }
+  el.innerHTML = S.ss.map(e => `<button class="card ss-item" data-go="#santa/${esc(e.id)}">
+      <div class="t">🎅 ${esc(e.name)}</div>
+      <div class="meta"><span>👥 ${e.people.length} ${e.people.length === 1 ? 'iscritto' : 'iscritti'}</span>${e.budget ? `<span>💶 ${esc(e.budget)}</span>` : ''}${e.gift_date ? `<span>📅 ${esc(e.gift_date)}</span>` : ''}</div>
+      <span class="pill ${e.status === 'drawn' ? 'menta' : 'rosa'}">${e.status === 'drawn' ? 'Sorteggio fatto' : 'Iscrizioni aperte'}</span></button>`).join('');
+}
+function newSS() {
+  formSheet({ title: 'Nuovo Secret Santa', ok: 'Crea 🎅',
+    intro: `<p class="muto">Lo organizzi tu (${esc(S.me)}). Il PIN organizzatore ti serve per gestire iscritti, esclusioni e sorteggio: <b>non</b> ti fa vedere gli abbinamenti.</p>`,
+    fields: [
+      { k: 'n', label: 'Nome', value: 'Natale ' + new Date().getFullYear(), max: 80 },
+      { k: 'b', label: 'Budget (facoltativo)', ph: 'es. 30 €', max: 40 },
+      { k: 'd', label: 'Quando vi scambiate i regali? (facoltativo)', ph: 'es. cena del 20 dicembre', max: 40 },
+      { k: 'p1', label: 'PIN organizzatore (4–8 cifre)', type: 'pin' },
+      { k: 'p2', label: 'Ripeti il PIN', type: 'pin' }
+    ],
+    submit: async v => {
+      if (!v.n) throw err('NOME_VUOTO');
+      if (!/^\d{4,8}$/.test(v.p1)) throw err('PIN_NON_VALIDO');
+      if (v.p1 !== v.p2) throw err('PIN_DIVERSI');
+      const id = await rpc('ss_create', { p_name: v.n, p_budget: v.b, p_date: v.d, p_organizer: S.me, p_admin_pin: v.p1 });
+      store.set('ssadm_' + id, v.p1); S.ui.adm[id] = true;
+      toast('Creato! Ora iscriviti anche tu 🎁');
+      await loadSS(); location.hash = '#santa/' + id;
+    } });
+}
+// chi sono io in questo evento (nome + PIN salvati su questo telefono)
+function getMine(ev) {
+  const m = S.mine[ev.id] || store.get('ssme_' + ev.id);
+  return m && ev.people.some(n => same(n, m.name)) ? Object.assign({}, m, { name: ev.people.find(n => same(n, m.name)) }) : null;
+}
+function setMine(id, m, ricorda) { S.mine[id] = m; if (ricorda) store.set('ssme_' + id, m); else store.del('ssme_' + id); }
+function forgetMine(id) { delete S.mine[id]; store.del('ssme_' + id); delete S.ui.rev[id]; }
+
+function viewEvento(id) {
+  $('#view').innerHTML = `<button class="back" data-go="#santa">‹ Secret Santa</button><div id="ev" style="margin-top:8px"><div class="loading">Carico</div></div>`;
+  if (S.ss) drawEvento();
+  S.refresh = loadSS; loadSS();
+}
+function drawEvento(force) {
+  const id = cur().arg, box = $('#ev'); if (!box || !S.ss) return;
+  const ev = S.ss.find(e => e.id === id);
+  if (!ev) { box.innerHTML = `<div class="empty">Questo Secret Santa non esiste più.</div>`; return; }
+  const mine = getMine(ev), drawn = ev.status === 'drawn';
+  const sig = JSON.stringify([ev, mine, S.ui.rev[id], !!store.get('ssadm_' + id)]);
+  if (!force && box.dataset.sig === sig) return; box.dataset.sig = sig;
+  const admOpen = S.ui.adm[id];
+  box.innerHTML = `
+    <section class="card"><div class="ss-title">🎅 ${esc(ev.name)}</div>
+      <div class="meta">${ev.budget ? `<span>💶 ${esc(ev.budget)}</span>` : ''}${ev.gift_date ? `<span>📅 ${esc(ev.gift_date)}</span>` : ''}<span>👑 organizza ${esc(ev.organizer)}</span></div>
+      <span class="pill ${drawn ? 'menta' : 'rosa'}">${drawn ? 'Sorteggio fatto' : 'Iscrizioni aperte'}</span></section>
+    <section class="card" id="ss-me">${meHTML(ev, mine)}</section>
+    <section class="card"><h3>Partecipanti <span class="count">${ev.people.length}</span></h3>
+      <div class="chips">${ev.people.map(n => `<span class="chip ${mine && same(n, mine.name) ? 'on' : ''}">${esc(n)}</span>`).join('') || '<span class="muto">Ancora nessuno: iscriviti per primo!</span>'}</div>
+      ${drawn ? `<div style="margin-top:14px"><button class="btn ghost sm" id="ss-check">🔍 Verifica che il sorteggio sia regolare</button><div id="ss-check-out"></div></div>` : ''}</section>
+    <details class="card adm" id="ss-adm" ${admOpen ? 'open' : ''}><summary>🔒 Area organizzatore</summary><div id="adm-body"></div></details>`;
+  wireMe(ev, mine);
+  const chk = $('#ss-check'); if (chk) chk.onclick = () => verifica(ev);
+  const det = $('#ss-adm');
+  det.addEventListener('toggle', () => { S.ui.adm[id] = det.open; });
+  drawAdm(ev);
+}
+function meHTML(ev, mine) {
+  const drawn = ev.status === 'drawn', rv = S.ui.rev[ev.id] && S.ui.rev[ev.id].at === ev.drawn_at ? S.ui.rev[ev.id] : null;
+  if (mine && drawn) return `<div id="reveal">${rv ? revealHTML(rv) : `<h3>Sei dentro come <b>${esc(mine.name)}</b> ✅</h3><p class="muto">Il sorteggio è fatto! Guardalo quando nessuno sbircia 👀</p><button class="btn big wide" data-a="reveal">🎁 Scopri a chi fai il regalo</button>`}</div>
+    <div class="row wrap" style="margin-top:10px"><button class="btn ghost sm" data-a="wish">✏️ La mia letterina</button><button class="link" data-a="forget">Non sei ${esc(mine.name)}?</button></div>`;
+  if (mine) return `<h3>Sei dentro come <b>${esc(mine.name)}</b> ✅</h3>
+    <p class="muto">Quando ${esc(ev.organizer)} farà il sorteggio, torna qui per scoprire a chi fai il regalo.</p>
+    <div class="row wrap"><button class="btn ghost sm" data-a="wish">✏️ La mia letterina</button><button class="btn ghost rosso sm" data-a="leave">Esci</button><button class="link" data-a="forget">Non sei ${esc(mine.name)}?</button></div>`;
+  const iscritto = ev.people.find(n => same(n, S.me));
+  if (drawn) return `<h3>Il sorteggio è fatto! 🎉</h3><p class="muto">Sei tra i partecipanti? Entra col tuo nome e il tuo PIN per scoprire a chi fai il regalo.</p>
+    <button class="btn big wide" data-a="login">🎁 Scopri a chi fai il regalo</button>`;
+  return `${iscritto ? `<p class="muto" style="margin:0 0 4px">Risulti già iscritto come <b>${esc(iscritto)}</b>:</p><button class="btn wide" data-a="login">Entra col tuo PIN</button><div class="or" style="margin-bottom:6px">— oppure iscrivi un'altra persona —</div>` : ''}
+    <h3>${iscritto ? 'Nuova iscrizione' : 'Partecipa 🎁'}</h3>
+    <form id="ss-join" novalidate>
+      <label style="margin-top:4px">Nome<input name="nm" maxlength="30" value="${iscritto ? '' : esc(S.me)}" autocomplete="off"></label>
+      <label>Scegli un PIN segreto (4–8 cifre)<input name="pin" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="••••"></label>
+      <p class="hint">Ti servirà per scoprire a chi fai il regalo: <b>ricordatelo!</b></p>
+      <label>La tua letterina <span style="font-weight:400">(facoltativa, la puoi scrivere anche dopo)</span><textarea name="wish" rows="3" maxlength="1000" placeholder="Cosa ti piacerebbe? Gusti, taglie, cose da evitare…"></textarea></label>
+      <label class="check"><input type="checkbox" name="rem" checked> Ricorda il PIN su questo telefono</label>
+      <p class="err" hidden></p>
+      <button class="btn wide" type="submit" style="margin-top:14px">Partecipa</button>
+    </form>
+    ${iscritto ? '' : `<button class="link" data-a="login">Sei già iscritto (magari da un altro telefono)? Entra col tuo PIN</button>`}`;
+}
+function revealHTML(r) {
+  return `<div class="reveal"><div class="rv-k">Fai il regalo a…</div><div class="rv-name">${esc(r.to)}</div>
+    <div class="letter"><div class="h">📜 La sua letterina</div>${r.wish ? `<p>${esc(r.wish)}</p>` : `<p class="muto">Non l'ha ancora scritta. Ricontrolla più avanti!</p>`}</div>
+    <button class="btn ghost sm" data-a="hide">🙈 Nascondi</button></div>`;
+}
+function wireMe(ev, mine) {
+  const box = $('#ss-me'), id = ev.id;
+  const on = (a, f) => box.querySelectorAll(`[data-a=${a}]`).forEach(b => b.onclick = f);
+  const pinCambiato = e => { if (e.message === 'PIN_ERRATO') { forgetMine(id); toast('Il tuo PIN è cambiato: rientra col PIN nuovo.', 'err'); drawEvento(true); return true; } return false; };
+  on('forget', () => { forgetMine(id); drawEvento(true); });
+  on('hide', () => { delete S.ui.rev[id]; drawEvento(true); });
+  on('reveal', async e => {
+    const b = e.currentTarget; b.disabled = true; b.classList.add('drum'); b.textContent = '🥁 Rullo di tamburi…';
+    try {
+      const [r] = await Promise.all([rpc('ss_reveal', { p_event: id, p_name: mine.name, p_pin: mine.pin }), new Promise(z => setTimeout(z, 1400))]);
+      if (!r.drawn) { toast('Il sorteggio è stato annullato: aspetta che venga rifatto.'); return loadSS(); }
+      S.ui.rev[id] = Object.assign({ at: ev.drawn_at }, r); drawEvento(true);
+    } catch (ex) { if (!pinCambiato(ex)) toast(msg(ex), 'err'); b.disabled = false; b.classList.remove('drum'); b.textContent = '🎁 Scopri a chi fai il regalo'; }
+  });
+  on('login', () => {
+    if (!ev.people.length) return toast('Non c\'è ancora nessun iscritto.');
+    formSheet({ title: 'Entra col tuo PIN', ok: ev.status === 'drawn' ? 'Scopri 🎁' : 'Entra',
+      fields: [
+        { k: 'n', label: 'Chi sei?', type: 'select', opts: ev.people, value: ev.people.find(n => same(n, S.me)) || ev.people[0] },
+        { k: 'p', label: 'Il tuo PIN', type: 'pin' },
+        { k: 'r', label: 'Ricorda il PIN su questo telefono', type: 'check', value: true }
+      ],
+      submit: async v => {
+        if (!/^\d{4,8}$/.test(v.p)) throw err('PIN_ERRATO');
+        const r = await rpc('ss_reveal', { p_event: id, p_name: v.n, p_pin: v.p });
+        setMine(id, { name: r.me || v.n, pin: v.p }, v.r);
+        if (r.drawn) S.ui.rev[id] = Object.assign({ at: ev.drawn_at }, r);
+        drawEvento(true);
+      } });
+  });
+  on('wish', async () => {
+    let r;
+    try { r = await rpc('ss_reveal', { p_event: id, p_name: mine.name, p_pin: mine.pin }); } catch (ex) { if (!pinCambiato(ex)) toast(msg(ex), 'err'); return; }
+    formSheet({ title: 'La mia letterina', ok: 'Salva',
+      intro: `<p class="muto">La legge solo chi ti fa il regalo. Puoi cambiarla quando vuoi, anche dopo il sorteggio.</p>`,
+      fields: [{ k: 'w', label: 'Cosa ti piacerebbe?', type: 'area', value: r.my_wish, ph: 'Gusti, taglie, cose da evitare…' }],
+      submit: async v => { await rpc('ss_join', { p_event: id, p_name: mine.name, p_pin: mine.pin, p_wish: v.w }); toast('Letterina salvata 📜'); } });
+  });
+  on('leave', async () => {
+    if (!await ask('Uscire dal Secret Santa?', `Togli <b>${esc(mine.name)}</b> dai partecipanti.`, 'Esci', true)) return;
+    try { await rpc('ss_leave', { p_event: id, p_name: mine.name, p_pin: mine.pin }); forgetMine(id); toast('Sei uscito'); await loadSS(); }
+    catch (ex) { if (!pinCambiato(ex)) toast(msg(ex), 'err'); }
+  });
+  const f = $('#ss-join');
+  if (f) f.onsubmit = async e => {
+    e.preventDefault();
+    const er = f.querySelector('.err'), b = f.querySelector('[type=submit]');
+    const name = f.nm.value.trim().slice(0, 30), pin = f.pin.value.trim(), wish = f.wish.value.trim(), rem = f.rem.checked;
+    er.hidden = true;
+    try {
+      if (!name) throw err('NOME_VUOTO');
+      if (!/^\d{4,8}$/.test(pin)) throw err('PIN_NON_VALIDO');
+      b.disabled = true;
+      await rpc('ss_join', { p_event: id, p_name: name, p_pin: pin, p_wish: wish });
+      setMine(id, { name, pin }, rem);
+      toast('Sei dentro! 🎉');
+      await loadSS(); drawEvento(true);
+    } catch (ex) { er.textContent = msg(ex); er.hidden = false; b.disabled = false; }
+  };
+}
+async function verifica(ev) {
+  const out = $('#ss-check-out'); out.innerHTML = '<div class="loading">Controllo</div>';
+  try {
+    const r = await rpc('ss_check', { p_event: ev.id });
+    const v = c => c ? '✅' : '❌';
+    out.innerHTML = `<div class="letter" style="margin:12px 0 0;border-style:solid;border-color:${r.ok ? 'rgba(70,245,192,.5)' : 'rgba(255,93,108,.6)'}">
+      <div class="h" style="color:${r.ok ? 'var(--menta)' : 'var(--rosso)'}">${r.ok ? '✅ Sorteggio regolare' : '⚠️ Qualcosa non torna: rifate il sorteggio'}</div>
+      <ul class="checks"><li>${v(r.pairs === r.people)} Tutti i ${r.people} partecipanti hanno qualcuno a cui fare il regalo</li>
+      <li>${v(r.self === 0)} Nessuno ha pescato se stesso</li><li>${v(r.dup_receivers === 0)} Ognuno riceve un solo regalo</li>
+      <li>${v(r.excluded_pairs === 0)} Le esclusioni sono rispettate</li><li>${v(r.single_chain)} Un unico giro di regali che passa da tutti</li></ul>
+      <p class="hint">Il controllo lo fa il database, senza mostrare a nessuno chi ha pescato chi.</p></div>`;
+  } catch (e) { out.innerHTML = `<p class="err">${esc(msg(e))}</p>`; }
+}
+// ----- area organizzatore -----
+function drawAdm(ev) {
+  const el = $('#adm-body'); if (!el) return;
+  const id = ev.id, apin = store.get('ssadm_' + id), drawn = ev.status === 'drawn', n = ev.people.length;
+  if (!apin) {
+    el.innerHTML = `<p class="muto" style="margin-top:12px">Solo per chi ha creato questo Secret Santa (${esc(ev.organizer)}).</p>
+      <form id="adm-in" class="row" novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN organizzatore"><button class="btn sm" type="submit">Sblocca</button></form><p class="err" hidden></p>`;
+    const f = $('#adm-in'), e = el.querySelector('.err');
+    f.onsubmit = async x => {
+      x.preventDefault(); e.hidden = true;
+      try { if (!await rpc('ss_admin_check', { p_event: id, p_admin_pin: f.p.value.trim() })) throw err('PIN_ORGANIZZATORE_ERRATO'); store.set('ssadm_' + id, f.p.value.trim()); drawEvento(true); }
+      catch (ex) { e.textContent = msg(ex); e.hidden = false; }
+    };
+    return;
+  }
+  const opts = sel => ev.people.map(p => `<option ${p === sel ? 'selected' : ''}>${esc(p)}</option>`).join('');
+  el.innerHTML = `
+    <div class="adm-sec"><h4>💑 Esclusioni</h4><p class="muto">Chi non deve pescarsi a vicenda (es. fidanzati).</p>
+      ${ev.excl.map((x, i) => `<div class="excl"><span>${esc(x[0])} ↔ ${esc(x[1])}</span>${drawn ? '' : `<button class="icon" data-x="unex" data-i="${i}" aria-label="Togli">✕</button>`}</div>`).join('') || '<p class="hint" style="margin:0">Nessuna esclusione.</p>'}
+      ${!drawn && n >= 2 ? `<div class="exadd"><select id="ex-a">${opts(ev.people[0])}</select><span>↔</span><select id="ex-b">${opts(ev.people[1])}</select><button class="btn ghost sm" data-x="addex">Aggiungi esclusione</button></div>` : ''}</div>
+    <div class="adm-sec"><h4>🎲 Sorteggio</h4>${drawn
+      ? `<p>Fatto ${esc(quando(ev.drawn_at))}. Ora ognuno può scoprire il suo abbinamento.</p><button class="btn ghost rosso sm" data-x="undo">↩️ Annulla sorteggio</button>`
+      : `<p class="muto">${n} ${n === 1 ? 'partecipante' : 'partecipanti'}. Dopo il sorteggio nessuno potrà più iscriversi o uscire.</p><button class="btn wide" data-x="draw" ${n < 3 ? 'disabled' : ''}>Fai il sorteggio 🎲</button>${n < 3 ? '<p class="hint">Servono almeno 3 persone.</p>' : ''}`}</div>
+    <div class="adm-sec"><h4>👥 Partecipanti</h4>${n ? ev.people.map(p => `<div class="prow"><b>${esc(p)}</b><span><button class="btn ghost xs" data-x="reset" data-n="${esc(p)}">Nuovo PIN</button>${drawn ? '' : `<button class="btn ghost rosso xs" data-x="kick" data-n="${esc(p)}">Togli</button>`}</span></div>`).join('') : '<p class="hint" style="margin:0">Nessuno ancora.</p>'}
+      <p class="hint">“Nuovo PIN” serve a chi ha dimenticato il suo: non ti fa vedere a chi fa il regalo.</p></div>
+    <div class="adm-sec row wrap"><button class="btn ghost sm" data-x="lock">🔒 Blocca</button><button class="btn ghost rosso sm" data-x="del">🗑️ Elimina Secret Santa</button></div>`;
+  const run = async (f, ok) => {
+    try { await f(); if (ok) toast(ok); await loadSS(); drawEvento(true); }
+    catch (ex) { if (ex.message === 'PIN_ORGANIZZATORE_ERRATO') { store.del('ssadm_' + id); drawEvento(true); } toast(msg(ex), 'err'); }
+  };
+  const P = { p_event: id, p_admin_pin: apin };
+  el.querySelectorAll('[data-x]').forEach(b => b.onclick = async () => {
+    const x = b.dataset.x;
+    if (x === 'draw') {
+      if (!await ask('Fare il sorteggio?', `Partecipano in ${n}. Dopo nessuno potrà più iscriversi o uscire.`, 'Sorteggia 🎲')) return;
+      run(() => rpc('ss_draw', P), `Sorteggio fatto! 🎉 Ora ognuno può scoprire il suo.`);
+    }
+    if (x === 'undo') {
+      if (!await ask('Annullare il sorteggio?', 'Gli abbinamenti vengono cancellati. Se lo rifai, saranno diversi: chi aveva già guardato dovrà guardare di nuovo.', 'Annulla sorteggio', true)) return;
+      run(async () => { await rpc('ss_undo', P); delete S.ui.rev[id]; }, 'Sorteggio annullato');
+    }
+    if (x === 'addex') {
+      const a = $('#ex-a').value, c = $('#ex-b').value;
+      if (same(a, c)) return toast(MSG.STESSA_PERSONA, 'err');
+      run(() => rpc('ss_set_excl', Object.assign({ p_pairs: ev.excl.concat([[a, c]]) }, P)), 'Esclusione aggiunta');
+    }
+    if (x === 'unex') run(() => rpc('ss_set_excl', Object.assign({ p_pairs: ev.excl.filter((_, i) => i !== +b.dataset.i) }, P)));
+    if (x === 'kick') {
+      if (!await ask(`Togliere ${b.dataset.n}?`, 'Viene tolto dai partecipanti (e dalle esclusioni).', 'Togli', true)) return;
+      run(() => rpc('ss_kick', Object.assign({ p_name: b.dataset.n }, P)), 'Tolto');
+    }
+    if (x === 'reset') formSheet({ title: `Nuovo PIN per ${b.dataset.n}`, ok: 'Imposta',
+      intro: `<p class="muto">Scegli un PIN nuovo e diglielo. Non vedrai a chi fa il regalo.</p>`,
+      fields: [{ k: 'p', label: 'Nuovo PIN (4–8 cifre)', type: 'pin' }],
+      submit: async v => {
+        if (!/^\d{4,8}$/.test(v.p)) throw err('PIN_NON_VALIDO');
+        await rpc('ss_reset_pin', Object.assign({ p_name: b.dataset.n, p_new_pin: v.p }, P));
+        const m = S.mine[id] || store.get('ssme_' + id); if (m && same(m.name, b.dataset.n)) forgetMine(id);
+        info('PIN cambiato ✅', `<p>Di' a <b>${esc(b.dataset.n)}</b> che il suo nuovo PIN è <b style="font-size:22px;color:var(--menta)">${esc(v.p)}</b></p>`);
+        drawEvento(true);
+      } });
+    if (x === 'lock') { store.del('ssadm_' + id); drawEvento(true); }
+    if (x === 'del') {
+      if (!await ask(`Eliminare “${ev.name}”?`, 'Si cancella tutto: iscritti, letterine e sorteggio. Non si torna indietro.', 'Elimina', true)) return;
+      try { await rpc('ss_event_del', P); store.del('ssadm_' + id); forgetMine(id); toast('Eliminato'); location.hash = '#santa'; }
+      catch (ex) { toast(msg(ex), 'err'); }
+    }
+  });
+}
+
+// ===================== FANTASANREMO =====================
+function viewFanta() {
+  $('#view').innerHTML = `<h1 class="neon m">FantaSanremo</h1>
+    <section class="card soon"><div class="mic">🎤</div><div class="neon flick">In arrivo</div>
+      <p class="muto">Qui faremo la nostra lega del FantaSanremo: squadre, punti e classifica del gruppo. Ci stiamo lavorando!</p></section>`;
+}
+
+// ===================== AVVIO =====================
+if (!SUPA_URL || !SUPA_KEY) renderNoConfig();
+else if (!S.pw) renderLogin();
+else if (!S.me) renderChiSei();
+else start();
+</script>
+</body>
+</html>

@@ -239,7 +239,7 @@ begin
   if st is null then raise exception 'EVENTO_NON_TROVATO'; end if;
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if coalesce(p_pin,'') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
-  select * into ex from ss_people where event_id = p_event and name = n;
+  select * into ex from ss_people where event_id = p_event and lower(name) = lower(n);
   if found then
     if ex.pin <> extensions.crypt(p_pin, ex.pin) then raise exception 'NOME_GIA_PRESO'; end if;
     update ss_people set wish = _clean(p_wish,1000) where id = ex.id;
@@ -255,9 +255,10 @@ declare ex ss_people%rowtype;
 begin
   perform _need(p_pw);
   if (select status from ss_events where id = p_event) <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
-  select * into ex from ss_people where event_id = p_event and name = p_name;
+  select * into ex from ss_people where event_id = p_event and lower(name) = lower(_clean(p_name,30));
   if not found or ex.pin <> extensions.crypt(coalesce(p_pin,''), ex.pin) then raise exception 'PIN_ERRATO'; end if;
   delete from ss_people where id = ex.id;
+  delete from ss_excl where event_id = p_event and (a = ex.name or b = ex.name);
 end $$;
 
 -- l'organizzatore toglie qualcuno (prima del sorteggio)
@@ -266,8 +267,10 @@ language plpgsql security definer set search_path = public, extensions as $$
 begin
   perform _need(p_pw); perform _ss_admin(p_event, p_admin_pin);
   if (select status from ss_events where id = p_event) <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
-  delete from ss_people where event_id = p_event and name = p_name;
-  delete from ss_excl where event_id = p_event and (a = p_name or b = p_name);
+  delete from ss_excl where event_id = p_event
+    and (a in (select name from ss_people where event_id = p_event and lower(name) = lower(p_name))
+      or b in (select name from ss_people where event_id = p_event and lower(name) = lower(p_name)));
+  delete from ss_people where event_id = p_event and lower(name) = lower(p_name);
 end $$;
 
 create or replace function ss_set_excl(p_pw text, p_event uuid, p_admin_pin text, p_pairs json) returns void
@@ -315,6 +318,25 @@ begin
   return n;
 end $$;
 
+-- controlla il PIN dell'organizzatore (per sbloccare l'area organizzatore)
+create or replace function ss_admin_check(p_pw text, p_event uuid, p_admin_pin text) returns boolean
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return exists (select 1 from ss_events where id = p_event and admin_pin = extensions.crypt(coalesce(p_admin_pin,''), admin_pin));
+end $$;
+
+-- chi ha dimenticato il PIN: l'organizzatore gliene imposta uno nuovo (senza vedere gli abbinamenti)
+create or replace function ss_reset_pin(p_pw text, p_event uuid, p_admin_pin text, p_name text, p_new_pin text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw); perform _ss_admin(p_event, p_admin_pin);
+  if coalesce(p_new_pin,'') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
+  update ss_people set pin = extensions.crypt(p_new_pin, extensions.gen_salt('bf'))
+   where event_id = p_event and lower(name) = lower(_clean(p_name,30));
+  if not found then raise exception 'NOME_NON_TROVATO'; end if;
+end $$;
+
 -- annulla il sorteggio (per rifarlo)
 create or replace function ss_undo(p_pw text, p_event uuid, p_admin_pin text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
@@ -337,11 +359,11 @@ language plpgsql stable security definer set search_path = public, extensions as
 declare me ss_people%rowtype; rec ss_people%rowtype;
 begin
   perform _need(p_pw);
-  select * into me from ss_people where event_id = p_event and name = p_name;
+  select * into me from ss_people where event_id = p_event and lower(name) = lower(_clean(p_name,30));
   if not found or me.pin <> extensions.crypt(coalesce(p_pin,''), me.pin) then raise exception 'PIN_ERRATO'; end if;
   select r.* into rec from ss_pairs s join ss_people r on r.id = s.receiver where s.event_id = p_event and s.giver = me.id;
-  if not found then return json_build_object('drawn', false, 'my_wish', me.wish); end if;
-  return json_build_object('drawn', true, 'to', rec.name, 'wish', rec.wish, 'my_wish', me.wish);
+  if not found then return json_build_object('drawn', false, 'me', me.name, 'my_wish', me.wish); end if;
+  return json_build_object('drawn', true, 'me', me.name, 'to', rec.name, 'wish', rec.wish, 'my_wish', me.wish);
 end $$;
 
 -- verifica pubblica: controlla che il sorteggio sia valido SENZA rivelare le coppie
@@ -375,6 +397,6 @@ end $$;
 revoke all on all tables in schema public from anon, authenticated;
 grant execute on function check_pw, members_list, member_add, feed, post_add, post_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
-  ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check to anon, authenticated;
+  ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin to anon, authenticated;
 revoke execute on function _ok, _need, _ss_admin from anon, authenticated;
 revoke execute on function _ok, _need, _ss_admin from public;
