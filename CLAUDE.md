@@ -26,6 +26,7 @@ Richiesta di Ricky:
 
 Decisioni già prese con Ricky:
 - Nome del sito: **"Pippeghi 24/7"** (insegna al neon: "Pippeghi" rosa, "24/7" verde menta). Lo stile neon gli piace.
+- Barra in basso: icone disegnate (SVG a linee, verde menta con alone quando attive), **niente emoji** (Ricky le trovava poco professionali). Etichette: Novità, Foto, Gioco, Santa, Sanremo.
 - **Novità in stile X/Twitter**: post con ❤️ mi piace e 💬 risposte, #hashtag cliccabili, "🔥 Di tendenza" = hashtag più usati negli ultimi 30 giorni (a destra su computer, riga scorrevole in alto sul telefono). Ricky deve ancora dire come vuole le altre sezioni e i colori: chiedere/proporre.
 - Database: **Supabase** (account di Ricky, organizzazione "Pippeghi 24/7", progetto "Lilricky97's Project", ref `hiypieuddqkwefifiqqc` → URL `https://hiypieuddqkwefifiqqc.supabase.co`, regione eu-west).
 - `sito/installa.sql` = `schema.sql` + `storage.sql` in un file solo (da rigenerare se cambiano), per un unico copia-incolla dal telefono.
@@ -42,7 +43,7 @@ Stato:
   Foto: ridimensionate a 1600px JPEG + miniatura 640px (`<uuid>_t.jpg`), cartelle `novita/` e `album/<id>/`. Dati salvati nel telefono con prefisso `pip_` in localStorage (`pipdemo_` in modalità prova).
 - ✅ Test (tutti verdi):
   - `cd sito && npm i @electric-sql/pglite && node test-database.mjs` – database.
-  - `node prova-locale.mjs` (finto Supabase su http://localhost:8787 col vero schema.sql in PGlite, password `prova`; `LAG=300` = rete lenta) e poi `node test-sito.mjs` – 6 telefoni finti con Playwright (100 controlli, compresa la modalità prova aperta come file): novità con foto, mi piace, risposte, hashtag e tendenze, cartelle, Secret Santa completo (iscrizioni, nome rubato, esclusioni, sorteggio, altro telefono, PIN dimenticato, letterina aggiornata, annulla e rifai). Riavvia `prova-locale.mjs` prima di ogni giro (i dati sono in memoria).
+  - `node prova-locale.mjs` (finto Supabase su http://localhost:8787 col vero schema.sql in PGlite, password `prova`; `LAG=300` = rete lenta) e poi `node test-sito.mjs` – 6 telefoni finti con Playwright (103 controlli, compresa la modalità prova aperta come file): novità con foto, mi piace, risposte, hashtag e tendenze, cartelle, Secret Santa completo (iscrizioni, nome rubato, esclusioni, sorteggio, altro telefono, PIN dimenticato, letterina aggiornata, annulla e rifai). Riavvia `prova-locale.mjs` prima di ogni giro (i dati sono in memoria).
 - ⏳ Da fare:
   1. Ricky esegue `schema.sql` e `storage.sql` nel SQL Editor del progetto Supabase, poi imposta la password del gruppo (la scrive lui, non io):
      `insert into app_config(k,v) values ('pw', extensions.crypt('PASSWORD', extensions.gen_salt('bf'))) on conflict (k) do update set v = excluded.v;`

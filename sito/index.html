@@ -50,11 +50,13 @@ main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px 
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
   background:rgba(10,15,36,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);
   padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
-.tabs button{position:relative;background:none;border:0;color:var(--muto2);font-weight:600;font-size:11.5px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 6px;cursor:pointer}
-.tabs .ico{font-size:23px;line-height:1;filter:grayscale(.7) opacity(.7);transition:filter .2s,transform .2s}
+.tabs button{position:relative;background:none;border:0;color:var(--muto2);font-weight:600;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 6px;cursor:pointer}
+.tabs .ico{display:block;width:24px;height:24px;transition:filter .2s,transform .2s}
+.tabs svg{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabs button:not(.on):hover{color:var(--muto)}
 .tabs button.on{color:var(--menta)}
-.tabs button.on .ico{filter:drop-shadow(0 0 6px var(--menta-g));transform:translateY(-1px)}
-.tabs button.on::before{content:"";position:absolute;top:-5px;left:28%;right:28%;height:3px;border-radius:3px;background:var(--menta);box-shadow:0 0 10px var(--menta)}
+.tabs button.on .ico{filter:drop-shadow(0 0 5px var(--menta)) drop-shadow(0 0 12px var(--menta-g))}
+.tabs button.on::before{content:"";position:absolute;top:-5px;left:32%;right:32%;height:2px;border-radius:2px;background:var(--menta);box-shadow:0 0 10px var(--menta)}
 
 /* ---------- elementi ---------- */
 .card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)),var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 14px}
@@ -84,6 +86,11 @@ select{appearance:none;-webkit-appearance:none;padding-right:36px;background-ima
 .pin{-webkit-text-security:disc;letter-spacing:.3em;font-size:20px}
 .check{display:flex;align-items:center;gap:10px;color:var(--testo);font-weight:500}
 .check input{width:22px;height:22px;margin:0;accent-color:var(--menta)}
+.pwbox{position:relative;margin-top:6px}
+.pwbox input{padding-right:52px}
+.eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:44px;height:44px;border:0;background:none;color:var(--muto2);cursor:pointer;display:grid;place-items:center}
+.eye svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.eye.on{color:var(--menta)}
 .err{color:var(--rosso);font-weight:600;font-size:14.5px;margin:10px 0 0}
 .av{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;color:var(--c);
   border:2px solid var(--c);box-shadow:0 0 10px -2px var(--c),inset 0 0 8px -3px var(--c);background:rgba(0,0,0,.25)}
@@ -311,6 +318,7 @@ const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, 
 const MSG = {
   RETE: 'Niente connessione. Controlla internet e riprova.',
   PASSWORD_ERRATA: 'Password del gruppo sbagliata.',
+  PASSWORD_PROVA: 'Il sito è ancora in modalità prova, quindi per ora la password è "prova". La password vera del gruppo funzionerà appena il sito è collegato al database.',
   NOME_VUOTO: 'Scrivi un nome.',
   POST_VUOTO: 'Scrivi qualcosa o aggiungi una foto 🙂',
   ALBUM_NON_VUOTO: 'La cartella ha ancora delle foto: prima eliminale.',
@@ -548,20 +556,22 @@ function renderLogin(avviso) {
   $('#app').innerHTML = `<main class="gate"><div class="sign">${insegna()}</div><div class="tag">IL POSTO DEL GRUPPO</div>
     <form class="card" id="g-pw" novalidate>
       ${avviso ? `<p class="err" style="margin:0 0 6px">${esc(avviso)}</p>` : ''}
-      <label style="margin-top:0">Password del gruppo<input id="g-in" type="password" autocomplete="current-password" enterkeyhint="go"></label>
+      <label style="margin-top:0" for="g-in">Password del gruppo</label>
+      <div class="pwbox"><input id="g-in" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"><button type="button" class="eye" id="g-eye" aria-label="Mostra la password">${svg('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>')}</button></div>
       <p class="err" hidden></p>
       <button class="btn wide" type="submit">Entra</button>
     </form>
     ${DEMO ? `<div class="demo-note">🧪 <b>Modalità prova</b>: il sito non è ancora collegato al database, quindi i dati sono finti e si azzerano ricaricando la pagina. La password di prova è <b>prova</b>.</div>`
       : `<p class="muto small" style="text-align:center">Non la sai? Chiedila nel gruppo 😉</p>`}</main>`;
-  const f = $('#g-pw'), e = f.querySelector('p.err[hidden]'), b = f.querySelector('button');
+  const f = $('#g-pw'), e = f.querySelector('p.err[hidden]'), b = f.querySelector('[type=submit]');
+  $('#g-eye').onclick = () => { const i = $('#g-in'), vedi = i.type === 'password'; i.type = vedi ? 'text' : 'password'; $('#g-eye').classList.toggle('on', vedi); i.focus(); };
   f.onsubmit = async ev => {
-    ev.preventDefault(); const pw = $('#g-in').value;
+    ev.preventDefault(); const pw = $('#g-in').value.trim();
     if (!pw) return;
     b.disabled = true; e.hidden = true;
     try {
       const ok = await rpc('check_pw', { p_pw: pw });
-      if (!ok) throw err('PASSWORD_ERRATA');
+      if (!ok) throw err(DEMO ? 'PASSWORD_PROVA' : 'PASSWORD_ERRATA');
       S.pw = pw; store.set('pw', pw);
       S.me ? start() : renderChiSei();
     } catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; }
@@ -598,12 +608,13 @@ function logout(avviso) {
 }
 
 // ===================== STRUTTURA =====================
+const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const TABS = [
-  { id: 'novita', ico: '✨', t: 'Novità', f: () => viewNovita('') },
-  { id: 'foto', ico: '📸', t: 'Foto', f: viewFoto },
-  { id: 'gioco', ico: '🃏', t: 'Gioco', f: viewGioco },
-  { id: 'santa', ico: '🎅', t: 'Santa', f: viewSanta },
-  { id: 'fanta', ico: '🎤', t: 'Fanta', f: viewFanta }
+  { id: 'novita', t: 'Novità', f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
+  { id: 'foto', t: 'Foto', f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
+  { id: 'gioco', t: 'Gioco', f: viewGioco, ico: svg('<rect x="4" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 9.2 12.7)"/><path d="m14.6 5.4 3.7.7a2 2 0 0 1 1.6 2.3l-2 11a2 2 0 0 1-2.3 1.6l-3.2-.6"/>') },
+  { id: 'santa', t: 'Santa', f: viewSanta, ico: svg('<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20h14v-7.5M12 8.5V20M12 8.5C10.6 5.3 7 4.6 7 6.8 7 8.3 9.6 8.5 12 8.5zm0 0c1.4-3.2 5-3.9 5-1.7 0 1.5-2.6 1.7-5 1.7z"/>') },
+  { id: 'fanta', t: 'Sanremo', f: viewFanta, ico: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>') }
 ];
 function start() {
   $('#app').innerHTML = `<header class="top"><button class="logo" data-go="#novita">${insegna()}</button>
@@ -1279,14 +1290,15 @@ function creaDemo() {
   D.ss.push({ id: uid(), name: 'Natale 2026 (prova)', budget: '30 €', gift_date: 'cena del 20 dicembre', organizer: 'Marco', admin_pin: '0000', status: 'open', drawn_at: null, created_at: t(60 * 5), pairs: null, excl: [['Marco', 'Sara']],
     people: [['Marco', '1111', 'Un libro giallo 📚'], ['Giulia', '2222', 'Una tazza gigante per il tè'], ['Sara', '3333', ''], ['Luca', '4444', 'Calzini assurdi 🧦']].map(([name, pin, wish]) => ({ id: uid(), name, pin, wish })) });
   // --- le stesse funzioni del database vero ---
-  const need = a => { if (a.p_pw !== D.pw) throw err('PASSWORD_ERRATA'); };
+  const pwOk = x => String(x || '').trim().toLowerCase() === D.pw;
+  const need = a => { if (!pwOk(a.p_pw)) throw err('PASSWORD_ERRATA'); };
   const ev = i => { const e = D.ss.find(x => x.id === i); if (!e) throw err('EVENTO_NON_TROVATO'); return e; };
   const adm = a => { const e = ev(a.p_event); if (e.admin_pin !== a.p_admin_pin) throw err('PIN_ORGANIZZATORE_ERRATO'); return e; };
   const aperto = e => { if (e.status !== 'open') throw err('SORTEGGIO_GIA_FATTO'); };
   const chi = (e, n) => e.people.find(p => same(p.name, clean(n, 30)));
   const togli = (e, p) => { e.people = e.people.filter(x => x !== p); e.excl = e.excl.filter(x => !x.includes(p.name)); };
   const F = {
-    check_pw: a => a.p_pw === D.pw,
+    check_pw: a => pwOk(a.p_pw),
     members_list: a => { need(a); return D.members.slice().sort(alfa); },
     member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!D.members.includes(n)) D.members.push(n); },
     feed: a => { need(a); return D.posts.slice().sort(desc).slice(0, 150).map(p => Object.assign({}, p, { likes: D.likes.filter(l => l.post === p.id).map(l => l.name), replies: D.replies.filter(r => r.post_id === p.id).length })); },
