@@ -426,6 +426,17 @@ await ricky.click('.sheet [data-close]'); await ricky.waitForTimeout(300)
 await ricky.click('#sv-del'); await ricky.click('.sheet [data-ok]'); await ricky.waitForFunction(() => !document.querySelector('.sv'))
 await ricky.evaluate(() => loadStorie()); await ricky.waitForFunction(() => document.querySelector('#st-hub').textContent.includes('Nessuna storia'))
 ok(true, 'storia eliminata')
+// le foto delle storie si cancellano dallo spazio foto 24 ore dopo la pubblicazione (solo quelle)
+const fotoSpazio = async () => (await (await fetch(BASE + '/__prova/stato')).json()).files
+const storieFile = (await fotoSpazio()).filter(f => f.startsWith('storie/'))
+ok(storieFile.length >= 2, 'la foto della storia (e la miniatura) sono nello spazio foto')
+await ricky.evaluate(() => { localStorage.removeItem('pip_pulizia'); return puliziaStorie() })
+ok((await fotoSpazio()).filter(f => f.startsWith('storie/')).length === storieFile.length, 'prima delle 24 ore non si cancella niente')
+await fetch(BASE + '/__prova/invecchia', { method: 'POST', body: JSON.stringify({ prefisso: 'storie/', ore: 25 }) })
+await fetch(BASE + '/__prova/invecchia', { method: 'POST', body: JSON.stringify({ prefisso: 'novita/', ore: 25 }) })
+await marco.evaluate(() => { localStorage.removeItem('pip_pulizia'); return puliziaStorie() })
+const dopo = await fotoSpazio()
+ok(!dopo.some(f => f.startsWith('storie/')) && dopo.some(f => f.startsWith('novita/')) && dopo.some(f => f.startsWith('album/')), 'dopo 24 ore le foto delle storie spariscono; quelle dei post e delle cartelle restano')
 
 // ---------------- SECRET SANTA ----------------
 await vai(ricky, 'santa')

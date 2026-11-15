@@ -446,6 +446,18 @@ begin
 end $$;
 
 -- ---------- storie (24 ore) ----------
+-- foto delle storie scadute (più di 24 ore dalla pubblicazione): il sito le cancella dallo spazio foto
+-- (lo spazio foto permette alla chiave pubblica di cancellare SOLO queste: vedi storage.sql)
+create or replace function foto_scadute(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  if to_regclass('storage.objects') is null then return '[]'::json; end if;
+  return coalesce((select json_agg(x.name) from (select o.name from storage.objects o
+    where o.bucket_id = 'foto' and o.name like 'storie/%' and o.created_at < now() - interval '24 hours'
+    order by o.created_at limit 200) x), '[]'::json);
+end $$;
+
 create or replace function stories_list(p_pw text, p_name text) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
 begin
@@ -1769,7 +1781,7 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin,
+grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute,
   reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
@@ -1799,6 +1811,13 @@ values ('foto', 'foto', true, 8388608, array['image/jpeg','image/png','image/web
 on conflict (id) do update set public = true, file_size_limit = 8388608, allowed_mime_types = array['image/jpeg','image/png','image/webp'];
 drop policy if exists "covo upload foto" on storage.objects;
 create policy "covo upload foto" on storage.objects for insert to anon, authenticated with check (bucket_id = 'foto');
+-- foto delle storie scadute (più di 24 ore): il sito le può vedere e CANCELLARE, nient'altro
+drop policy if exists "pippeghi storie scadute vedi" on storage.objects;
+create policy "pippeghi storie scadute vedi" on storage.objects for select to anon, authenticated
+  using (bucket_id = 'foto' and name like 'storie/%' and created_at < now() - interval '24 hours');
+drop policy if exists "pippeghi storie scadute cancella" on storage.objects;
+create policy "pippeghi storie scadute cancella" on storage.objects for delete to anon, authenticated
+  using (bucket_id = 'foto' and name like 'storie/%' and created_at < now() - interval '24 hours');
 
 -- ============================================================
 --  PIPPEGHI 24/7 – impostazioni di QUESTO progetto Supabase (notifiche sul telefono)

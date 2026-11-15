@@ -22,7 +22,8 @@ const LAG = +(process.env.LAG || 0)
 const KEY = 'sb_publishable_PROVA_LOCALE'
 
 const db = await PGlite.create({ extensions: { pgcrypto } })
-await db.exec('create role anon; create role authenticated;')
+await db.exec(`create role anon; create role authenticated;
+  create schema storage; create table storage.objects(id serial, bucket_id text, name text, created_at timestamptz default now());`)   // finto spazio foto (per foto_scadute)
 await db.exec(fs.readFileSync(new URL('schema.sql', DIR), 'utf8'))
 await db.query(`insert into app_config(k,v) values ('pw', extensions.crypt($1, extensions.gen_salt('bf')))`, [PW])
 await db.query(`insert into app_config(k,v) values ('admin', extensions.crypt($1, extensions.gen_salt('bf')))`, [process.env.ADMIN || '9999'])   // PIN amministratore per la prova
@@ -120,7 +121,23 @@ http.createServer(async (req, res) => {
       if (buf.length > 8388608) return send(res, 413, JSON.stringify({ statusCode: '413', error: 'Payload too large', message: 'The object exceeded the maximum allowed size' }))
       if (files.has(up[1])) return send(res, 400, JSON.stringify({ statusCode: '409', error: 'Duplicate', message: 'The resource already exists' }))
       files.set(up[1], { type, buf })
+      await db.query(`insert into storage.objects(bucket_id, name) values ('foto', $1)`, [up[1]])
       return send(res, 200, JSON.stringify({ Key: 'foto/' + up[1], Id: crypto.randomUUID() }))
+    }
+    // cancellazione (come lo spazio foto vero con le regole di storage.sql: solo storie con più di 24 ore)
+    if (p === '/storage/v1/object/foto' && req.method === 'DELETE') {
+      if (req.headers.apikey !== KEY) return send(res, 401, JSON.stringify({ message: 'Invalid API key' }))
+      const nomi = (JSON.parse((await readBody(req)).toString() || '{}').prefixes || [])
+      const via = (await db.query(`delete from storage.objects where bucket_id = 'foto' and name = any($1) and name like 'storie/%' and created_at < now() - interval '24 hours' returning name`, [nomi])).rows.map(r => r.name)
+      via.forEach(n => files.delete(n))
+      return send(res, 200, JSON.stringify(via.map(name => ({ name }))))
+    }
+    // solo per i test: fa "invecchiare" le foto (e le storie) di un certo numero di ore
+    if (p === '/__prova/invecchia' && req.method === 'POST') {
+      const { prefisso, ore } = JSON.parse((await readBody(req)).toString())
+      await db.query(`update storage.objects set created_at = created_at - make_interval(hours => $2) where name like $1 || '%'`, [prefisso, ore])
+      if (prefisso === 'storie/') await db.query(`update stories set created_at = created_at - make_interval(hours => $1) where true`, [ore])
+      return send(res, 200, '{}')
     }
     const pub = p.match(/^\/storage\/v1\/object\/public\/foto\/(.+)$/)
     if (pub && req.method === 'GET') {

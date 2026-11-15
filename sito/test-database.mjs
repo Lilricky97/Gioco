@@ -2,7 +2,8 @@ import { PGlite } from '@electric-sql/pglite'
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto'
 import fs from 'fs'
 const db = await PGlite.create({ extensions: { pgcrypto } })
-await db.exec(`create role anon; create role authenticated; create role service_role;`)
+await db.exec(`create role anon; create role authenticated; create role service_role;
+  create schema storage; create table storage.objects(id serial, bucket_id text, name text, created_at timestamptz default now());`)   // finto spazio foto
 await db.exec(fs.readFileSync(new URL('./schema.sql', import.meta.url),'utf8'))
 await db.exec(`insert into app_config(k,v) values ('pw', extensions.crypt('cocorico', extensions.gen_salt('bf')))`)
 const q = async (sql, p=[]) => (await db.query(sql, p)).rows
@@ -277,6 +278,19 @@ ok(l3.people.length===1 && l3.excl.length===0,'tolto Luca: sparisce anche dalle 
 await q('select ss_leave($1,$2,$3,$4)',[PW,ev3,'giulia','1111'])
 ok((await one('select ss_list($1)',[PW])).find(e=>e.id===ev3).people.length===0,'Giulia esce col suo PIN')
 ok((await err('select ss_leave($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')]))==='CHIEDI_ORGANIZZATORE','dopo il sorteggio per uscire bisogna chiedere all\'organizzatore')
+// FOTO DELLE STORIE SCADUTE: dopo 24 ore il sito le cancella (solo quelle)
+await q(`insert into storage.objects(bucket_id, name, created_at) values
+  ('foto','storie/vecchia.jpg', now() - interval '25 hours'), ('foto','storie/vecchia_t.jpg', now() - interval '25 hours'),
+  ('foto','storie/nuova.jpg', now() - interval '2 hours'), ('foto','novita/post.jpg', now() - interval '30 days'),
+  ('foto','album/x/foto.jpg', now() - interval '30 days'), ('foto','avatar/io.jpg', now() - interval '30 days'), ('altro','storie/z.jpg', now() - interval '3 days')`)
+const scad = await one('select foto_scadute($1)',[PW])
+ok(JSON.stringify(scad.slice().sort())===JSON.stringify(['storie/vecchia.jpg','storie/vecchia_t.jpg']),'foto da cancellare: solo quelle delle storie con più di 24 ore (non post, cartelle, foto utente, storie nuove)')
+ok((await err('select foto_scadute($1)',['x']))==='PASSWORD_ERRATA','elenco protetto dalla password')
+const storageSql = fs.readFileSync(new URL('./storage.sql', import.meta.url),'utf8')
+ok([...storageSql.matchAll(/for (select|delete) to anon, authenticated\s+using \(([^;]*)\);/g)].length===2 && [...storageSql.matchAll(/for (select|delete) to anon, authenticated\s+using \(([^;]*)\);/g)].every(m => m[2].includes("name like 'storie/%'") && m[2].includes("interval '24 hours'")),
+  'lo spazio foto lascia vedere e cancellare alla chiave pubblica SOLO le foto delle storie scadute')
+await q('delete from storage.objects where true')
+
 // POST IN EVIDENZA (fissati in cima, max 3, solo amministratore)
 {
   const ids = []

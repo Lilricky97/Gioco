@@ -997,7 +997,17 @@ function start() {
   $('#on-btn').onclick = apriGruppo;
   $('#menu-btn').onclick = apriMenu;
   clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); loadStorie(); } }, 45000);
-  route(); ping(); loadStorie(); rinnovaNotifiche();
+  route(); ping(); loadStorie(); rinnovaNotifiche(); puliziaStorie();
+}
+// foto delle storie scadute (più di 24 ore): il sito le cancella dallo spazio foto, al massimo una volta l'ora per telefono.
+// Lo spazio foto permette di cancellare SOLO quelle (regole in storage.sql)
+async function puliziaStorie() {
+  if (DEMO || Date.now() - (store.get('pulizia') || 0) < 3600e3) return;
+  store.set('pulizia', Date.now());
+  try {
+    const L = await rpc('foto_scadute');
+    if (L && L.length) await fetch(`${SUPA_URL}/storage/v1/object/foto`, { method: 'DELETE', headers: headers({ 'Content-Type': 'application/json' }), body: JSON.stringify({ prefixes: L }) });
+  } catch (e) {}
 }
 const zona = id => ZONE.find(z => z.id === id);
 // menu delle zone: pannello da sinistra con riquadri al neon + il proprio profilo
