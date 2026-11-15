@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0f24">
-<title>Il Covo</title>
+<title>Pippeghi 24/7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;500;600;700;800&family=Yellowtail&display=swap" rel="stylesheet">
@@ -42,9 +42,9 @@ a{color:var(--menta)}
 /* ---------- struttura ---------- */
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:calc(8px + env(safe-area-inset-top)) 16px 8px;background:rgba(10,15,36,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(39,51,104,.6)}
-.logo{font-family:Yellowtail,cursive;font-size:32px;line-height:1;color:#fff;background:none;border:0;padding:4px 0;
+.logo{font-family:Yellowtail,cursive;font-size:clamp(24px,7.6vw,32px);white-space:nowrap;flex:none;line-height:1;color:#fff;background:none;border:0;padding:4px 0;cursor:pointer;
   text-shadow:0 0 3px #fff,0 0 9px var(--rosa),0 0 20px var(--rosa)}
-.me{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:15px;max-width:55%}
+.me{display:flex;align-items:center;gap:8px;min-width:0;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:15px;max-width:44%}
 .me b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px + env(safe-area-inset-bottom))}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
@@ -59,7 +59,7 @@ main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px 
 /* ---------- elementi ---------- */
 .card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)),var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 14px}
 .btn{appearance:none;-webkit-appearance:none;border:0;border-radius:999px;background:var(--rosa);color:#22001a;font-weight:700;font-size:16px;line-height:1.1;
-  padding:13px 20px;min-height:48px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center;
+  padding:13px 20px;min-height:48px;cursor:pointer;display:inline-flex;white-space:nowrap;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center;
   box-shadow:0 6px 22px -8px var(--rosa-g);transition:transform .08s,opacity .2s}
 .btn:active{transform:scale(.97)}
 .btn[disabled]{opacity:.45;pointer-events:none}
@@ -107,8 +107,12 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .intro{color:var(--muto);margin:-6px 0 16px}
 
 /* ---------- ingresso ---------- */
+.s7{color:#fff;text-shadow:0 0 3px #fff,0 0 9px var(--menta),0 0 20px var(--menta),0 0 40px var(--menta)}
+.sign .s7{display:block;font-size:.6em;margin:.22em 0 .12em;transform:rotate(-5deg)}
+.demo-bar{background:repeating-linear-gradient(-45deg,rgba(255,216,107,.16) 0 10px,rgba(255,216,107,.07) 10px 20px);color:var(--giallo);text-align:center;font-weight:700;font-size:12.5px;letter-spacing:.03em;padding:6px 12px;border-bottom:1px solid rgba(255,216,107,.3)}
+.demo-note{margin-top:14px;border:1.5px dashed rgba(255,216,107,.5);border-radius:14px;padding:12px 14px;color:var(--giallo);font-size:14.5px;line-height:1.5}
 .gate{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;max-width:440px;margin:0 auto;padding:30px 18px calc(30px + env(safe-area-inset-bottom))}
-.sign{font-family:Yellowtail,cursive;font-size:76px;line-height:1;text-align:center;color:#fff;margin:0 0 6px;
+.sign{font-family:Yellowtail,cursive;font-size:clamp(62px,21vw,88px);line-height:1;text-align:center;color:#fff;margin:0 0 6px;
   text-shadow:0 0 4px #fff,0 0 12px var(--rosa),0 0 26px var(--rosa),0 0 52px var(--rosa),0 0 80px var(--rosa)}
 .tag{text-align:center;font-weight:700;letter-spacing:.32em;font-size:12px;color:var(--menta);text-shadow:0 0 10px var(--menta-g);margin:0 0 28px}
 .or{text-align:center;color:var(--muto2);font-size:14px;margin:16px 0 0}
@@ -119,22 +123,72 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .composer .row{align-items:flex-start}
 .composer textarea{min-height:48px;max-height:300px;border-radius:14px}
 .composer .row.end{margin-top:12px}
+.np-hint{margin:0 auto 0 0!important;display:none}
+@media (min-width:520px){.np-hint{display:block}}
 .prev{display:flex;gap:8px;flex-wrap:wrap}
 .prev:not(:empty){margin-top:12px}
 .prev div{position:relative;width:74px;height:74px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
 .prev img{width:100%;height:100%;object-fit:cover}
 .prev button{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(10,15,36,.85);color:#fff;font-size:13px;line-height:24px;padding:0;cursor:pointer}
-.post header{display:flex;align-items:center;gap:10px}
-.who{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
-.who span{color:var(--muto);font-size:13.5px}
-.post .body{margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:16.5px}
-.pics{display:grid;gap:3px;margin:12px -16px -16px;border-radius:0 0 var(--r) var(--r);overflow:hidden}
+.pics{display:grid;gap:3px;margin:10px 0 0;border-radius:16px;border:1px solid var(--line);overflow:hidden}
 .pic{position:relative;display:block;border:0;padding:0;background:var(--campo);aspect-ratio:1;cursor:zoom-in;overflow:hidden}
 .pic img{width:100%;height:100%;object-fit:cover;display:block}
-.pics.n1 .pic{aspect-ratio:auto}.pics.n1 img{height:auto;max-height:560px;object-fit:cover}
+.pics.n1 .pic{aspect-ratio:auto}.pics.n1 img{height:auto;max-height:520px;object-fit:cover}
 .pics.n2,.pics.n4{grid-template-columns:1fr 1fr}
 .pics.n3{grid-template-columns:2fr 1fr}.pics.n3 .pic:first-child{grid-row:span 2;aspect-ratio:auto}
 .more{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,15,36,.6);font-weight:800;font-size:28px;color:#fff}
+/* stile X */
+.view.wide{max-width:1060px}
+.x-side{display:none}
+@media (min-width:960px){
+  .x-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+  .x-side{display:block;position:sticky;top:84px}
+  .trend-row{display:none!important}
+}
+.trend-row{display:flex;gap:8px;align-items:center;overflow-x:auto;margin:-6px -16px 14px;padding:2px 16px 4px;scrollbar-width:none}
+.trend-row::-webkit-scrollbar{display:none}
+.trend-row:empty{display:none}
+.tr-k{font-size:20px;flex:none}
+.chip.tr{flex:none;white-space:nowrap;cursor:pointer;color:var(--menta);font-size:15px;padding:7px 12px}
+.chip.tr small{color:var(--muto);font-weight:500;margin-left:6px}
+.chip.tr.on{background:rgba(70,245,192,.12);border-color:var(--menta);box-shadow:0 0 12px -4px var(--menta)}
+.trends h3{margin:0 0 4px}
+.trd{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 2px;cursor:pointer}
+.trd:first-child{border-top:0}
+.trd small{color:var(--muto);font-size:12.5px}
+.trd b{font-size:16px}
+.trd.on b,.trd:hover b{color:var(--menta);text-shadow:0 0 10px var(--menta-g)}
+.tag-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px}
+.tag-head b{font-size:22px;color:var(--menta);text-shadow:0 0 12px var(--menta-g);overflow-wrap:anywhere}
+.tag-head span{color:var(--muto)}
+.xfeed{padding:0;overflow:hidden}
+.xfeed>.empty,.xfeed>.loading{padding:30px 16px}
+.tw{display:flex;gap:12px;padding:14px 16px 6px;border-bottom:1px solid var(--line)}
+.tw[data-id]:not(.big){cursor:pointer}
+.tw:last-child{border-bottom:0}
+.tw-b{flex:1;min-width:0}
+.tw-h{display:flex;align-items:center;gap:6px;line-height:1.3;min-height:24px}
+.tw-h b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.tw-h span{color:var(--muto);font-size:14px;white-space:nowrap;flex:none}
+.tw-h .del{margin:-8px -8px -8px auto;padding:8px;color:var(--muto2)}
+.tw-t{margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:16px;line-height:1.42}
+.tw.big .tw-t{font-size:18.5px}
+.htag{color:var(--menta);font-weight:600;cursor:pointer;text-decoration:none;letter-spacing:normal}
+.tw-a{display:flex;gap:22px;margin:2px 0 0 -9px}
+.act{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--muto);font-size:14px;font-weight:600;padding:8px 9px;border-radius:999px;cursor:pointer;min-width:52px}
+.act svg{display:block;flex:none}
+.act.like.on{color:var(--rosa)}
+.act.like.on path{fill:currentColor}
+.act.like.on svg{filter:drop-shadow(0 0 5px var(--rosa-g))}
+.act.like.pop svg{animation:pop .35s ease-out}
+@keyframes pop{40%{transform:scale(1.4)}}
+.likers{padding:10px 16px;border-bottom:1px solid var(--line);color:var(--muto);font-size:14.5px}
+.likers b{color:var(--testo);font-weight:600}
+.rp{display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-bottom:1px solid var(--line)}
+.rp textarea{min-height:44px;padding:10px 12px}
+.rp .btn{flex:none}
+.tw.reply{padding-bottom:12px}
+.tw.reply .av{margin-top:2px}
 
 /* ---------- foto ---------- */
 .albums{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
@@ -226,20 +280,23 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 // ===================== IMPOSTAZIONI =====================
 const SUPA_URL = '';   // "Project URL" di Supabase, es. https://abcdefgh.supabase.co
 const SUPA_KEY = '';   // chiave PUBBLICA (publishable / anon). Mai la secret/service key!
-const NOME = 'Il Covo';
+const NOME = 'Pippeghi 24/7';
 const GIOCO_URL = 'https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/68a1fb1/index.html';
 // =========================================================
+const DEMO = !SUPA_URL || !SUPA_KEY;   // senza database: modalità prova con dati finti
+const PFX = DEMO ? 'pipdemo_' : 'pip_';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const same = (a, b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
 const store = {
-  get(k, d = null) { try { const v = localStorage.getItem('covo_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem('covo_' + k, JSON.stringify(v)); } catch (e) {} },
-  del(k) { try { localStorage.removeItem('covo_' + k); } catch (e) {} }
+  get(k, d = null) { try { const v = localStorage.getItem(PFX + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(PFX + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(PFX + k); } catch (e) {} }
 };
 const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, album: {}, ss: null,
-  draft: { text: '', files: [] }, ui: { rev: {}, adm: {} }, mine: {}, busy: 0, refresh: null };
+  draft: { text: '', files: [] }, ui: { rev: {}, adm: {} }, mine: {}, busy: 0, refresh: null,
+  thread: {}, replyDraft: {}, liking: {}, lastFeed: '#novita' };
 
 // ---------- messaggi d'errore in italiano ----------
 const MSG = {
@@ -258,6 +315,7 @@ const MSG = {
   ESCLUSIONI_IMPOSSIBILI: 'Con queste esclusioni il sorteggio è impossibile: togline qualcuna.',
   EVENTO_NON_TROVATO: 'Questo Secret Santa non esiste più.',
   NOME_NON_TROVATO: 'Nome non trovato.',
+  POST_NON_TROVATO: 'Questo post non esiste più.',
   STESSA_PERSONA: 'Scegli due persone diverse.',
   FOTO_ILLEGGIBILE: 'Questa foto non si riesce ad aprire. Prova a sceglierne un\'altra (o fai uno screenshot).',
   NO_DB: 'Il database non è ancora pronto (manca schema.sql su Supabase).',
@@ -279,6 +337,10 @@ function headers(extra) {
   return h;
 }
 async function rpc(fn, args = {}) {
+  if (DEMO) {
+    try { return await demoDB().rpc(fn, Object.assign({ p_pw: S.pw }, args)); }
+    catch (e) { if (e.message === 'PASSWORD_ERRATA' && fn !== 'check_pw') logout('Password sbagliata: inseriscila di nuovo.'); throw e; }
+  }
   let r;
   try {
     r = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: headers({ 'Content-Type': 'application/json' }),
@@ -295,8 +357,8 @@ async function rpc(fn, args = {}) {
   return d;
 }
 const okPath = p => typeof p === 'string' && /^[a-z0-9_\-\/]+\.jpg$/i.test(p) && !p.includes('..');
-const pub = p => `${SUPA_URL}/storage/v1/object/public/foto/${p}`;
-const thumb = p => pub(p.replace(/\.jpg$/i, '_t.jpg'));
+const pub = p => DEMO ? (demoDB().files.get(p) || '') : `${SUPA_URL}/storage/v1/object/public/foto/${p}`;
+const thumb = p => DEMO ? (demoDB().files.get(p.replace(/\.jpg$/i, '_t.jpg')) || pub(p)) : pub(p.replace(/\.jpg$/i, '_t.jpg'));
 function img(p, full) {
   if (!okPath(p)) return '';
   return `<img loading="lazy" decoding="async" src="${esc(full ? pub(p) : thumb(p))}" data-full="${esc(pub(p))}" alt="">`;
@@ -329,6 +391,7 @@ function toJpeg(im, max, q) {
   return new Promise((ok, ko) => c.toBlob(b => b ? ok(b) : ko(err('FOTO_ILLEGGIBILE')), 'image/jpeg', q));
 }
 async function putFile(path, blob) {
+  if (DEMO) { await new Promise(z => setTimeout(z, 80)); demoDB().files.set(path, URL.createObjectURL(blob)); return; }
   for (let tent = 1; ; tent++) {
     let r;
     try {
@@ -371,11 +434,6 @@ function quando(ts) {
   if (dd === 1) return 'ieri alle ' + hm;
   return d.toLocaleDateString('it-IT', Object.assign({ day: 'numeric', month: 'short' }, d.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}));
 }
-function linkify(t) {
-  const re = /https?:\/\/[^\s<>"']+[^\s<>"'.,;:!?)\]]/g; let out = '', last = 0, m;
-  while ((m = re.exec(t))) { out += esc(t.slice(last, m.index)) + `<a href="${esc(m[0])}" target="_blank" rel="noopener">${esc(m[0])}</a>`; last = m.index + m[0].length; }
-  return out + esc(t.slice(last));
-}
 function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight + 3, 300) + 'px'; }
 let toastT;
 function toast(t, kind) {
@@ -385,7 +443,13 @@ function toast(t, kind) {
 }
 function errBox(e) { return `<div class="empty">😕 ${esc(msg(e))}<br><button class="btn ghost sm" data-retry>Riprova</button></div>`; }
 function progHTML(i, n) { return `Carico la foto ${Math.min(i + 1, n)} di ${n}…<div class="pbar"><i style="width:${Math.round(i / n * 100)}%"></i></div>`; }
-function cur() { const [sec, arg] = (location.hash.slice(1) || 'novita').split('/'); return { sec, arg: arg || '' }; }
+function cur() {
+  const [sec, arg] = (location.hash.slice(1) || 'novita').split('/');
+  let a = arg || ''; try { a = decodeURIComponent(a); } catch (e) {}
+  return { sec, arg: a };
+}
+// "Pippeghi 24/7": l'ultima parola diventa il neon verde che sfarfalla
+function insegna() { return esc(NOME).replace(/ (\S+)$/, ' <span class="s7 flick">$1</span>'); }
 
 // finestra dal basso
 function sheet(html, mount, onClose) {
@@ -470,19 +534,16 @@ function lightbox(paths, start, opt = {}) {
 }
 
 // ===================== INGRESSO =====================
-function renderNoConfig() {
-  $('#app').innerHTML = `<main class="gate"><div class="sign flick">${esc(NOME)}</div><div class="tag">IL POSTO DEL GRUPPO</div>
-    <section class="card"><h2>Quasi pronto 🔧</h2><p class="muto">Il sito non è ancora collegato al database: mancano l'indirizzo di Supabase e la chiave pubblica.</p></section></main>`;
-}
 function renderLogin(avviso) {
-  $('#app').innerHTML = `<main class="gate"><div class="sign flick">${esc(NOME)}</div><div class="tag">IL POSTO DEL GRUPPO</div>
+  $('#app').innerHTML = `<main class="gate"><div class="sign">${insegna()}</div><div class="tag">IL POSTO DEL GRUPPO</div>
     <form class="card" id="g-pw" novalidate>
       ${avviso ? `<p class="err" style="margin:0 0 6px">${esc(avviso)}</p>` : ''}
       <label style="margin-top:0">Password del gruppo<input id="g-in" type="password" autocomplete="current-password" enterkeyhint="go"></label>
       <p class="err" hidden></p>
       <button class="btn wide" type="submit">Entra</button>
     </form>
-    <p class="muto small" style="text-align:center">Non la sai? Chiedila nel gruppo 😉</p></main>`;
+    ${DEMO ? `<div class="demo-note">🧪 <b>Modalità prova</b>: il sito non è ancora collegato al database, quindi i dati sono finti e si azzerano ricaricando la pagina. La password di prova è <b>prova</b>.</div>`
+      : `<p class="muto small" style="text-align:center">Non la sai? Chiedila nel gruppo 😉</p>`}</main>`;
   const f = $('#g-pw'), e = f.querySelector('p.err[hidden]'), b = f.querySelector('button');
   f.onsubmit = async ev => {
     ev.preventDefault(); const pw = $('#g-in').value;
@@ -497,7 +558,7 @@ function renderLogin(avviso) {
   };
 }
 async function renderChiSei() {
-  $('#app').innerHTML = `<main class="gate"><div class="sign">${esc(NOME)}</div><section class="card" id="g-who"><div class="loading">Un attimo</div></section></main>`;
+  $('#app').innerHTML = `<main class="gate"><div class="sign">${insegna()}</div><section class="card" id="g-who"><div class="loading">Un attimo</div></section></main>`;
   let members;
   try { members = await rpc('members_list'); } catch (ex) { if (S.pw) $('#g-who').innerHTML = errBox(ex); return; }
   const box = $('#g-who');
@@ -521,26 +582,27 @@ async function renderChiSei() {
 }
 function setMe(n) { S.me = n; store.set('me', n); start(); }
 function logout(avviso) {
-  S.pw = null; store.del('pw'); S.feed = S.albums = S.ss = null; S.album = {};
+  S.pw = null; store.del('pw'); S.feed = S.albums = S.ss = null; S.album = {}; S.thread = {};
   document.querySelectorAll('.ov,.lb').forEach(x => x.remove()); document.body.classList.remove('noscroll');
   renderLogin(avviso);
 }
 
 // ===================== STRUTTURA =====================
 const TABS = [
-  { id: 'novita', ico: '✨', t: 'Novità', f: viewNovita },
+  { id: 'novita', ico: '✨', t: 'Novità', f: () => viewNovita('') },
   { id: 'foto', ico: '📸', t: 'Foto', f: viewFoto },
   { id: 'gioco', ico: '🃏', t: 'Gioco', f: viewGioco },
   { id: 'santa', ico: '🎅', t: 'Santa', f: viewSanta },
   { id: 'fanta', ico: '🎤', t: 'Fanta', f: viewFanta }
 ];
 function start() {
-  $('#app').innerHTML = `<header class="top"><button class="logo flick" data-go="#novita">${esc(NOME)}</button>
+  $('#app').innerHTML = `<header class="top"><button class="logo" data-go="#novita">${insegna()}</button>
     <button class="me" id="me-btn">${avatar(S.me, 's')}<b>${esc(S.me)}</b></button></header>
+    ${DEMO ? '<div class="demo-bar">🧪 MODALITÀ PROVA · dati finti, si azzerano se ricarichi</div>' : ''}
     <main class="view" id="view"></main>
     <nav class="tabs">${TABS.map(t => `<button data-go="#${t.id}" data-tab="${t.id}"><span class="ico">${t.ico}</span><span>${t.t}</span></button>`).join('')}</nav>`;
   $('#me-btn').onclick = () => sheet(`<div class="row" style="margin-bottom:12px">${avatar(S.me)}<h3 style="margin:0">Ciao ${esc(S.me)} 👋</h3></div>
-      <p class="muto">Sei entrato nel ${esc(NOME)} con questo nome. Quello che scrivi appare a nome tuo.</p>
+      <p class="muto">Sei entrato su ${esc(NOME)} con questo nome. Quello che scrivi appare a nome tuo.</p>
       <div class="col" style="margin-top:16px"><button class="btn ghost wide" data-a="nome">Cambia nome</button><button class="btn ghost rosso wide" data-a="esci">Esci (chiederà di nuovo la password)</button><button class="btn wide" data-close>Chiudi</button></div>`,
     (s, close) => {
       s.querySelector('[data-a=nome]').onclick = () => { close(); renderChiSei(); };
@@ -551,9 +613,11 @@ function start() {
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
   document.querySelectorAll('.ov,.lb').forEach(x => x.remove()); document.body.classList.remove('noscroll');
-  const c = cur(), t = TABS.find(x => x.id === c.sec) || TABS[0];
+  const c = cur(), t = (c.sec === 'post' || c.sec === 'tag') ? TABS[0] : (TABS.find(x => x.id === c.sec) || TABS[0]);
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t.id));
-  S.refresh = null; $('#view').innerHTML = ''; window.scrollTo(0, 0);
+  const v = $('#view'); S.refresh = null; v.innerHTML = ''; v.className = 'view' + (t.id === 'novita' ? ' wide' : ''); window.scrollTo(0, 0);
+  if (c.sec === 'post') return viewPost(c.arg);
+  if (c.sec === 'tag') return viewNovita(c.arg);
   t.f(c.arg);
 }
 window.addEventListener('hashchange', route);
@@ -570,21 +634,120 @@ document.addEventListener('click', e => {
 });
 window.addEventListener('beforeunload', e => { if (S.busy) { e.preventDefault(); e.returnValue = ''; } });
 
-// ===================== NOVITÀ =====================
-function viewNovita() {
+// ===================== NOVITÀ (stile X) =====================
+const ICO = {
+  rep: '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M4 5h16a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 17h-9.5L6 20.5V17H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  like: '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M12 20.3s-7.4-4.5-9.4-9C1.2 8 3.2 4.3 6.9 4.3c2.1 0 3.6 1.2 5.1 3 1.5-1.8 3-3 5.1-3 3.7 0 5.7 3.7 4.3 7-2 4.5-9.4 9-9.4 9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  del: '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+// #hashtag: lettere (anche accentate), numeri e _ ; deve contenere almeno una lettera
+function tagsOf(t) {
+  const out = new Set(), s = String(t || '').replace(/https?:\/\/\S+/g, ' ');
+  for (const m of s.matchAll(/(^|[^\p{L}\p{N}_&#])#([\p{L}\p{N}_]{2,40})/gu)) if (/\p{L}/u.test(m[2])) out.add(m[2].toLowerCase());
+  return out;
+}
+// testo con link e #hashtag cliccabili
+function richText(t) {
+  const re = /(https?:\/\/[^\s<>"']+[^\s<>"'.,;:!?)\]])|(^|[^\p{L}\p{N}_&#])#([\p{L}\p{N}_]{2,40})/gu;
+  let out = '', last = 0, m;
+  while ((m = re.exec(t))) {
+    if (m[1]) { out += esc(t.slice(last, m.index)) + `<a href="${esc(m[1])}" target="_blank" rel="noopener">${esc(m[1])}</a>`; last = m.index + m[1].length; }
+    else if (/\p{L}/u.test(m[3])) {
+      const st = m.index + m[2].length;
+      out += esc(t.slice(last, st)) + `<a class="htag" data-go="#tag/${encodeURIComponent(m[3].toLowerCase())}">#${esc(m[3])}</a>`;
+      last = st + 1 + m[3].length;
+    }
+  }
+  return out + esc(t.slice(last));
+}
+function trends() {
+  const c = new Map(), lim = Date.now() - 30 * 864e5;
+  let posts = (S.feed || []).filter(p => new Date(p.created_at) > lim); if (!posts.length) posts = S.feed || [];
+  for (const p of posts) for (const t of tagsOf(p.body)) c.set(t, (c.get(t) || 0) + 1);
+  return [...c].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 8);
+}
+function drawTrends() {
+  const tr = trends(), c = cur(), sel = c.sec === 'tag' ? c.arg : '', m = $('#trends-m'), d = $('#trends-d');
+  if (m) m.innerHTML = tr.length ? `<span class="tr-k">🔥</span>${tr.map(([t, n]) => `<button class="chip tr ${t === sel ? 'on' : ''}" data-go="#tag/${encodeURIComponent(t)}">#${esc(t)}<small>${n}</small></button>`).join('')}` : '';
+  if (d) d.innerHTML = tr.length ? tr.map(([t, n], i) => `<button class="trd ${t === sel ? 'on' : ''}" data-go="#tag/${encodeURIComponent(t)}"><small>${i + 1} · Di tendenza</small><b>#${esc(t)}</b><small>${n} post</small></button>`).join('')
+    : `<p class="hint" style="margin:0">Ancora nessun #hashtag: scrivine uno in un post e comparirà qui.</p>`;
+}
+function pics(p) {
+  const ph = (p.photos || []).filter(okPath); if (!ph.length) return '';
+  const n = ph.length;
+  return `<div class="pics n${Math.min(n, 4)}">${ph.slice(0, 4).map((x, i) => `<button class="pic" data-post="${esc(p.id)}" data-i="${i}">${img(x, n === 1)}${i === 3 && n > 4 ? `<span class="more">+${n - 4}</span>` : ''}</button>`).join('')}</div>`;
+}
+function tweetHTML(p, big) {
+  const on = p.likes.some(n => same(n, S.me));
+  return `<article class="tw${big ? ' big' : ''}" data-id="${esc(p.id)}">${avatar(p.author)}<div class="tw-b">
+    <div class="tw-h"><b>${esc(p.author)}</b><span>· ${esc(quando(p.created_at))}</span>${same(p.author, S.me) ? `<button class="icon del" data-del="${esc(p.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div>
+    ${p.body ? `<div class="tw-t">${richText(p.body)}</div>` : ''}${pics(p)}
+    <div class="tw-a"><button class="act" data-rep="${esc(p.id)}" aria-label="Rispondi">${ICO.rep}<span>${p.replies || ''}</span></button><button class="act like ${on ? 'on' : ''}" data-like="${esc(p.id)}" aria-label="Mi piace">${ICO.like}<span>${p.likes.length || ''}</span></button></div>
+  </div></article>`;
+}
+function wireTweets(el) {
+  el.querySelectorAll('.tw[data-id]').forEach(a => a.onclick = e => {
+    if (cur().sec === 'post' || e.target.closest('a,button,.pic')) return;
+    location.hash = '#post/' + a.dataset.id;
+  });
+  el.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => {
+    if (cur().sec === 'post') { const t = $('#rp-text'); if (t) t.focus(); } else location.hash = '#post/' + b.dataset.rep;
+  });
+  el.querySelectorAll('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => delPost(b.dataset.del));
+  el.querySelectorAll('.pic[data-post]').forEach(b => b.onclick = () => {
+    const p = (S.feed || []).find(x => x.id === b.dataset.post); if (!p) return;
+    lightbox(p.photos.filter(okPath), +b.dataset.i, { caption: () => `${p.author} · ${quando(p.created_at)}` });
+  });
+}
+async function toggleLike(id) {
+  const p = (S.feed || []).find(x => x.id === id); if (!p || S.liking[id]) return;
+  S.liking[id] = true;
+  const had = p.likes.some(n => same(n, S.me));
+  const set = on => {
+    p.likes = p.likes.filter(n => !same(n, S.me)); if (on) p.likes.push(S.me);
+    document.querySelectorAll(`[data-like="${id}"]`).forEach(b => {
+      b.classList.toggle('on', on); b.classList.remove('pop'); void b.offsetWidth; if (on) b.classList.add('pop');
+      b.querySelector('span').textContent = p.likes.length || '';
+    });
+    drawLikers(id);
+  };
+  set(!had);
+  try { const on = await rpc('post_like', { p_id: id, p_name: S.me }); if (on !== !had) set(on); }
+  catch (e) { set(had); toast(msg(e), 'err'); }
+  finally { delete S.liking[id]; }
+}
+async function delPost(id) {
+  if (!await ask('Eliminare questo post?', 'Sparisce per tutti, con le risposte e i mi piace.', 'Elimina', true)) return;
+  const p = (S.feed || []).find(x => x.id === id);
+  try {
+    await rpc('post_del', { p_id: id, p_author: p ? p.author : S.me }); toast('Eliminato');
+    S.feed = (S.feed || []).filter(x => x.id !== id);
+    if (cur().sec === 'post') location.hash = S.lastFeed || '#novita'; else await loadFeed();
+  } catch (e) { toast(msg(e), 'err'); }
+}
+function viewNovita(tag) {
+  tag = tag || '';
+  S.lastFeed = tag ? '#tag/' + encodeURIComponent(tag) : '#novita';
   $('#view').innerHTML = `<h1 class="neon">Novità</h1>
-    <section class="card composer">
-      <div class="row">${avatar(S.me)}<textarea id="np-text" rows="1" maxlength="4000" placeholder="Cosa c'è di nuovo, ${esc(S.me)}?"></textarea></div>
-      <div class="prev" id="np-prev"></div>
-      <div class="row end">
-        <label class="btn ghost sm" style="margin:0;color:var(--menta)">📷 Foto<input type="file" id="np-file" accept="image/*" multiple hidden></label>
-        <button class="btn sm" id="np-go">Pubblica</button>
-      </div>
-      <div class="prog" id="np-prog" hidden></div>
-    </section>
-    <div id="feed"><div class="loading">Carico le novità</div></div>`;
+    <div class="trend-row" id="trends-m"></div>
+    <div class="x-wrap"><div class="x-main">
+      ${tag ? `<div class="tag-head"><div><b>#${esc(tag)}</b><span id="tag-n"></span></div><button class="btn ghost xs" data-go="#novita">✕ Tutti i post</button></div>` : ''}
+      <section class="card composer">
+        <div class="row">${avatar(S.me)}<textarea id="np-text" rows="1" maxlength="4000" placeholder="Che succede, ${esc(S.me)}?"></textarea></div>
+        <div class="prev" id="np-prev"></div>
+        <div class="row end">
+          <span class="hint np-hint">Usa # per gli argomenti</span>
+          <label class="btn ghost sm" style="margin:0;color:var(--menta)">📷 Foto<input type="file" id="np-file" accept="image/*" multiple hidden></label>
+          <button class="btn sm" id="np-go">Pubblica</button>
+        </div>
+        <div class="prog" id="np-prog" hidden></div>
+      </section>
+      <section class="card xfeed" id="feed"><div class="loading">Carico le novità</div></section>
+    </div><aside class="x-side"><section class="card trends"><h3>🔥 Di tendenza</h3><div id="trends-d"></div></section></aside></div>`;
   const ta = $('#np-text'); ta.value = S.draft.text; autoGrow(ta);
   ta.oninput = () => { S.draft.text = ta.value; autoGrow(ta); };
+  ta.onfocus = () => { if (tag && !ta.value) { ta.value = '#' + tag + ' '; S.draft.text = ta.value; } };
   $('#np-file').onchange = e => {
     for (const f of e.target.files) if (S.draft.files.length < 20) S.draft.files.push({ file: f, url: URL.createObjectURL(f) });
     e.target.value = ''; drawPreviews();
@@ -603,7 +766,7 @@ function drawPreviews() {
 async function publish() {
   const text = S.draft.text.trim(), files = S.draft.files.slice();
   if (!text && !files.length) return toast(MSG.POST_VUOTO);
-  const btn = $('#np-go'), prog = $('#np-prog'); btn.disabled = true; S.busy++;
+  const btn = $('#np-go'); btn.disabled = true; S.busy++;
   try {
     const paths = [];
     for (let i = 0; i < files.length; i++) {
@@ -611,7 +774,7 @@ async function publish() {
       paths.push(await uploadOne('novita', files[i].file));
     }
     await rpc('post_add', { p_author: S.me, p_body: text, p_photos: paths });
-    files.forEach(f => URL.revokeObjectURL(f.url)); S.draft = { text: '', files: [] };
+    files.forEach(f => { if (!DEMO) URL.revokeObjectURL(f.url); }); S.draft = { text: '', files: [] };
     const ta = $('#np-text'); if (ta) { ta.value = ''; autoGrow(ta); } drawPreviews();
     toast('Pubblicato ✨');
     await loadFeed();
@@ -619,30 +782,62 @@ async function publish() {
   finally { S.busy--; const b = $('#np-go'); if (b) b.disabled = false; const p = $('#np-prog'); if (p) p.hidden = true; }
 }
 async function loadFeed() {
-  try { S.feed = await rpc('feed'); if (cur().sec === 'novita' || !location.hash) drawFeed(); }
+  try { S.feed = await rpc('feed'); const s = cur().sec; if (s === 'novita' || s === 'tag') drawFeed(); }
   catch (e) { const el = $('#feed'); if (el && !S.feed) el.innerHTML = errBox(e); }
-}
-function pics(p) {
-  const ph = (p.photos || []).filter(okPath); if (!ph.length) return '';
-  const n = ph.length;
-  return `<div class="pics n${Math.min(n, 4)}">${ph.slice(0, 4).map((x, i) => `<button class="pic" data-post="${esc(p.id)}" data-i="${i}">${img(x, n === 1)}${i === 3 && n > 4 ? `<span class="more">+${n - 4}</span>` : ''}</button>`).join('')}</div>`;
 }
 function drawFeed() {
   const el = $('#feed'); if (!el || !S.feed) return;
-  const sig = JSON.stringify(S.feed) + S.me; if (el.dataset.sig === sig) return; el.dataset.sig = sig;
-  if (!S.feed.length) { el.innerHTML = `<div class="empty">Ancora niente qui.<br>Scrivi la prima novità! ✨</div>`; return; }
-  el.innerHTML = S.feed.map(p => `<article class="card post">
-      <header>${avatar(p.author)}<div class="who"><b>${esc(p.author)}</b><span>${esc(quando(p.created_at))}</span></div>
-      ${same(p.author, S.me) ? `<button class="icon" data-del="${esc(p.id)}" aria-label="Elimina">🗑️</button>` : ''}</header>
-      ${p.body ? `<div class="body">${linkify(p.body)}</div>` : ''}${pics(p)}</article>`).join('');
-  el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
-    if (!await ask('Eliminare questa novità?', 'Sparisce per tutti.', 'Elimina', true)) return;
-    const p = S.feed.find(x => x.id === b.dataset.del);
-    try { await rpc('post_del', { p_id: b.dataset.del, p_author: p ? p.author : S.me }); toast('Eliminata'); await loadFeed(); } catch (e) { toast(msg(e), 'err'); }
-  });
-  el.querySelectorAll('[data-post]').forEach(b => b.onclick = () => {
-    const p = S.feed.find(x => x.id === b.dataset.post); if (!p) return;
-    lightbox(p.photos.filter(okPath), +b.dataset.i, { caption: () => `${p.author} · ${quando(p.created_at)}` });
+  const c = cur(), tag = c.sec === 'tag' ? c.arg : '';
+  drawTrends();
+  const list = tag ? S.feed.filter(p => tagsOf(p.body).has(tag)) : S.feed;
+  const tn = $('#tag-n'); if (tn) tn.textContent = ` · ${list.length} post`;
+  const sig = JSON.stringify(list) + S.me + tag; if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  if (!list.length) { el.innerHTML = `<div class="empty">${tag ? `Nessun post con #${esc(tag)}.<br>Scrivine uno tu!` : 'Ancora niente qui.<br>Scrivi la prima novità! ✨'}</div>`; return; }
+  el.innerHTML = list.map(p => tweetHTML(p)).join('');
+  wireTweets(el);
+}
+// ----- un post con le sue risposte -----
+function viewPost(id) {
+  $('#view').innerHTML = `<button class="back" id="pb">‹ Indietro</button><div id="thread" style="margin-top:8px"><div class="loading">Carico</div></div>`;
+  $('#pb').onclick = () => { location.hash = S.lastFeed || '#novita'; };
+  if (S.feed && S.thread[id]) drawPost(id);
+  S.refresh = () => loadThread(id); loadThread(id);
+}
+async function loadThread(id) {
+  try {
+    const [f, r] = await Promise.all([rpc('feed'), rpc('post_thread', { p_id: id })]);
+    S.feed = f; S.thread[id] = r;
+    if (cur().sec === 'post' && cur().arg === id) drawPost(id);
+  } catch (e) { const el = $('#thread'); if (el && !S.thread[id]) el.innerHTML = errBox(e); }
+}
+function drawLikers(id) {
+  const el = $('#likers'), p = (S.feed || []).find(x => x.id === id); if (!el || !p || cur().arg !== id) return;
+  el.innerHTML = p.likes.length ? `<span style="color:var(--rosa)">❤</span> Piace a ${p.likes.map(n => `<b>${esc(n)}</b>`).join(', ')}` : '';
+  el.hidden = !p.likes.length;
+}
+function drawPost(id) {
+  const el = $('#thread'); if (!el) return;
+  const p = (S.feed || []).find(x => x.id === id), rs = S.thread[id] || [];
+  if (!p) { el.innerHTML = `<div class="empty">Questo post non esiste più.</div>`; return; }
+  const sig = JSON.stringify([p, rs, S.me]); if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  const draft = $('#rp-text') ? $('#rp-text').value : (S.replyDraft[id] || '');
+  el.innerHTML = `<section class="card xfeed">${tweetHTML(p, true)}
+    <div class="likers" id="likers" hidden></div>
+    <form class="rp" id="rp-form" novalidate>${avatar(S.me, 's')}<textarea id="rp-text" rows="1" maxlength="2000" placeholder="Rispondi a ${esc(p.author)}…"></textarea><button class="btn sm" type="submit">Rispondi</button></form>
+    <div id="replies">${rs.map(r => `<div class="tw reply">${avatar(r.author, 's')}<div class="tw-b"><div class="tw-h"><b>${esc(r.author)}</b><span>· ${esc(quando(r.created_at))}</span>${same(r.author, S.me) ? `<button class="icon del" data-rdel="${esc(r.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div><div class="tw-t">${richText(r.body)}</div></div></div>`).join('')}</div></section>`;
+  wireTweets(el); drawLikers(id);
+  const ta = $('#rp-text'); ta.value = draft; autoGrow(ta);
+  ta.oninput = () => { S.replyDraft[id] = ta.value; autoGrow(ta); };
+  $('#rp-form').onsubmit = async e => {
+    e.preventDefault(); const b = e.target.querySelector('button'), body = ta.value.trim();
+    if (!body) return toast('Scrivi la risposta 🙂');
+    b.disabled = true;
+    try { await rpc('reply_add', { p_id: id, p_author: S.me, p_body: body }); S.replyDraft[id] = ''; ta.value = ''; toast('Risposta inviata 💬'); await loadThread(id); }
+    catch (ex) { toast(msg(ex), 'err'); } finally { b.disabled = false; }
+  };
+  el.querySelectorAll('[data-rdel]').forEach(b => b.onclick = async () => {
+    if (!await ask('Eliminare la risposta?', '', 'Elimina', true)) return;
+    try { await rpc('reply_del', { p_id: b.dataset.rdel, p_author: S.me }); toast('Risposta eliminata'); await loadThread(id); } catch (ex) { toast(msg(ex), 'err'); }
   });
 }
 
@@ -935,7 +1130,7 @@ function drawAdm(ev) {
   const el = $('#adm-body'); if (!el) return;
   const id = ev.id, apin = store.get('ssadm_' + id), drawn = ev.status === 'drawn', n = ev.people.length;
   if (!apin) {
-    el.innerHTML = `<p class="muto" style="margin-top:12px">Solo per chi ha creato questo Secret Santa (${esc(ev.organizer)}).</p>
+    el.innerHTML = `<p class="muto" style="margin-top:12px">Solo per chi ha creato questo Secret Santa (${esc(ev.organizer)}).${DEMO ? ' <b>Nel Secret Santa di prova il PIN è 0000.</b>' : ''}</p>
       <form id="adm-in" class="row" novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN organizzatore"><button class="btn sm" type="submit">Sblocca</button></form><p class="err" hidden></p>`;
     const f = $('#adm-in'), e = el.querySelector('.err');
     f.onsubmit = async x => {
@@ -1007,9 +1202,127 @@ function viewFanta() {
       <p class="muto">Qui faremo la nostra lega del FantaSanremo: squadre, punti e classifica del gruppo. Ci stiamo lavorando!</p></section>`;
 }
 
+// ===================== MODALITÀ PROVA =====================
+// Se SUPA_URL / SUPA_KEY sono vuoti il sito funziona lo stesso, con dati finti
+// che vivono solo in questa pagina (si azzerano ricaricando). Stesse regole del database vero.
+let demo = null;
+function demoDB() { return demo || (demo = creaDemo()); }
+function creaDemo() {
+  const D = { pw: 'prova', members: ['Anna', 'Giulia', 'Luca', 'Marco', 'Sara'], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
+  const t = min => new Date(Date.now() - min * 60000).toISOString();
+  const clean = (x, n) => String(x ?? '').trim().slice(0, n);
+  const pinOk = p => /^\d{4,8}$/.test(p || '');
+  const desc = (a, b) => a.created_at < b.created_at ? 1 : -1;
+  const alfa = (x, y) => x.toLowerCase() < y.toLowerCase() ? -1 : 1;
+  const fotoFinta = (i, emo, scritta) => {
+    const c = document.createElement('canvas'); c.width = 900; c.height = 675; const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 900, 675); g.addColorStop(0, `hsl(${i * 47 + 300},80%,45%)`); g.addColorStop(1, `hsl(${i * 47 + 200},85%,22%)`);
+    x.fillStyle = g; x.fillRect(0, 0, 900, 675); x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = '230px serif'; x.fillText(emo, 450, 290); x.font = 'bold 46px sans-serif'; x.fillStyle = 'rgba(255,255,255,.92)'; x.fillText(scritta, 450, 570);
+    const p = `demo/foto${i}.jpg`; D.files.set(p, c.toDataURL('image/jpeg', .8)); return p;
+  };
+  // --- contenuti di esempio ---
+  const al = uid(); D.albums.push({ id: al, name: 'Sabato al mare (prova)', created_by: 'Giulia', created_at: t(60 * 30) });
+  const fs = [['🏖️', 'Spiaggia'], ['🍕', 'Pizzata'], ['🌅', 'Tramonto'], ['🍹', 'Aperitivo'], ['🎉', 'Festa']].map(([e, s], i) => fotoFinta(i, e, s));
+  fs.forEach((p, i) => D.photos.push({ id: uid(), album_id: al, path: p, author: i % 2 ? 'Marco' : 'Giulia', created_at: t(60 * 29 - i) }));
+  const post = (author, body, min, photos = []) => { const id = uid(); D.posts.push({ id, author, body, photos, created_at: t(min) }); return id; };
+  const p1 = post('Marco', 'Stasera da me per il #FantaSanremo? Porto io le birre 🍻', 25);
+  const p2 = post('Giulia', 'Ho messo le foto di sabato nella cartella "Sabato al mare" 📸 #mare', 60 * 3, [fs[0], fs[2]]);
+  post('Sara', 'Chi si ricorda dove abbiamo lasciato l\'ombrellone? 😂 #mare', 60 * 26);
+  const p4 = post('Luca', '#Capodanno: casa di chi quest\'anno? Io voto Anna', 60 * 50);
+  const p5 = post('Anna', 'Benvenuti su Pippeghi 24/7! Scrivete qui le novità del gruppo ✨ #pippeghi #capodanno', 60 * 72);
+  [[p1, 'Giulia'], [p1, 'Sara'], [p2, 'Marco'], [p2, 'Anna'], [p2, 'Luca'], [p4, 'Anna'], [p5, 'Marco']].forEach(([post, name]) => D.likes.push({ post, name }));
+  [[p1, 'Luca', 'Ci sono! Porto le patatine', 20], [p4, 'Anna', 'Da me va bene, ma il cotechino lo porti tu 😄', 60 * 40], [p4, 'Marco', '#Capodanno da Anna, deciso!', 60 * 39]]
+    .forEach(([post_id, author, body, m]) => D.replies.push({ id: uid(), post_id, author, body, created_at: t(m) }));
+  D.ss.push({ id: uid(), name: 'Natale 2026 (prova)', budget: '30 €', gift_date: 'cena del 20 dicembre', organizer: 'Marco', admin_pin: '0000', status: 'open', drawn_at: null, created_at: t(60 * 5), pairs: null, excl: [['Marco', 'Sara']],
+    people: [['Marco', '1111', 'Un libro giallo 📚'], ['Giulia', '2222', 'Una tazza gigante per il tè'], ['Sara', '3333', ''], ['Luca', '4444', 'Calzini assurdi 🧦']].map(([name, pin, wish]) => ({ id: uid(), name, pin, wish })) });
+  // --- le stesse funzioni del database vero ---
+  const need = a => { if (a.p_pw !== D.pw) throw err('PASSWORD_ERRATA'); };
+  const ev = i => { const e = D.ss.find(x => x.id === i); if (!e) throw err('EVENTO_NON_TROVATO'); return e; };
+  const adm = a => { const e = ev(a.p_event); if (e.admin_pin !== a.p_admin_pin) throw err('PIN_ORGANIZZATORE_ERRATO'); return e; };
+  const aperto = e => { if (e.status !== 'open') throw err('SORTEGGIO_GIA_FATTO'); };
+  const chi = (e, n) => e.people.find(p => same(p.name, clean(n, 30)));
+  const togli = (e, p) => { e.people = e.people.filter(x => x !== p); e.excl = e.excl.filter(x => !x.includes(p.name)); };
+  const F = {
+    check_pw: a => a.p_pw === D.pw,
+    members_list: a => { need(a); return D.members.slice().sort(alfa); },
+    member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!D.members.includes(n)) D.members.push(n); },
+    feed: a => { need(a); return D.posts.slice().sort(desc).slice(0, 150).map(p => Object.assign({}, p, { likes: D.likes.filter(l => l.post === p.id).map(l => l.name), replies: D.replies.filter(r => r.post_id === p.id).length })); },
+    post_add: a => { need(a); const b = clean(a.p_body, 4000), ph = (a.p_photos || []).slice(0, 20); if (!b && !ph.length) throw err('POST_VUOTO'); const id = uid(); D.posts.push({ id, author: clean(a.p_author, 30), body: b, photos: ph, created_at: t(0) }); return id; },
+    post_del: a => { need(a); D.posts = D.posts.filter(p => !(p.id === a.p_id && p.author === a.p_author)); const ok = new Set(D.posts.map(p => p.id)); D.likes = D.likes.filter(l => ok.has(l.post)); D.replies = D.replies.filter(r => ok.has(r.post_id)); },
+    post_like: a => {
+      need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!D.posts.some(p => p.id === a.p_id)) throw err('POST_NON_TROVATO');
+      const i = D.likes.findIndex(l => l.post === a.p_id && same(l.name, n)); if (i >= 0) { D.likes.splice(i, 1); return false; }
+      D.likes.push({ post: a.p_id, name: n }); return true;
+    },
+    post_thread: a => { need(a); return D.replies.filter(r => r.post_id === a.p_id).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(r => ({ id: r.id, author: r.author, body: r.body, created_at: r.created_at })); },
+    reply_add: a => { need(a); const b = clean(a.p_body, 2000); if (!b) throw err('POST_VUOTO'); if (!D.posts.some(p => p.id === a.p_id)) throw err('POST_NON_TROVATO'); const id = uid(); D.replies.push({ id, post_id: a.p_id, author: clean(a.p_author, 30), body: b, created_at: t(0) }); return id; },
+    reply_del: a => { need(a); D.replies = D.replies.filter(r => !(r.id === a.p_id && r.author === a.p_author)); },
+    albums_list: a => { need(a); return D.albums.slice().sort(desc).map(x => { const ph = D.photos.filter(f => f.album_id === x.id).sort(desc); return Object.assign({}, x, { n: ph.length, cover: ph[0] ? ph[0].path : null }); }); },
+    album_create: a => { need(a); const n = clean(a.p_name, 60); if (!n) throw err('NOME_VUOTO'); const id = uid(); D.albums.push({ id, name: n, created_by: clean(a.p_author, 30), created_at: t(0) }); return id; },
+    album_photos: a => { need(a); return D.photos.filter(f => f.album_id === a.p_album).sort(desc).map(f => ({ id: f.id, path: f.path, author: f.author, created_at: f.created_at })); },
+    photo_add: a => { need(a); D.photos.push({ id: uid(), album_id: a.p_album, path: clean(a.p_path, 300), author: clean(a.p_author, 30), created_at: t(0) }); },
+    photo_del: a => { need(a); D.photos = D.photos.filter(f => f.id !== a.p_id); },
+    album_del: a => { need(a); if (D.photos.some(f => f.album_id === a.p_album)) throw err('ALBUM_NON_VUOTO'); D.albums = D.albums.filter(x => x.id !== a.p_album); },
+    ss_list: a => { need(a); return D.ss.slice().sort(desc).map(e => ({ id: e.id, name: e.name, budget: e.budget, gift_date: e.gift_date, organizer: e.organizer, status: e.status, drawn_at: e.drawn_at, created_at: e.created_at, people: e.people.map(p => p.name).sort(alfa), excl: e.excl.map(x => x.slice()) })); },
+    ss_create: a => {
+      need(a); if (!clean(a.p_name, 80)) throw err('NOME_VUOTO'); if (!pinOk(a.p_admin_pin)) throw err('PIN_NON_VALIDO');
+      const id = uid(); D.ss.push({ id, name: clean(a.p_name, 80), budget: clean(a.p_budget, 40), gift_date: clean(a.p_date, 40), organizer: clean(a.p_organizer, 30), admin_pin: a.p_admin_pin, status: 'open', drawn_at: null, created_at: t(0), people: [], excl: [], pairs: null }); return id;
+    },
+    ss_admin_check: a => { need(a); return ev(a.p_event).admin_pin === a.p_admin_pin; },
+    ss_join: a => {
+      need(a); const e = ev(a.p_event), n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!pinOk(a.p_pin)) throw err('PIN_NON_VALIDO');
+      const p = chi(e, n);
+      if (p) { if (p.pin !== a.p_pin) throw err('NOME_GIA_PRESO'); p.wish = clean(a.p_wish, 1000); }
+      else { aperto(e); e.people.push({ id: uid(), name: n, pin: a.p_pin, wish: clean(a.p_wish, 1000) }); }
+    },
+    ss_leave: a => { need(a); const e = ev(a.p_event); aperto(e); const p = chi(e, a.p_name); if (!p || p.pin !== a.p_pin) throw err('PIN_ERRATO'); togli(e, p); },
+    ss_kick: a => { need(a); const e = adm(a); aperto(e); const p = chi(e, a.p_name); if (p) togli(e, p); },
+    ss_set_excl: a => {
+      need(a); const e = adm(a); aperto(e); const L = [];
+      for (const [x, y] of (a.p_pairs || [])) if (x && y && x !== y) { const k = [x, y].sort(); if (!L.some(z => z[0] === k[0] && z[1] === k[1])) L.push(k); }
+      e.excl = L;
+    },
+    ss_draw: a => {
+      need(a); const e = adm(a); aperto(e); const P = e.people, n = P.length; if (n < 3) throw err('SERVONO_ALMENO_3');
+      const vietato = (x, y) => e.excl.some(([p, q]) => (p === x.name && q === y.name) || (p === y.name && q === x.name));
+      for (let k = 0; k < 20000; k++) {
+        const o = P.slice(); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+        if (o.every((g, i) => !vietato(g, o[(i + 1) % n]))) { e.pairs = new Map(o.map((g, i) => [g.id, o[(i + 1) % n].id])); e.status = 'drawn'; e.drawn_at = t(0); return n; }
+      }
+      throw err('ESCLUSIONI_IMPOSSIBILI');
+    },
+    ss_undo: a => { need(a); const e = adm(a); e.pairs = null; e.status = 'open'; e.drawn_at = null; },
+    ss_event_del: a => { need(a); adm(a); D.ss = D.ss.filter(x => x.id !== a.p_event); },
+    ss_reveal: a => {
+      need(a); const e = ev(a.p_event), me = chi(e, a.p_name); if (!me || me.pin !== a.p_pin) throw err('PIN_ERRATO');
+      const r = e.pairs && e.people.find(p => p.id === e.pairs.get(me.id));
+      return r ? { drawn: true, me: me.name, to: r.name, wish: r.wish, my_wish: me.wish } : { drawn: false, me: me.name, my_wish: me.wish };
+    },
+    ss_check: a => {
+      need(a); const e = ev(a.p_event), n = e.people.length, pr = e.pairs || new Map(), rec = [...pr.values()];
+      const nome = i => (e.people.find(p => p.id === i) || {}).name;
+      let passi = 0; const inizio = [...pr.keys()][0]; let c = inizio;
+      if (inizio) do { c = pr.get(c); passi++; } while (c && c !== inizio && passi <= n);
+      const self = [...pr].filter(([g, r]) => g === r).length, dup = rec.length - new Set(rec).size;
+      const ex = [...pr].filter(([g, r]) => e.excl.some(([p, q]) => (p === nome(g) && q === nome(r)) || (p === nome(r) && q === nome(g)))).length;
+      const giro = passi === n && c === inizio;
+      return { people: n, pairs: pr.size, self, dup_receivers: dup, excluded_pairs: ex, single_chain: giro, ok: pr.size === n && !self && !dup && !ex && giro };
+    },
+    ss_reset_pin: a => { need(a); const e = adm(a); if (!pinOk(a.p_new_pin)) throw err('PIN_NON_VALIDO'); const p = chi(e, a.p_name); if (!p) throw err('NOME_NON_TROVATO'); p.pin = a.p_new_pin; }
+  };
+  return {
+    files: D.files,
+    async rpc(fn, a) {
+      await new Promise(z => setTimeout(z, 120));
+      if (!F[fn]) throw err('NO_DB');
+      const r = F[fn](a); return r === undefined ? null : JSON.parse(JSON.stringify(r));
+    }
+  };
+}
+
 // ===================== AVVIO =====================
-if (!SUPA_URL || !SUPA_KEY) renderNoConfig();
-else if (!S.pw) renderLogin();
+if (!S.pw) renderLogin();
 else if (!S.me) renderChiSei();
 else start();
 </script>

@@ -1,5 +1,5 @@
 -- ============================================================
---  IL COVO – database del sito del gruppo (Supabase / Postgres)
+--  PIPPEGHI 24/7 – database del sito del gruppo (Supabase / Postgres)
 --  Tutto passa da funzioni che chiedono la password del gruppo.
 --  Le tabelle non sono leggibili direttamente con la chiave pubblica.
 -- ============================================================
@@ -19,6 +19,21 @@ create table if not exists posts (
   author text not null,
   body text not null default '',
   photos text[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists post_likes (         -- i "mi piace"
+  post_id uuid not null references posts(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  primary key (post_id, name)
+);
+
+create table if not exists post_replies (       -- le risposte ai post
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references posts(id) on delete cascade,
+  author text not null,
+  body text not null,
   created_at timestamptz not null default now()
 );
 
@@ -75,6 +90,8 @@ create table if not exists ss_pairs (
 alter table app_config enable row level security;
 alter table members   enable row level security;
 alter table posts     enable row level security;
+alter table post_likes   enable row level security;
+alter table post_replies enable row level security;
 alter table albums    enable row level security;
 alter table photos    enable row level security;
 alter table ss_events enable row level security;
@@ -124,7 +141,10 @@ language plpgsql stable security definer set search_path = public, extensions as
 begin
   perform _need(p_pw);
   return coalesce((select json_agg(row_to_json(p) order by p.created_at desc)
-    from (select id, author, body, photos, created_at from posts order by created_at desc limit 150) p), '[]'::json);
+    from (select x.id, x.author, x.body, x.photos, x.created_at,
+            coalesce((select json_agg(l.name order by l.created_at) from post_likes l where l.post_id = x.id), '[]'::json) as likes,
+            (select count(*) from post_replies r where r.post_id = x.id) as replies
+          from posts x order by x.created_at desc limit 150) p), '[]'::json);
 end $$;
 
 create or replace function post_add(p_pw text, p_author text, p_body text, p_photos text[]) returns uuid
@@ -142,6 +162,46 @@ language plpgsql security definer set search_path = public, extensions as $$
 begin
   perform _need(p_pw);
   delete from posts where id = p_id and author = p_author;
+end $$;
+
+-- mi piace / non mi piace più (restituisce true se ora piace)
+create or replace function post_like(p_pw text, p_id uuid, p_name text) returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30);
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if not exists (select 1 from posts where id = p_id) then raise exception 'POST_NON_TROVATO'; end if;
+  delete from post_likes where post_id = p_id and lower(name) = lower(n);
+  if found then return false; end if;
+  insert into post_likes(post_id, name) values (p_id, n) on conflict do nothing;
+  return true;
+end $$;
+
+create or replace function post_thread(p_pw text, p_id uuid) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(row_to_json(r) order by r.created_at)
+    from (select id, author, body, created_at from post_replies where post_id = p_id) r), '[]'::json);
+end $$;
+
+create or replace function reply_add(p_pw text, p_id uuid, p_author text, p_body text) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; b text := _clean(p_body, 2000);
+begin
+  perform _need(p_pw);
+  if b = '' then raise exception 'POST_VUOTO'; end if;
+  if not exists (select 1 from posts where id = p_id) then raise exception 'POST_NON_TROVATO'; end if;
+  insert into post_replies(post_id, author, body) values (p_id, _clean(p_author,30), b) returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function reply_del(p_pw text, p_id uuid, p_author text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from post_replies where id = p_id and author = p_author;
 end $$;
 
 -- ---------- album foto ----------
@@ -395,7 +455,8 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, feed, post_add, post_del, albums_list, album_create,
+grant execute on function check_pw, members_list, member_add, feed, post_add, post_del, post_like, post_thread,
+  reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
   ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin to anon, authenticated;
 revoke execute on function _ok, _need, _ss_admin from anon, authenticated;
