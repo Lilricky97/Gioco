@@ -435,6 +435,12 @@ await pr.click('[data-tab=foto]'); await pr.waitForSelector('#albums .album'); a
 await pr.waitForFunction(() => document.querySelectorAll('#al-grid .pic').length === 5); ok(true, 'prova: cartella con 5 foto finte')
 await pr.click('#al-grid .pic >> nth=4'); await pr.waitForSelector('.lb-com')
 ok((await pr.textContent('.lb-com')).includes('2 commenti'), 'prova: la foto della spiaggia ha 2 commenti')
+for (const w of [320, 390]) {
+  await pr.setViewportSize({ width: w, height: 680 }); await pr.waitForTimeout(150)
+  const fuori = await pr.evaluate(() => [...document.querySelectorAll('.lb-bot *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1).length)
+  ok(!fuori, `visore foto a ${w}px: tutti i bottoni dentro lo schermo`)
+}
+await shot(pr, '24-prova-visore'); await pr.setViewportSize({ width: 390, height: 664 })
 await pr.click('.lb-x')
 await pr.click('[data-tab=santa]'); await pr.waitForSelector('.ss-item'); await pr.click('.ss-item'); await pr.waitForSelector('#ss-join')
 await pr.fill('#ss-join [name=pin]', '5555'); await pr.click('#ss-join [type=submit]'); await pr.waitForSelector('#ss-me [data-a=wish]')
