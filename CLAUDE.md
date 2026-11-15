@@ -27,7 +27,8 @@ Richiesta di Ricky:
 Decisioni già prese con Ricky:
 - Nome del sito: **"Pippeghi 24/7"** (insegna al neon: "Pippeghi" rosa, "24/7" verde menta). Lo stile neon gli piace.
 - **Novità in stile X/Twitter**: post con ❤️ mi piace e 💬 risposte, #hashtag cliccabili, "🔥 Di tendenza" = hashtag più usati negli ultimi 30 giorni (a destra su computer, riga scorrevole in alto sul telefono). Ricky deve ancora dire come vuole le altre sezioni e i colori: chiedere/proporre.
-- Database: **Supabase** (account già creato da Ricky con GitHub, progetto "amici", regione Frankfurt).
+- Database: **Supabase** (account di Ricky, organizzazione "Pippeghi 24/7", progetto "Lilricky97's Project", ref `hiypieuddqkwefifiqqc` → URL `https://hiypieuddqkwefifiqqc.supabase.co`, regione eu-west).
+- `sito/installa.sql` = `schema.sql` + `storage.sql` in un file solo (da rigenerare se cambiano), per un unico copia-incolla dal telefono.
 - Accesso: **una password unica del gruppo**, poi ognuno sceglie il proprio nome. (Ricky deve ancora dire quale password.)
 
 Stato:
