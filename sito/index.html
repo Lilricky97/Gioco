@@ -65,7 +65,7 @@ main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px 
   padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
 .tabs button{position:relative;background:none;border:0;color:var(--muto2);font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 6px;cursor:pointer}
 .tabs .ico{display:block;width:24px;height:24px;transition:filter .2s,transform .2s}
-.tabs button span:last-child{max-width:100%;overflow:hidden;text-overflow:clip;white-space:nowrap}
+.tabs button span:last-child{max-width:100%;white-space:nowrap;line-height:1.6;padding-top:2px;overflow:visible}
 @media (max-width:379px){.tabs button{font-size:9px;letter-spacing:.03em}}
 .tabs svg{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tabs button:not(.on):hover{color:var(--muto)}
@@ -975,7 +975,7 @@ function logout(avviso) {
 const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 // tutte le zone del sito (menu ☰); in basso solo Novità e Storie
 const ZONE = [
-  { id: 'novita', t: 'Novità', d: 'Post, risposte e #tendenze', f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
+  { id: 'novita', t: 'Novità', d: 'Post, risposte e #tendenze', menu: false, f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
   { id: 'calendario', t: 'Calendario', d: 'Cene, feste e serate', f: viewCalendario, ico: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/>') },
   { id: 'storie', t: 'Storie', d: 'Foto che durano 24 ore', menu: false, f: viewStorie, ico: svg('<circle cx="12" cy="12" r="8.5" stroke-dasharray="4.2 2.4"/><path d="M12 8.5v7M8.5 12h7"/>') },
   { id: 'foto', t: 'Foto', d: 'Le cartelle del gruppo', f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },

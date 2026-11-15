@@ -264,7 +264,8 @@ ok(true, 'sondaggio eliminato')
 const giornoT = k => { const d = new Date(); d.setDate(d.getDate() + k); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 const codaVuota = page => page.waitForFunction(() => Object.values(S.vq).every(q => !q.n))
 await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in [data-zona]')
-ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1, 'menu ☰: niente Storie (sono già in basso), c\'è il Calendario')
+ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=novita]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1, 'menu ☰: niente Novità e Storie (sono già in basso), c\'è il Calendario')
+ok(await ricky.evaluate(() => { const s = document.querySelector('.tabs [data-tab=novita] span:last-child'), c = getComputedStyle(s); return s.textContent === 'Novità' && c.overflow === 'visible' && parseFloat(c.lineHeight) >= parseFloat(c.fontSize) * 1.5 }), 'barra in basso: "NOVITÀ" con spazio per l\'accento (niente taglio in alto)')
 await ricky.click('.mz [data-zona=calendario]'); await ricky.waitForFunction(() => !document.querySelector('.mz-ov'))
 await ricky.waitForSelector('#ev-list .ev-vuoto'); ok(await ricky.locator('#cal .cd.oggi').count() === 1, 'calendario: il mese con oggi evidenziato, ancora nessun evento')
 // nuovo evento domani, con copertina e annuncio nelle Novità
