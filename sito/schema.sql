@@ -14,6 +14,23 @@ create table if not exists members (
   created_at timestamptz not null default now()
 );
 
+alter table members add column if not exists last_seen timestamptz;   -- per sapere chi è online
+
+create table if not exists stories (            -- foto che spariscono dopo 24 ore
+  id uuid primary key default gen_random_uuid(),
+  author text not null,
+  path text not null,
+  caption text not null default '',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists story_views (        -- chi ha visto ogni storia
+  story_id uuid not null references stories(id) on delete cascade,
+  name text not null,
+  seen_at timestamptz not null default now(),
+  primary key (story_id, name)
+);
+
 create table if not exists posts (
   id uuid primary key default gen_random_uuid(),
   author text not null,
@@ -28,6 +45,8 @@ create table if not exists post_likes (         -- i "mi piace"
   created_at timestamptz not null default now(),
   primary key (post_id, name)
 );
+
+alter table post_likes add column if not exists val smallint not null default 1;   -- 1 = mi piace, -1 = non mi piace
 
 create table if not exists post_replies (       -- le risposte ai post
   id uuid primary key default gen_random_uuid(),
@@ -50,6 +69,22 @@ create table if not exists photos (
   path text not null,
   author text not null,
   created_at timestamptz not null default now()
+);
+
+create table if not exists photo_comments (     -- commenti alle foto degli album
+  id uuid primary key default gen_random_uuid(),
+  photo_id uuid not null references photos(id) on delete cascade,
+  author text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists photo_votes (        -- mi piace / non mi piace sulle foto
+  photo_id uuid not null references photos(id) on delete cascade,
+  name text not null,
+  val smallint not null,
+  created_at timestamptz not null default now(),
+  primary key (photo_id, name)
 );
 
 create table if not exists ss_events (
@@ -89,11 +124,15 @@ create table if not exists ss_pairs (
 
 alter table app_config enable row level security;
 alter table members   enable row level security;
+alter table stories     enable row level security;
+alter table story_views enable row level security;
 alter table posts     enable row level security;
 alter table post_likes   enable row level security;
 alter table post_replies enable row level security;
 alter table albums    enable row level security;
 alter table photos    enable row level security;
+alter table photo_comments enable row level security;
+alter table photo_votes enable row level security;
 alter table ss_events enable row level security;
 alter table ss_people enable row level security;
 alter table ss_excl   enable row level security;
@@ -135,6 +174,61 @@ begin
   insert into members(name) values (n) on conflict do nothing;
 end $$;
 
+-- chi è online: ogni telefono "bussa" ogni 45 secondi; online = visto negli ultimi 150 secondi
+create or replace function presenza(p_pw text, p_name text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30);
+begin
+  perform _need(p_pw);
+  if n <> '' then
+    update members set last_seen = now() where lower(name) = lower(n);
+    if not found then insert into members(name, last_seen) values (n, now()) on conflict (name) do update set last_seen = now(); end if;
+  end if;
+  return coalesce((select json_agg(json_build_object('name', name, 'created_at', created_at, 'last_seen', last_seen,
+      'online', coalesce(last_seen > now() - interval '150 seconds', false)) order by last_seen desc nulls last, lower(name)) from members), '[]'::json);
+end $$;
+
+-- ---------- storie (24 ore) ----------
+create or replace function stories_list(p_pw text, p_name text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(x order by x.created_at) from (
+    select s.id, s.author, s.path, s.caption, s.created_at,
+      case when lower(s.author) = lower(coalesce(p_name, '')) then   -- chi l'ha vista: solo per l'autore
+        coalesce((select json_agg(v.name order by v.seen_at) from story_views v where v.story_id = s.id), '[]'::json) end as views
+    from stories s where s.created_at > now() - interval '24 hours') x), '[]'::json);
+end $$;
+
+create or replace function story_add(p_pw text, p_author text, p_path text, p_caption text) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; pth text := _clean(p_path, 300);
+begin
+  perform _need(p_pw);
+  if pth = '' then raise exception 'POST_VUOTO'; end if;
+  delete from stories where created_at < now() - interval '24 hours';   -- pulizia delle scadute
+  insert into stories(author, path, caption) values (_clean(p_author, 30), pth, _clean(p_caption, 150)) returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function story_seen(p_pw text, p_id uuid, p_name text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30);
+begin
+  perform _need(p_pw);
+  if n = '' then return; end if;
+  if exists (select 1 from stories where id = p_id and lower(author) <> lower(n)) then
+    insert into story_views(story_id, name) values (p_id, n) on conflict do nothing;
+  end if;
+end $$;
+
+create or replace function story_del(p_pw text, p_id uuid, p_author text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from stories where id = p_id and author = p_author;
+end $$;
+
 -- ---------- novità ----------
 create or replace function feed(p_pw text) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
@@ -142,7 +236,8 @@ begin
   perform _need(p_pw);
   return coalesce((select json_agg(row_to_json(p) order by p.created_at desc)
     from (select x.id, x.author, x.body, x.photos, x.created_at,
-            coalesce((select json_agg(l.name order by l.created_at) from post_likes l where l.post_id = x.id), '[]'::json) as likes,
+            coalesce((select json_agg(l.name order by l.created_at) from post_likes l where l.post_id = x.id and l.val = 1), '[]'::json) as likes,
+            coalesce((select json_agg(l.name order by l.created_at) from post_likes l where l.post_id = x.id and l.val = -1), '[]'::json) as dislikes,
             (select count(*) from post_replies r where r.post_id = x.id) as replies
           from posts x order by x.created_at desc limit 150) p), '[]'::json);
 end $$;
@@ -172,10 +267,26 @@ begin
   perform _need(p_pw);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if not exists (select 1 from posts where id = p_id) then raise exception 'POST_NON_TROVATO'; end if;
-  delete from post_likes where post_id = p_id and lower(name) = lower(n);
+  delete from post_likes where post_id = p_id and lower(name) = lower(n) and val = 1;
   if found then return false; end if;
-  insert into post_likes(post_id, name) values (p_id, n) on conflict do nothing;
+  insert into post_likes(post_id, name, val) values (p_id, n, 1) on conflict (post_id, name) do update set val = 1;
   return true;
+end $$;
+
+-- voto su un post: p_val 1 = mi piace, -1 = non mi piace; lo stesso voto di nuovo lo toglie. Restituisce il voto attuale (0 = nessuno)
+create or replace function post_vote(p_pw text, p_id uuid, p_name text, p_val int) returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); prima smallint;
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if p_val is null or p_val not in (1, -1) then raise exception 'VOTO_NON_VALIDO'; end if;
+  if not exists (select 1 from posts where id = p_id) then raise exception 'POST_NON_TROVATO'; end if;
+  select val into prima from post_likes where post_id = p_id and lower(name) = lower(n);
+  delete from post_likes where post_id = p_id and lower(name) = lower(n);
+  if prima is not distinct from p_val::smallint then return 0; end if;
+  insert into post_likes(post_id, name, val) values (p_id, n, p_val) on conflict (post_id, name) do update set val = excluded.val;
+  return p_val;
 end $$;
 
 create or replace function post_thread(p_pw text, p_id uuid) returns json
@@ -231,7 +342,11 @@ language plpgsql stable security definer set search_path = public, extensions as
 begin
   perform _need(p_pw);
   return coalesce((select json_agg(row_to_json(f) order by f.created_at desc)
-    from (select id, path, author, created_at from photos where album_id = p_album) f), '[]'::json);
+    from (select x.id, x.path, x.author, x.created_at,
+            (select count(*) from photo_comments c where c.photo_id = x.id) as comments,
+            coalesce((select json_agg(v.name order by v.created_at) from photo_votes v where v.photo_id = x.id and v.val = 1), '[]'::json) as likes,
+            coalesce((select json_agg(v.name order by v.created_at) from photo_votes v where v.photo_id = x.id and v.val = -1), '[]'::json) as dislikes
+          from photos x where x.album_id = p_album) f), '[]'::json);
 end $$;
 
 create or replace function photo_add(p_pw text, p_album uuid, p_path text, p_author text) returns void
@@ -239,6 +354,47 @@ language plpgsql security definer set search_path = public, extensions as $$
 begin
   perform _need(p_pw);
   insert into photos(album_id, path, author) values (p_album, _clean(p_path,300), _clean(p_author,30));
+end $$;
+
+create or replace function photo_comments(p_pw text, p_photo uuid) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(row_to_json(c) order by c.created_at)
+    from (select id, author, body, created_at from photo_comments where photo_id = p_photo) c), '[]'::json);
+end $$;
+
+create or replace function photo_comment_add(p_pw text, p_photo uuid, p_author text, p_body text) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; b text := _clean(p_body, 1000);
+begin
+  perform _need(p_pw);
+  if b = '' then raise exception 'POST_VUOTO'; end if;
+  if not exists (select 1 from photos where id = p_photo) then raise exception 'FOTO_NON_TROVATA'; end if;
+  insert into photo_comments(photo_id, author, body) values (p_photo, _clean(p_author, 30), b) returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function photo_vote(p_pw text, p_photo uuid, p_name text, p_val int) returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); prima smallint;
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if p_val is null or p_val not in (1, -1) then raise exception 'VOTO_NON_VALIDO'; end if;
+  if not exists (select 1 from photos where id = p_photo) then raise exception 'FOTO_NON_TROVATA'; end if;
+  select val into prima from photo_votes where photo_id = p_photo and lower(name) = lower(n);
+  delete from photo_votes where photo_id = p_photo and lower(name) = lower(n);
+  if prima is not distinct from p_val::smallint then return 0; end if;
+  insert into photo_votes(photo_id, name, val) values (p_photo, n, p_val) on conflict (photo_id, name) do update set val = excluded.val;
+  return p_val;
+end $$;
+
+create or replace function photo_comment_del(p_pw text, p_id uuid, p_author text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from photo_comments where id = p_id and author = p_author;
 end $$;
 
 create or replace function photo_del(p_pw text, p_id uuid) returns void
@@ -455,9 +611,9 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, feed, post_add, post_del, post_like, post_thread,
+grant execute on function check_pw, members_list, member_add, presenza, stories_list, story_add, story_seen, story_del, feed, post_add, post_del, post_like, post_vote, post_thread,
   reply_add, reply_del, albums_list, album_create,
-  album_photos, photo_add, photo_del, album_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
+  album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
   ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin to anon, authenticated;
 revoke execute on function _ok, _need, _ss_admin from anon, authenticated;
 revoke execute on function _ok, _need, _ss_admin from public;

@@ -7,23 +7,23 @@
 <title>Pippeghi 24/7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;500;600;700;800&family=Yellowtail&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=Bebas+Neue&family=Monoton&display=swap" rel="stylesheet">
 <style>
 :root{
-  --notte:#0a0f24;--notte2:#10183a;--card:#131b40;--campo:#0b1230;--line:#273368;
+  --notte:#070b1d;--notte2:#10183a;--card:#131b40;--campo:#0b1230;--line:#273368;
   --rosa:#ff3ea5;--rosa-g:rgba(255,62,165,.55);--menta:#46f5c0;--menta-g:rgba(70,245,192,.45);
   --giallo:#ffd86b;--rosso:#ff5d6c;--testo:#eef1ff;--muto:#9aa3cf;--muto2:#6c76a8;
-  --r:18px;--bar:64px;
+  --r:8px;--bar:64px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;color:var(--testo);font:16px/1.45 Outfit,system-ui,-apple-system,sans-serif}
+html,body{margin:0;color:var(--testo);font:16px/1.45 Archivo,system-ui,-apple-system,sans-serif}
 html{background:var(--notte)}
 body{min-height:100vh;min-height:100dvh;background:
   radial-gradient(700px 420px at -10% -5%,rgba(255,62,165,.17),transparent 60%),
   radial-gradient(700px 520px at 110% 105%,rgba(70,245,192,.11),transparent 60%),var(--notte);background-attachment:fixed}
 body.noscroll{overflow:hidden}
 button{font:inherit;color:inherit}
-h2,h3,h4{margin:0 0 10px;line-height:1.2}
+h2,h3,h4{margin:0 0 10px;line-height:1.15;font-weight:800;letter-spacing:-.01em}
 h2{font-size:22px}h3{font-size:18px}h4{font-size:15px;color:var(--giallo);letter-spacing:.02em}
 p{margin:0 0 10px}
 a{color:var(--menta)}
@@ -31,26 +31,31 @@ a{color:var(--menta)}
 .hint{color:var(--muto);font-size:14px;margin:6px 0 0}
 
 /* ---------- insegna al neon ---------- */
-.neon{font-family:Yellowtail,cursive;font-weight:400;font-size:46px;line-height:1.05;margin:10px 0 16px;color:#fff;
-  text-shadow:0 0 3px #fff,0 0 10px var(--rosa),0 0 22px var(--rosa),0 0 44px var(--rosa)}
-.neon.m{text-shadow:0 0 3px #fff,0 0 10px var(--menta),0 0 22px var(--menta),0 0 44px var(--menta)}
-.neon.sm{font-size:38px;word-break:break-word}
-@keyframes flick{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.35}}
-.flick{animation:flick 7s infinite}
-@media (prefers-reduced-motion:reduce){.flick,.rv-name{animation:none!important}}
+.neon{font-family:"Bebas Neue",Archivo,sans-serif;font-weight:400;font-size:60px;line-height:.92;letter-spacing:.03em;margin:14px 0 16px;color:#fff3fa;
+  text-shadow:0 0 2px #fff,0 0 8px var(--rosa),0 0 18px var(--rosa),0 0 38px var(--rosa),0 0 70px rgba(255,62,165,.5);animation:ronzio 8s infinite}
+.neon.m{color:#effff9;text-shadow:0 0 2px #fff,0 0 8px var(--menta),0 0 18px var(--menta),0 0 38px var(--menta),0 0 70px rgba(70,245,192,.45);animation-delay:-3s}
+.neon.sm{font-size:48px;word-break:break-word}
+/* neon che sfarfallano: ronzio = tubo che ogni tanto perde colpi; flick = più nervoso; rotto = lettera difettosa */
+@keyframes ronzio{0%,61%,63.5%,66%,100%{opacity:1}62%,65%{opacity:.25}64%{opacity:.8}}
+@keyframes flick{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.3}}
+@keyframes rotto{0%,9%,11%,13%,40%,42%,70%,100%{opacity:1;text-shadow:inherit}10%,12%,41%,71%,73%{opacity:.18;text-shadow:none}72%{opacity:.6}}
+.flick{animation:flick 6s infinite}
+.rotto{animation:rotto 4.5s infinite}
+@media (prefers-reduced-motion:reduce){.flick,.rotto,.neon,.rv-name{animation:none!important}}
 
 /* ---------- struttura ---------- */
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:calc(8px + env(safe-area-inset-top)) 16px 8px;background:rgba(10,15,36,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(39,51,104,.6)}
-.logo{font-family:Yellowtail,cursive;font-size:clamp(24px,7.6vw,32px);white-space:nowrap;flex:none;line-height:1;color:#fff;background:none;border:0;padding:4px 0;cursor:pointer;
-  text-shadow:0 0 3px #fff,0 0 9px var(--rosa),0 0 20px var(--rosa)}
-.me{display:flex;align-items:center;gap:8px;min-width:0;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:15px;max-width:44%}
+.logo{font-family:Monoton,"Bebas Neue",sans-serif;font-size:clamp(17px,5.4vw,24px);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;flex:none;line-height:1;color:#fff3fa;background:none;border:0;padding:6px 0;cursor:pointer;
+  text-shadow:0 0 2px #fff,0 0 7px var(--rosa),0 0 16px var(--rosa),0 0 30px rgba(255,62,165,.6)}
+.logo .s7{font-family:"Bebas Neue",sans-serif;font-size:1.25em;letter-spacing:.04em;margin-left:.15em;display:inline-block;transform:rotate(-6deg) translateY(1px)}
+.me{display:flex;align-items:center;gap:8px;min-width:0;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:4px 12px 4px 4px;font-weight:600;font-size:15px;max-width:44%}
 .me b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px + env(safe-area-inset-bottom))}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
   background:rgba(10,15,36,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);
   padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
-.tabs button{position:relative;background:none;border:0;color:var(--muto2);font-weight:600;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 6px;cursor:pointer}
+.tabs button{position:relative;background:none;border:0;color:var(--muto2);font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 6px;cursor:pointer}
 .tabs .ico{display:block;width:24px;height:24px;transition:filter .2s,transform .2s}
 .tabs svg{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tabs button:not(.on):hover{color:var(--muto)}
@@ -60,17 +65,17 @@ main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px 
 
 /* ---------- elementi ---------- */
 .card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)),var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 14px}
-.btn{appearance:none;-webkit-appearance:none;border:0;border-radius:999px;background:var(--rosa);color:#22001a;font-weight:700;font-size:16px;line-height:1.1;
-  padding:13px 20px;min-height:48px;cursor:pointer;display:inline-flex;white-space:nowrap;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center;
-  box-shadow:0 6px 22px -8px var(--rosa-g);transition:transform .08s,opacity .2s}
+.btn{appearance:none;-webkit-appearance:none;border:0;border-radius:6px;background:var(--rosa);color:#22001a;font-weight:800;font-size:14.5px;line-height:1.1;text-transform:uppercase;letter-spacing:.07em;
+  padding:13px 20px;min-height:48px;cursor:pointer;display:inline-flex;max-width:100%;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 0 18px -4px var(--rosa-g),0 6px 22px -10px var(--rosa);transition:transform .08s,opacity .2s,box-shadow .2s}
 .btn:active{transform:scale(.97)}
 .btn[disabled]{opacity:.45;pointer-events:none}
-.btn.ghost{background:transparent;color:var(--menta);border:1.5px solid rgba(70,245,192,.5);box-shadow:none}
+.btn.ghost{background:rgba(70,245,192,.04);color:var(--menta);border:1.5px solid rgba(70,245,192,.55);box-shadow:0 0 14px -6px var(--menta-g),inset 0 0 10px -6px var(--menta-g)}
 .btn.danger{background:var(--rosso);color:#2a0006}
 .btn.ghost.rosso{color:var(--rosso);border-color:rgba(255,93,108,.5);background:transparent}
-.btn.sm{font-size:14.5px;padding:9px 15px;min-height:40px}
-.btn.xs{font-size:13.5px;padding:6px 12px;min-height:34px}
-.btn.big{font-size:19px;padding:17px 22px;min-height:60px}
+.btn.sm{font-size:12.5px;padding:9px 15px;min-height:40px}
+.btn.xs{font-size:11.5px;padding:6px 12px;min-height:34px}
+.btn.big{font-size:17px;padding:17px 22px;min-height:60px}
 .btn.wide{width:100%}
 .link{background:none;border:0;color:var(--muto);text-decoration:underline;font-size:14.5px;padding:10px 2px;cursor:pointer}
 .icon{background:none;border:0;font-size:18px;padding:6px 8px;cursor:pointer;border-radius:10px;color:var(--muto)}
@@ -78,7 +83,7 @@ main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px 
 .col{display:flex;flex-direction:column;gap:10px}
 label{display:block;font-weight:600;font-size:14px;color:var(--muto);margin:14px 0 0}
 label>input,label>textarea,label>select{margin-top:6px}
-input,textarea,select{width:100%;background:var(--campo);border:1.5px solid var(--line);color:var(--testo);border-radius:14px;padding:12px 14px;font:16px/1.4 Outfit,system-ui,sans-serif;outline:none}
+input,textarea,select{width:100%;background:var(--campo);border:1.5px solid var(--line);color:var(--testo);border-radius:6px;padding:12px 14px;font:16px/1.4 Archivo,system-ui,sans-serif;outline:none}
 textarea{resize:none}
 input::placeholder,textarea::placeholder{color:var(--muto2)}
 input:focus,textarea:focus,select:focus{border-color:var(--menta);box-shadow:0 0 0 3px rgba(70,245,192,.16)}
@@ -96,10 +101,10 @@ select{appearance:none;-webkit-appearance:none;padding-right:36px;background-ima
   border:2px solid var(--c);box-shadow:0 0 10px -2px var(--c),inset 0 0 8px -3px var(--c);background:rgba(0,0,0,.25)}
 .av.s{width:30px;height:30px;font-size:13px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:rgba(255,255,255,.03);border-radius:999px;padding:7px 13px;font-weight:600;font-size:15px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:rgba(255,255,255,.03);border-radius:6px;padding:7px 13px;font-weight:600;font-size:15px}
 .chip.on{border-color:var(--menta);color:var(--menta);box-shadow:0 0 12px -4px var(--menta)}
 button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
-.pill{display:inline-block;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700}
+.pill{display:inline-block;border-radius:4px;padding:4px 10px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
 .pill.rosa{background:rgba(255,62,165,.15);color:var(--rosa);border:1px solid rgba(255,62,165,.4)}
 .pill.menta{background:rgba(70,245,192,.12);color:var(--menta);border:1px solid rgba(70,245,192,.4)}
 .loading{color:var(--muto);text-align:center;padding:34px 0}
@@ -115,22 +120,23 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 
 /* ---------- ingresso ---------- */
 .s7{color:#fff;text-shadow:0 0 3px #fff,0 0 9px var(--menta),0 0 20px var(--menta),0 0 40px var(--menta)}
-.sign .s7{display:block;font-size:.6em;margin:.22em 0 .12em;transform:rotate(-5deg)}
+.sign .s7{display:block;font-family:"Bebas Neue",sans-serif;font-size:1.55em;letter-spacing:.06em;margin:.12em 0 0;transform:rotate(-5deg)}
 .demo-bar{background:repeating-linear-gradient(-45deg,rgba(255,216,107,.16) 0 10px,rgba(255,216,107,.07) 10px 20px);color:var(--giallo);text-align:center;font-weight:700;font-size:12.5px;letter-spacing:.03em;padding:6px 12px;border-bottom:1px solid rgba(255,216,107,.3)}
-.demo-note{margin-top:14px;border:1.5px dashed rgba(255,216,107,.5);border-radius:14px;padding:12px 14px;color:var(--giallo);font-size:14.5px;line-height:1.5}
+.demo-note{margin-top:14px;border:1.5px dashed rgba(255,216,107,.5);border-radius:6px;padding:12px 14px;color:var(--giallo);font-size:14.5px;line-height:1.5}
 .gate{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;max-width:440px;margin:0 auto;padding:30px 18px calc(30px + env(safe-area-inset-bottom))}
-.sign{font-family:Yellowtail,cursive;font-size:clamp(62px,21vw,88px);line-height:1;text-align:center;color:#fff;margin:0 0 6px;
-  text-shadow:0 0 4px #fff,0 0 12px var(--rosa),0 0 26px var(--rosa),0 0 52px var(--rosa),0 0 80px var(--rosa)}
-.tag{text-align:center;font-weight:700;letter-spacing:.32em;font-size:12px;color:var(--menta);text-shadow:0 0 10px var(--menta-g);margin:0 0 28px}
+.sign{font-family:Monoton,"Bebas Neue",sans-serif;font-size:clamp(34px,11.5vw,62px);text-transform:uppercase;line-height:1;text-align:center;color:#fff3fa;margin:0 0 8px;white-space:nowrap;
+  text-shadow:0 0 3px #fff,0 0 10px var(--rosa),0 0 24px var(--rosa),0 0 48px var(--rosa),0 0 90px rgba(255,62,165,.55)}
+.tag{text-align:center;font-family:"Bebas Neue",sans-serif;letter-spacing:.42em;font-size:20px;color:var(--menta);text-shadow:0 0 8px var(--menta-g),0 0 20px var(--menta-g);margin:6px 0 30px}
 .or{text-align:center;color:var(--muto2);font-size:14px;margin:16px 0 0}
 .gate .card{padding:20px}
 .gate .btn.wide{margin-top:16px}
 
 /* ---------- novità ---------- */
 .composer .row{align-items:flex-start}
-.composer textarea{min-height:48px;max-height:300px;border-radius:14px}
+.composer textarea{min-height:48px;max-height:300px}
 .composer .row.end{margin-top:12px}
 .np-hint{margin:0 auto 0 0!important;display:none}
+.composer .btn,.tw-a .act,.lb-act .btn{white-space:nowrap}
 @media (min-width:520px){.np-hint{display:block}}
 .prev{display:flex;gap:8px;flex-wrap:wrap}
 .prev:not(:empty){margin-top:12px}
@@ -184,10 +190,14 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .tw-a{display:flex;gap:22px;margin:2px 0 0 -9px}
 .act{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--muto);font-size:14px;font-weight:600;padding:8px 9px;border-radius:999px;cursor:pointer;min-width:52px}
 .act svg{display:block;flex:none}
-.act.like.on{color:var(--rosa)}
-.act.like.on path{fill:currentColor}
-.act.like.on svg{filter:drop-shadow(0 0 5px var(--rosa-g))}
-.act.like.pop svg{animation:pop .35s ease-out}
+.act.up.on{color:var(--menta)}
+.act.up.on svg{filter:drop-shadow(0 0 5px var(--menta-g))}
+.act.down.on{color:var(--rosso)}
+.act.down.on svg{filter:drop-shadow(0 0 5px rgba(255,93,108,.6))}
+.act.on path{fill:currentColor;fill-opacity:.28}
+.act.pop svg{animation:pop .35s ease-out}
+.lk{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.lk+.lk{margin-top:4px}
+.lk svg{flex:none}.lk.up svg{color:var(--menta)}.lk.down svg{color:var(--rosso)}
 @keyframes pop{40%{transform:scale(1.4)}}
 .likers{padding:10px 16px;border-bottom:1px solid var(--line);color:var(--muto);font-size:14.5px}
 .likers b{color:var(--testo);font-weight:600}
@@ -220,23 +230,34 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:64px;border:0;background:rgba(255,255,255,.07);color:#fff;font-size:34px;cursor:pointer}
 .lb-prev{left:0;border-radius:0 14px 14px 0}.lb-next{right:0;border-radius:14px 0 0 14px}
 .lb-cap{color:var(--muto);font-size:14.5px}
-.lb-act{display:flex;gap:8px}
+.lb-act{display:flex;gap:6px;align-items:center;width:100%}
+.lb-cap{width:100%}
+.lb-sp{flex:1}
+.lb-v{display:flex}
+.lb-v .act{color:rgba(255,255,255,.75)}
+.lb-o,.lb-del{padding:9px 11px}
+.lb-o svg,.lb-del svg{display:block}
+.lb-com svg{width:18px;height:18px}
+.pc-n{position:absolute;right:5px;bottom:5px;display:flex;align-items:center;gap:4px;background:rgba(10,15,36,.78);color:#fff;font-size:12px;font-weight:700;padding:3px 8px 3px 6px;border-radius:999px}
+.pc-n svg{width:13px;height:13px}
+.cm .tw{padding:12px 0}
+.cm-form{padding:12px 0 0;border:0}
 
 /* ---------- finestre ---------- */
 .ov{position:fixed;inset:0;z-index:70;background:rgba(3,5,15,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .18s}
 .ov.in{opacity:1}
-.sheet{width:100%;max-width:560px;background:var(--notte2);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;
+.sheet{width:100%;max-width:560px;background:var(--notte2);border:1px solid var(--line);border-bottom:0;border-radius:14px 14px 0 0;
   padding:22px 18px calc(22px + env(safe-area-inset-bottom));max-height:90vh;max-height:90dvh;overflow:auto;transform:translateY(40px);transition:transform .2s}
 .ov.in .sheet{transform:none}
 .sheet .row.end{margin-top:18px}
 .toast{position:fixed;left:50%;bottom:calc(var(--bar) + 20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;width:max-content;max-width:calc(100% - 32px);
-  background:#0f1738;border:1.5px solid var(--menta);border-radius:14px;padding:12px 16px;font-weight:600;box-shadow:0 0 26px -6px var(--menta-g);animation:tin .2s ease-out}
+  background:#0f1738;border:1.5px solid var(--menta);border-radius:6px;padding:12px 16px;font-weight:600;box-shadow:0 0 26px -6px var(--menta-g);animation:tin .2s ease-out}
 .toast.err{border-color:var(--rosso);box-shadow:0 0 26px -6px rgba(255,93,108,.6)}
 @keyframes tin{from{opacity:0;transform:translate(-50%,10px)}}
 
 /* ---------- gioco ---------- */
 .game{text-align:center;padding:26px 18px;background:radial-gradient(120% 80% at 50% 0%,rgba(255,46,99,.18),transparent 60%),#0d0d12;border-color:#2a2a33}
-.sf{font-family:"Archivo Black",Outfit,sans-serif;font-size:42px;line-height:.95;letter-spacing:-.01em;margin:6px 0 14px;color:#fafafa}
+.sf{font-family:"Archivo Black",Archivo,sans-serif;font-size:42px;line-height:.95;letter-spacing:-.01em;margin:6px 0 14px;color:#fafafa}
 .sf span{color:#ff2e63}
 .game p{color:#c9c9d3}
 .game .btn{background:#ff2e63;color:#fff;box-shadow:0 8px 26px -8px rgba(255,46,99,.7)}
@@ -246,9 +267,9 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .gl-bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;background:#0d0d12;border-bottom:1px solid #2a2a33}
 .gl-b{background:rgba(255,255,255,.06);border:1px solid #2a2a33;color:#fafafa;border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px;cursor:pointer}
 .gl-x{width:36px;height:36px;padding:0}
-.gl-t{font-family:"Archivo Black",Outfit,sans-serif;font-size:14px;color:#fafafa}.gl-t i{font-style:normal;color:#ff2e63}
+.gl-t{font-family:"Archivo Black",Archivo,sans-serif;font-size:14px;color:#fafafa}.gl-t i{font-style:normal;color:#ff2e63}
 .gl iframe{flex:1;width:100%;border:0;background:#0a0a0c}
-.gl-pill{position:fixed;right:14px;bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));z-index:35;background:#ff2e63;color:#fff;border:0;border-radius:999px;padding:11px 16px;font-weight:600;font-size:14.5px;box-shadow:0 8px 26px -6px rgba(255,46,99,.7);cursor:pointer;animation:tin .2s ease-out}
+.gl-pill{position:fixed;left:14px;bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));z-index:35;background:#ff2e63;color:#fff;border:0;border-radius:6px;padding:11px 16px;font-weight:600;font-size:14.5px;box-shadow:0 8px 26px -6px rgba(255,46,99,.7);cursor:pointer;animation:tin .2s ease-out}
 .steps{text-align:left;margin:18px 0 0;padding:0;list-style:none;counter-reset:s}
 .steps li{counter-increment:s;position:relative;padding:0 0 12px 40px;color:#d6d6de}
 .steps li::before{content:counter(s);position:absolute;left:0;top:-2px;width:28px;height:28px;border-radius:50%;background:#ffd60a;color:#111;font-weight:800;display:grid;place-items:center;font-size:14px}
@@ -261,10 +282,10 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .count{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 7px;border-radius:13px;background:var(--campo);color:var(--menta);font-size:14px;margin-left:4px;vertical-align:2px}
 .reveal{text-align:center;padding:6px 0 4px}
 .rv-k{color:var(--muto);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
-.rv-name{font-family:Yellowtail,cursive;font-size:clamp(44px,15vw,68px);line-height:1.1;margin:6px 0 16px;color:#fff;overflow-wrap:anywhere;
+.rv-name{font-family:"Bebas Neue",Archivo,sans-serif;font-size:clamp(56px,20vw,92px);letter-spacing:.03em;line-height:1;margin:6px 0 16px;color:#fff;overflow-wrap:anywhere;
   text-shadow:0 0 5px #fff,0 0 14px var(--menta),0 0 30px var(--menta),0 0 60px var(--menta);animation:acc 1.3s ease-out both}
 @keyframes acc{0%{opacity:0;filter:blur(8px)}25%{opacity:.9;filter:none}32%{opacity:.15}42%{opacity:1}52%{opacity:.35}62%,100%{opacity:1}}
-.letter{text-align:left;background:var(--campo);border:1.5px dashed rgba(255,216,107,.45);border-radius:14px;padding:14px;margin:0 0 14px}
+.letter{text-align:left;background:var(--campo);border:1.5px dashed rgba(255,216,107,.45);border-radius:6px;padding:14px;margin:0 0 14px}
 .letter .h{color:var(--giallo);font-weight:700;margin:0 0 6px}
 .letter p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
 .drum{animation:drum .35s ease-in-out infinite alternate}
@@ -284,10 +305,63 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .exadd{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:10px}
 .exadd .btn{grid-column:1/-1}
 
+/* ---------- chi è online ---------- */
+.top-r{display:flex;align-items:center;gap:8px;min-width:0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#3ddc84;box-shadow:0 0 8px #3ddc84;flex:none}
+.on-btn{display:flex;align-items:center;gap:6px;background:rgba(61,220,132,.08);border:1px solid rgba(61,220,132,.35);color:#c9f7dc;border-radius:8px;padding:7px 11px;font-weight:700;font-size:14px;cursor:pointer;flex:none}
+.on-btn[hidden]{display:none}
+.on-btn span{font-weight:500;color:var(--muto)}
+@media (max-width:419px){.on-btn span{display:none}.me b{display:none}.me{padding:3px}}
+.grp-k{display:flex;align-items:center;gap:8px;margin:16px 0 4px;font-weight:700;color:var(--muto);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.prs{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(39,51,104,.5)}
+.prs:last-child{border-bottom:0}
+.prs-n{flex:1;min-width:0;font-weight:600;display:flex;flex-direction:column;line-height:1.25}
+.prs-n small{font-weight:500;color:var(--muto2);font-size:12.5px}
+.prs-s{display:flex;align-items:center;gap:6px;color:var(--muto);font-size:13.5px;white-space:nowrap}
+.prs-s.on{color:#3ddc84;font-weight:700}
+.x-side h3 .dot{vertical-align:2px;margin-right:2px}
+/* ---------- storie ---------- */
+.fab{position:fixed;right:14px;bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));z-index:35;width:62px;height:62px;border-radius:50%;border:0;padding:0;background:none;cursor:pointer}
+.fab::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--line);box-shadow:0 6px 20px -6px #000}
+.fab.nuove::before{background:conic-gradient(var(--rosa),var(--menta),var(--giallo),var(--rosa));animation:giro 2.8s linear infinite;box-shadow:0 0 18px -2px var(--rosa-g)}
+@keyframes giro{to{transform:rotate(1turn)}}
+.fab-in{position:absolute;inset:3px;border-radius:50%;overflow:hidden;background:var(--notte2);border:2px solid var(--notte);display:grid;place-items:center;color:var(--menta)}
+.fab-in img{width:100%;height:100%;object-fit:cover}
+.fab-in svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fab-n{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;border-radius:11px;background:var(--rosa);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 6px;border:2px solid var(--notte)}
+.fab-n[hidden]{display:none}
+.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:14px 8px;margin-top:14px}
+.st-p{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--testo)}
+.st-p .ring{position:relative;width:70px;height:70px;border-radius:50%;padding:3px;background:var(--line)}
+.st-p.nuove .ring{background:conic-gradient(var(--rosa),var(--menta),var(--giallo),var(--rosa))}
+.st-p .in{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;overflow:hidden;border:3px solid var(--notte2);background:var(--campo)}
+.st-p .in img{width:100%;height:100%;object-fit:cover}
+.st-p .in .av{width:100%;height:100%;font-size:24px;border:0;box-shadow:none}
+.st-p .plus{position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:var(--menta);color:#06261c;font-weight:900;display:grid;place-items:center;border:2px solid var(--notte2);font-size:17px;line-height:1}
+.st-p .nm{font-size:13px;font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-prev{border-radius:10px;overflow:hidden;background:#000;display:grid;place-items:center}
+.st-prev img{max-width:100%;max-height:44vh;display:block}
+.sv{position:fixed;inset:0;z-index:65;background:#000;color:#fff;display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none}
+.sv-bars{display:flex;gap:4px;padding:calc(10px + env(safe-area-inset-top)) 10px 0}
+.sv-bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden}
+.sv-bars b{display:block;height:100%;background:#fff}
+.sv-top{display:flex;align-items:center;justify-content:space-between;padding:8px 6px 8px 14px}
+.sv-who{display:flex;align-items:center;gap:8px;min-width:0}
+.sv-who span{color:rgba(255,255,255,.7);font-size:14px;white-space:nowrap}
+.sv-x{background:none;border:0;color:#fff;font-size:24px;width:44px;height:44px;cursor:pointer}
+.sv-stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.sv-img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
+.sv-cap{position:absolute;left:16px;right:16px;bottom:20px;text-align:center;font-weight:700;font-size:18px;background:rgba(0,0,0,.55);padding:10px 14px;border-radius:10px;overflow-wrap:anywhere}
+.sv-cap[hidden]{display:none}
+.sv-bot{display:flex;gap:10px;justify-content:center;padding:10px 14px calc(14px + env(safe-area-inset-bottom));min-height:24px}
+.sv-bot .btn.ghost{color:#fff;border-color:rgba(255,255,255,.4)}
+.sv-bot .btn.ghost.rosso{color:var(--rosso);border-color:rgba(255,93,108,.5)}
+.sv-bot svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+
 /* ---------- fantasanremo ---------- */
 .soon{text-align:center;padding:34px 18px}
 .soon .mic{font-size:64px;filter:drop-shadow(0 0 16px var(--rosa-g))}
-.soon .neon{font-size:54px}
+.soon .neon{font-size:72px}
 </style>
 </head>
 <body>
@@ -312,7 +386,7 @@ const store = {
 };
 const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, album: {}, ss: null,
   draft: { text: '', files: [] }, ui: { rev: {}, adm: {} }, mine: {}, busy: 0, refresh: null,
-  thread: {}, replyDraft: {}, liking: {}, lastFeed: '#novita' };
+  thread: {}, replyDraft: {}, liking: {}, vq: {}, lastFeed: '#novita' };
 
 // ---------- messaggi d'errore in italiano ----------
 const MSG = {
@@ -333,9 +407,11 @@ const MSG = {
   EVENTO_NON_TROVATO: 'Questo Secret Santa non esiste più.',
   NOME_NON_TROVATO: 'Nome non trovato.',
   POST_NON_TROVATO: 'Questo post non esiste più.',
+  FOTO_NON_TROVATA: 'Questa foto non esiste più.',
+  VOTO_NON_VALIDO: 'Voto non valido.',
   STESSA_PERSONA: 'Scegli due persone diverse.',
   FOTO_ILLEGGIBILE: 'Questa foto non si riesce ad aprire. Prova a sceglierne un\'altra (o fai uno screenshot).',
-  NO_DB: 'Il database non è ancora pronto (manca schema.sql su Supabase).',
+  NO_DB: 'Il database va aggiornato: ricopia installa.sql nel SQL Editor di Supabase e premi Run.',
   NO_FOTO: 'Lo spazio foto non è pronto (manca storage.sql su Supabase).',
   LENTO: 'Il server ci ha messo troppo. Riprova.'
 };
@@ -466,9 +542,14 @@ function cur() {
   return { sec, arg: a };
 }
 // "Pippeghi 24/7": l'ultima parola diventa il neon verde che sfarfalla
-function insegna() { return esc(NOME).replace(/ (\S+)$/, ' <span class="s7 flick">$1</span>'); }
+function insegna() {
+  const m = NOME.match(/^(.*?)(?: (\S+))?$/), testa = [...m[1]];
+  const k = Math.min(4, testa.length - 1);   // la 5ª lettera è il "tubo difettoso"
+  const prima = testa.map((c, i) => i === k ? `<span class="rotto">${esc(c)}</span>` : esc(c)).join('');
+  return prima + (m[2] ? ` <span class="s7 flick">${esc(m[2])}</span>` : '');
+}
 
-function sblocca() { if (!document.querySelector('.ov,.lb,.gl:not([hidden])')) document.body.classList.remove('noscroll'); }
+function sblocca() { if (!document.querySelector('.ov,.lb,.sv,.gl:not([hidden])')) document.body.classList.remove('noscroll'); }
 // finestra dal basso
 function sheet(html, mount, onClose) {
   const ov = document.createElement('div'); ov.className = 'ov';
@@ -525,7 +606,7 @@ function lightbox(paths, start, opt = {}) {
   el.innerHTML = `<div class="lb-top"><span class="lb-n"></span><button class="lb-x" aria-label="Chiudi">✕</button></div>
     <div class="lb-stage"><img class="lb-img" alt=""></div>
     <button class="lb-nav lb-prev" aria-label="Precedente">‹</button><button class="lb-nav lb-next" aria-label="Successiva">›</button>
-    <div class="lb-bot"><span class="lb-cap"></span><span class="lb-act"><a class="btn ghost sm lb-o" target="_blank" rel="noopener">Originale ↗</a>${opt.onDelete ? '<button class="btn ghost rosso sm lb-del">Elimina</button>' : ''}</span></div>`;
+    <div class="lb-bot"><span class="lb-cap"></span><span class="lb-act">${opt.voti ? '<span class="lb-v"></span>' : ''}${opt.onComments ? '<button class="btn sm lb-com"></button>' : ''}<span class="lb-sp"></span><a class="btn ghost sm lb-o" target="_blank" rel="noopener" aria-label="Apri l'originale" title="Apri l'originale">${ICO.open}</a>${opt.onDelete ? `<button class="btn ghost rosso sm lb-del" aria-label="Elimina" title="Elimina">${ICO.del}</button>` : ''}</span></div>`;
   document.body.appendChild(el); document.body.classList.add('noscroll');
   const im = el.querySelector('.lb-img');
   const show = () => {
@@ -534,6 +615,11 @@ function lightbox(paths, start, opt = {}) {
     el.querySelector('.lb-cap').textContent = opt.caption ? opt.caption(i) : '';
     el.querySelector('.lb-prev').hidden = i === 0; el.querySelector('.lb-next').hidden = i === paths.length - 1;
     [paths[i - 1], paths[i + 1]].forEach(p => { if (p) new Image().src = pub(p); });
+    if (opt.voti) {
+      const x = opt.voti.cosa(i), box = el.querySelector('.lb-v'); box.innerHTML = votiHTML(x, 'lb');
+      box.querySelector('[data-like]').onclick = () => opt.voti.vota(i, 1); box.querySelector('[data-dislike]').onclick = () => opt.voti.vota(i, -1);
+    }
+    if (opt.onComments) { const n = opt.nComments(i); el.querySelector('.lb-com').innerHTML = `${ICO.rep}<span>${n ? n + (n === 1 ? ' commento' : ' commenti') : 'Commenta'}</span>`; }
   };
   const go = d => { const n = i + d; if (n >= 0 && n < paths.length) { i = n; show(); } };
   const close = () => { el.remove(); document.removeEventListener('keydown', key); sblocca(); };
@@ -548,6 +634,7 @@ function lightbox(paths, start, opt = {}) {
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1); else if (dy > 110 && Math.abs(dy) > Math.abs(dx)) close();
   });
   if (opt.onDelete) el.querySelector('.lb-del').onclick = async () => { if (await opt.onDelete(i)) close(); };
+  if (opt.onComments) el.querySelector('.lb-com').onclick = () => opt.onComments(i, show);
   show();
 }
 
@@ -603,7 +690,8 @@ async function renderChiSei() {
 function setMe(n) { S.me = n; store.set('me', n); start(); }
 function logout(avviso) {
   S.pw = null; store.del('pw'); S.feed = S.albums = S.ss = null; S.album = {}; S.thread = {};
-  document.querySelectorAll('.ov,.lb,#gl,#gl-pill').forEach(x => x.remove()); document.body.classList.remove('noscroll');
+  clearInterval(S.tick); S.people = S.storie = null;
+  document.querySelectorAll('.ov,.lb,.sv,#gl,#gl-pill').forEach(x => x.remove()); document.body.classList.remove('noscroll');
   renderLogin(avviso);
 }
 
@@ -618,22 +706,28 @@ const TABS = [
 ];
 function start() {
   $('#app').innerHTML = `<header class="top"><button class="logo" data-go="#novita">${insegna()}</button>
-    <button class="me" id="me-btn">${avatar(S.me, 's')}<b>${esc(S.me)}</b></button></header>
+    <div class="top-r"><button class="on-btn" id="on-btn" hidden aria-label="Chi è online"><i class="dot"></i><b>0</b><span>online</span></button>
+    <button class="me" id="me-btn">${avatar(S.me, 's')}<b>${esc(S.me)}</b></button></div></header>
     ${DEMO ? '<div class="demo-bar">🧪 MODALITÀ PROVA · dati finti, si azzerano se ricarichi</div>' : ''}
     <main class="view" id="view"></main>
-    <nav class="tabs">${TABS.map(t => `<button data-go="#${t.id}" data-tab="${t.id}"><span class="ico">${t.ico}</span><span>${t.t}</span></button>`).join('')}</nav>`;
+    <nav class="tabs">${TABS.map(t => `<button data-go="#${t.id}" data-tab="${t.id}"><span class="ico">${t.ico}</span><span>${t.t}</span></button>`).join('')}</nav>
+    <button class="fab" id="fab" aria-label="Storie"><span class="fab-in">${ICO_CAM}</span><b class="fab-n" hidden></b></button>`;
+  $('#on-btn').onclick = apriGruppo;
+  $('#fab').onclick = apriStorie;
   $('#me-btn').onclick = () => sheet(`<div class="row" style="margin-bottom:12px">${avatar(S.me)}<h3 style="margin:0">Ciao ${esc(S.me)} 👋</h3></div>
       <p class="muto">Sei entrato su ${esc(NOME)} con questo nome. Quello che scrivi appare a nome tuo.</p>
-      <div class="col" style="margin-top:16px"><button class="btn ghost wide" data-a="nome">Cambia nome</button><button class="btn ghost rosso wide" data-a="esci">Esci (chiederà di nuovo la password)</button><button class="btn wide" data-close>Chiudi</button></div>`,
+      <div class="col" style="margin-top:16px"><button class="btn ghost wide" data-a="gruppo">Chi c'è nel gruppo</button><button class="btn ghost wide" data-a="nome">Cambia nome</button><button class="btn ghost rosso wide" data-a="esci">Esci (chiederà di nuovo la password)</button><button class="btn wide" data-close>Chiudi</button></div>`,
     (s, close) => {
+      s.querySelector('[data-a=gruppo]').onclick = () => { close(); setTimeout(apriGruppo, 200); };
       s.querySelector('[data-a=nome]').onclick = () => { close(); renderChiSei(); };
       s.querySelector('[data-a=esci]').onclick = () => { close(); logout(); };
     });
-  route();
+  clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); loadStorie(); } }, 45000);
+  route(); ping(); loadStorie();
 }
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
-  document.querySelectorAll('.ov,.lb').forEach(x => x.remove()); document.body.classList.remove('noscroll');
+  document.querySelectorAll('.ov,.lb,.sv').forEach(x => x.remove()); document.body.classList.remove('noscroll');
   const c = cur(), inGioco = c.sec === 'gioco' && c.arg === 'gioca';
   if (inGioco) { giocoLayer().hidden = false; document.body.classList.add('noscroll'); } else if ($('#gl')) $('#gl').hidden = true;
   drawPill();
@@ -645,7 +739,7 @@ function route() {
   t.f(c.arg);
 }
 window.addEventListener('hashchange', route);
-document.addEventListener('visibilitychange', () => { if (!document.hidden && S.pw && S.me && S.refresh) S.refresh(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden || !S.pw || !S.me) return; if (S.refresh) S.refresh(); ping(); loadStorie(); });
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-go]');
   if (g) {
@@ -661,7 +755,9 @@ window.addEventListener('beforeunload', e => { if (S.busy) { e.preventDefault();
 // ===================== NOVITÀ (stile X) =====================
 const ICO = {
   rep: '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M4 5h16a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 17h-9.5L6 20.5V17H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
-  like: '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M12 20.3s-7.4-4.5-9.4-9C1.2 8 3.2 4.3 6.9 4.3c2.1 0 3.6 1.2 5.1 3 1.5-1.8 3-3 5.1-3 3.7 0 5.7 3.7 4.3 7-2 4.5-9.4 9-9.4 9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  up: '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M7.5 10.5V20H4.8a1.3 1.3 0 0 1-1.3-1.3v-6.9a1.3 1.3 0 0 1 1.3-1.3zm0 0 3.9-6.6a2 2 0 0 1 3.6 1.6l-.9 3.9h5a2 2 0 0 1 2 2.4l-1.3 6.5A2 2 0 0 1 17.8 20H7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  down: '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><g transform="rotate(180 12 12)"><path d="M7.5 10.5V20H4.8a1.3 1.3 0 0 1-1.3-1.3v-6.9a1.3 1.3 0 0 1 1.3-1.3zm0 0 3.9-6.6a2 2 0 0 1 3.6 1.6l-.9 3.9h5a2 2 0 0 1 2 2.4l-1.3 6.5A2 2 0 0 1 17.8 20H7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></g></svg>',
+  open: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   del: '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 // #hashtag: lettere (anche accentate), numeri e _ ; deve contenere almeno una lettera
@@ -701,12 +797,17 @@ function pics(p) {
   const n = ph.length;
   return `<div class="pics n${Math.min(n, 4)}">${ph.slice(0, 4).map((x, i) => `<button class="pic" data-post="${esc(p.id)}" data-i="${i}">${img(x, n === 1)}${i === 3 && n > 4 ? `<span class="more">+${n - 4}</span>` : ''}</button>`).join('')}</div>`;
 }
+// il mio voto: 1 = mi piace, -1 = non mi piace, 0 = niente
+const voto = x => (x.likes || []).some(n => same(n, S.me)) ? 1 : (x.dislikes || []).some(n => same(n, S.me)) ? -1 : 0;
+function votiHTML(x, attr) {
+  const v = voto(x);
+  return `<button class="act up ${v === 1 ? 'on' : ''}" data-like="${esc(attr)}" aria-label="Mi piace">${ICO.up}<span>${(x.likes || []).length || ''}</span></button><button class="act down ${v === -1 ? 'on' : ''}" data-dislike="${esc(attr)}" aria-label="Non mi piace">${ICO.down}<span>${(x.dislikes || []).length || ''}</span></button>`;
+}
 function tweetHTML(p, big) {
-  const on = p.likes.some(n => same(n, S.me));
   return `<article class="tw${big ? ' big' : ''}" data-id="${esc(p.id)}">${avatar(p.author)}<div class="tw-b">
     <div class="tw-h"><b>${esc(p.author)}</b><span>· ${esc(quando(p.created_at))}</span>${same(p.author, S.me) ? `<button class="icon del" data-del="${esc(p.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div>
     ${p.body ? `<div class="tw-t">${richText(p.body)}</div>` : ''}${pics(p)}
-    <div class="tw-a"><button class="act" data-rep="${esc(p.id)}" aria-label="Rispondi">${ICO.rep}<span>${p.replies || ''}</span></button><button class="act like ${on ? 'on' : ''}" data-like="${esc(p.id)}" aria-label="Mi piace">${ICO.like}<span>${p.likes.length || ''}</span></button></div>
+    <div class="tw-a"><button class="act" data-rep="${esc(p.id)}" aria-label="Rispondi">${ICO.rep}<span>${p.replies || ''}</span></button>${votiHTML(p, p.id)}</div>
   </div></article>`;
 }
 function wireTweets(el) {
@@ -717,29 +818,42 @@ function wireTweets(el) {
   el.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => {
     if (cur().sec === 'post') { const t = $('#rp-text'); if (t) t.focus(); } else location.hash = '#post/' + b.dataset.rep;
   });
-  el.querySelectorAll('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
+  el.querySelectorAll('[data-like]').forEach(b => b.onclick = () => votaPost(b.dataset.like, 1));
+  el.querySelectorAll('[data-dislike]').forEach(b => b.onclick = () => votaPost(b.dataset.dislike, -1));
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => delPost(b.dataset.del));
   el.querySelectorAll('.pic[data-post]').forEach(b => b.onclick = () => {
     const p = (S.feed || []).find(x => x.id === b.dataset.post); if (!p) return;
     lightbox(p.photos.filter(okPath), +b.dataset.i, { caption: () => `${p.author} · ${quando(p.created_at)}` });
   });
 }
-async function toggleLike(id) {
-  const p = (S.feed || []).find(x => x.id === id); if (!p || S.liking[id]) return;
-  S.liking[id] = true;
-  const had = p.likes.some(n => same(n, S.me));
-  const set = on => {
-    p.likes = p.likes.filter(n => !same(n, S.me)); if (on) p.likes.push(S.me);
-    document.querySelectorAll(`[data-like="${id}"]`).forEach(b => {
-      b.classList.toggle('on', on); b.classList.remove('pop'); void b.offsetWidth; if (on) b.classList.add('pop');
-      b.querySelector('span').textContent = p.likes.length || '';
-    });
-    drawLikers(id);
-  };
-  set(!had);
-  try { const on = await rpc('post_like', { p_id: id, p_name: S.me }); if (on !== !had) set(on); }
-  catch (e) { set(had); toast(msg(e), 'err'); }
-  finally { delete S.liking[id]; }
+// aggiorna i bottoni 👍 👎 di un oggetto (post o foto) senza ridisegnare tutto
+function dipingiVoti(x, attr) {
+  const v = voto(x);
+  document.querySelectorAll(`[data-like="${attr}"],[data-dislike="${attr}"]`).forEach(b => {
+    const su = b.hasAttribute('data-like'), on = su ? v === 1 : v === -1, era = b.classList.contains('on');
+    b.classList.toggle('on', on); b.classList.remove('pop'); if (on && !era) { void b.offsetWidth; b.classList.add('pop'); }
+    b.querySelector('span').textContent = ((su ? x.likes : x.dislikes) || []).length || '';
+  });
+}
+function impostaVoto(x, v) {
+  x.likes = (x.likes || []).filter(n => !same(n, S.me)); x.dislikes = (x.dislikes || []).filter(n => !same(n, S.me));
+  if (v === 1) x.likes.push(S.me); if (v === -1) x.dislikes.push(S.me);
+}
+// i voti partono in fila (anche se si tocca velocemente 👍 e 👎 con internet lento)
+function votoInCoda(chiave, x, val, chiama, ridisegna, ancoraValido) {
+  const prima = voto(x), dopo = prima === val ? 0 : val;
+  impostaVoto(x, dopo); ridisegna();
+  const q = S.vq[chiave] || (S.vq[chiave] = { n: 0, p: Promise.resolve() });
+  q.n++;
+  q.p = q.p.then(async () => {
+    try { const v = await chiama(val); if (q.n === 1 && v !== voto(x)) { impostaVoto(x, v); ridisegna(); } }
+    catch (e) { toast(msg(e), 'err'); if (q.n === 1) { impostaVoto(x, prima); ridisegna(); } }
+    finally { q.n--; if (!q.n && ancoraValido && !ancoraValido() && S.refresh) S.refresh(); }   // la pagina si è ricaricata nel frattempo: riallinea
+  });
+}
+function votaPost(id, val) {
+  const p = (S.feed || []).find(x => x.id === id); if (!p) return;
+  votoInCoda('p' + id, p, val, v => rpc('post_vote', { p_id: id, p_name: S.me, p_val: v }), () => { dipingiVoti(p, id); drawLikers(id); }, () => (S.feed || []).includes(p));
 }
 async function delPost(id) {
   if (!await ask('Eliminare questo post?', 'Sparisce per tutti, con le risposte e i mi piace.', 'Elimina', true)) return;
@@ -768,7 +882,8 @@ function viewNovita(tag) {
         <div class="prog" id="np-prog" hidden></div>
       </section>
       <section class="card xfeed" id="feed"><div class="loading">Carico le novità</div></section>
-    </div><aside class="x-side"><section class="card trends"><h3>🔥 Di tendenza</h3><div id="trends-d"></div></section></aside></div>`;
+    </div><aside class="x-side"><section class="card trends"><h3>🔥 Di tendenza</h3><div id="trends-d"></div></section>
+      <section class="card"><h3><i class="dot"></i> Online ora</h3><div id="online-d"></div><button class="link" id="grp-all">Tutti gli iscritti →</button></section></aside></div>`;
   const ta = $('#np-text'); ta.value = S.draft.text; autoGrow(ta);
   ta.oninput = () => { S.draft.text = ta.value; autoGrow(ta); };
   ta.onfocus = () => { if (tag && !ta.value) { ta.value = '#' + tag + ' '; S.draft.text = ta.value; } };
@@ -777,6 +892,7 @@ function viewNovita(tag) {
     e.target.value = ''; drawPreviews();
   };
   $('#np-go').onclick = publish;
+  $('#grp-all').onclick = apriGruppo; drawOnline();
   drawPreviews();
   if (S.busy) { $('#np-go').disabled = true; }
   if (S.feed) drawFeed();
@@ -836,8 +952,9 @@ async function loadThread(id) {
 }
 function drawLikers(id) {
   const el = $('#likers'), p = (S.feed || []).find(x => x.id === id); if (!el || !p || cur().arg !== id) return;
-  el.innerHTML = p.likes.length ? `<span style="color:var(--rosa)">❤</span> Piace a ${p.likes.map(n => `<b>${esc(n)}</b>`).join(', ')}` : '';
-  el.hidden = !p.likes.length;
+  const L = p.likes || [], N = p.dislikes || [], nomi = a => a.map(n => `<b>${esc(n)}</b>`).join(', ');
+  el.innerHTML = [L.length ? `<div class="lk up">${ICO.up} Piace a ${nomi(L)}</div>` : '', N.length ? `<div class="lk down">${ICO.down} Non piace a ${nomi(N)}</div>` : ''].join('');
+  el.hidden = !L.length && !N.length;
 }
 function drawPost(id) {
   const el = $('#thread'); if (!el) return;
@@ -909,19 +1026,53 @@ function viewAlbum(id) {
   };
   S.refresh = load; load();
 }
+function votaFoto(f, val) {
+  votoInCoda('f' + f.id, f, val, v => rpc('photo_vote', { p_photo: f.id, p_name: S.me, p_val: v }), () => dipingiVoti(f, 'lb'), () => Object.values(S.album).some(l => l.includes(f)));
+}
+// commenti a una foto dell'album
+function commentiFoto(f, aggiorna) {
+  sheet(`<h3>Commenti</h3><div class="cm" id="fc-list"><div class="loading">Carico</div></div>
+    <form class="rp cm-form" id="fc-form" novalidate>${avatar(S.me, 's')}<textarea id="fc-text" rows="1" maxlength="1000" placeholder="Scrivi un commento…"></textarea><button class="btn sm" type="submit">Invia</button></form>
+    <div class="row end"><button class="btn ghost" data-close>Chiudi</button></div>`, (s, close) => {
+    const list = s.querySelector('#fc-list'), ta = s.querySelector('#fc-text');
+    ta.oninput = () => autoGrow(ta);
+    const load = async () => {
+      try {
+        const L = await rpc('photo_comments', { p_photo: f.id });
+        f.comments = L.length; if (aggiorna) aggiorna();
+        list.innerHTML = L.length ? L.map(c => `<div class="tw reply">${avatar(c.author, 's')}<div class="tw-b"><div class="tw-h"><b>${esc(c.author)}</b><span>· ${esc(quando(c.created_at))}</span>${same(c.author, S.me) ? `<button class="icon del" data-cdel="${esc(c.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div><div class="tw-t">${richText(c.body)}</div></div></div>`).join('')
+          : '<p class="muto">Ancora nessun commento. Scrivi il primo!</p>';
+        list.querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
+          try { await rpc('photo_comment_del', { p_id: b.dataset.cdel, p_author: S.me }); toast('Commento eliminato'); load(); } catch (e) { toast(msg(e), 'err'); }
+        });
+      } catch (e) { list.innerHTML = `<p class="err">${esc(msg(e))}</p>`; }
+    };
+    s.querySelector('#fc-form').onsubmit = async e => {
+      e.preventDefault(); const b = e.target.querySelector('button'), body = ta.value.trim();
+      if (!body) return toast('Scrivi il commento 🙂');
+      b.disabled = true;
+      try { await rpc('photo_comment_add', { p_photo: f.id, p_author: S.me, p_body: body }); ta.value = ''; autoGrow(ta); await load(); }
+      catch (ex) { toast(msg(ex), 'err'); } finally { b.disabled = false; }
+    };
+    load();
+  }, () => { if (S.refresh && cur().sec === 'foto') S.refresh(); });
+}
 function drawAlbum(id) {
   const a = (S.albums || []).find(x => x.id === id), ph = S.album[id] || [];
   const head = $('#al-head'), grid = $('#al-grid'), foot = $('#al-foot'); if (!grid) return;
   if (!a && S.albums) { $('#view').innerHTML = `<button class="back" data-go="#foto">‹ Cartelle</button><div class="empty">Questa cartella non esiste più.</div>`; return; }
   if (a) head.innerHTML = `<h1 class="neon m sm">${esc(a.name)}</h1><p class="muto" style="margin-top:-8px">${ph.length} foto · creata da ${esc(a.created_by)}</p>`;
   const sig = JSON.stringify(ph); if (grid.dataset.sig === sig) return; grid.dataset.sig = sig;
-  grid.innerHTML = ph.length ? `<div class="pgrid">${ph.map((f, i) => `<button class="pic" data-i="${i}">${img(f.path)}</button>`).join('')}</div>`
+  grid.innerHTML = ph.length ? `<div class="pgrid">${ph.map((f, i) => `<button class="pic" data-i="${i}">${img(f.path)}${f.comments ? `<span class="pc-n">${ICO.rep}${f.comments}</span>` : ''}</button>`).join('')}</div>`
     : `<div class="empty">Cartella vuota.<br>Tocca “Aggiungi foto” per caricare le prime.</div>`;
   foot.innerHTML = ph.length ? '' : `<div style="text-align:center"><button class="btn ghost rosso sm" id="al-del">Elimina cartella</button></div>`;
   grid.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
     const list = (S.album[id] || []).filter(f => okPath(f.path));
     lightbox(list.map(f => f.path), +b.dataset.i, {
       caption: i => `${list[i].author} · ${quando(list[i].created_at)}`,
+      nComments: i => list[i].comments || 0,
+      voti: { cosa: i => list[i], vota: (i, val) => votaFoto(list[i], val) },
+      onComments: (i, aggiorna) => commentiFoto(list[i], aggiorna),
       onDelete: async i => {
         if (!await ask('Eliminare questa foto?', 'Sparisce dalla cartella per tutti.', 'Elimina', true)) return false;
         try { await rpc('photo_del', { p_id: list[i].id }); toast('Foto eliminata'); S.refresh && S.refresh(); return true; } catch (e) { toast(msg(e), 'err'); return false; }
@@ -1069,7 +1220,7 @@ function drawEvento(force) {
     <section class="card" id="ss-me">${meHTML(ev, mine)}</section>
     <section class="card"><h3>Partecipanti <span class="count">${ev.people.length}</span></h3>
       <div class="chips">${ev.people.map(n => `<span class="chip ${mine && same(n, mine.name) ? 'on' : ''}">${esc(n)}</span>`).join('') || '<span class="muto">Ancora nessuno: iscriviti per primo!</span>'}</div>
-      ${drawn ? `<div style="margin-top:14px"><button class="btn ghost sm" id="ss-check">🔍 Verifica che il sorteggio sia regolare</button><div id="ss-check-out"></div></div>` : ''}</section>
+      ${drawn ? `<div style="margin-top:14px"><button class="btn ghost sm" id="ss-check">🔍 Verifica il sorteggio</button><div id="ss-check-out"></div></div>` : ''}</section>
     <details class="card adm" id="ss-adm" ${admOpen ? 'open' : ''}><summary>🔒 Area organizzatore</summary><div id="adm-body"></div></details>`;
   wireMe(ev, mine);
   const chk = $('#ss-check'); if (chk) chk.onclick = () => verifica(ev);
@@ -1255,36 +1406,206 @@ function viewFanta() {
       <p class="muto">Qui faremo la nostra lega del FantaSanremo: squadre, punti e classifica del gruppo. Ci stiamo lavorando!</p></section>`;
 }
 
+// ===================== CHI È ONLINE =====================
+async function ping() {
+  if (!S.pw || !S.me || !$('#view')) return;
+  try { S.people = await rpc('presenza', { p_name: S.me }); S.noPresenza = false; }
+  catch (e) { if (e.message === 'NO_DB') S.noPresenza = true; return; }
+  drawOnline();
+}
+function personaHTML(p, conIscrizione) {
+  const stato = p.online ? '<i class="dot"></i>online' : esc(p.last_seen ? 'visto ' + quando(p.last_seen) : 'mai visto online');
+  return `<div class="prs">${avatar(p.name, 's')}<span class="prs-n">${esc(p.name)}${same(p.name, S.me) ? ' <small>(tu)</small>' : ''}${conIscrizione ? `<small class="prs-i">iscritto ${esc(quando(p.created_at))}</small>` : ''}</span><span class="prs-s ${p.online ? 'on' : ''}">${stato}</span></div>`;
+}
+function gruppoHTML() {
+  if (S.noPresenza) return '<p class="muto">Per vedere chi è online bisogna aggiornare il database: ricopia <b>installa.sql</b> nel SQL Editor di Supabase e premi Run (non cancella niente).</p>';
+  const ppl = S.people || [], on = ppl.filter(p => p.online);
+  const tutti = ppl.slice().sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
+  return `<div class="grp-k"><i class="dot"></i>Online ora · ${on.length}</div>${on.map(p => personaHTML(p)).join('') || '<p class="hint">Nessuno online in questo momento.</p>'}
+    <div class="grp-k">Tutti gli iscritti · ${ppl.length}</div>${tutti.map(p => personaHTML(p, true)).join('')}`;
+}
+function drawOnline() {
+  const ppl = S.people || [], on = ppl.filter(p => p.online);
+  const b = $('#on-btn'); if (b) { b.hidden = !S.people; b.querySelector('b').textContent = on.length; }
+  const d = $('#online-d'); if (d) d.innerHTML = on.map(p => personaHTML(p)).join('') || '<p class="hint" style="margin:0">Nessuno online.</p>';
+  const g = $('#gruppo'); if (g) g.innerHTML = gruppoHTML();
+}
+function apriGruppo() {
+  sheet(`<h3>Il gruppo</h3><div id="gruppo">${S.people || S.noPresenza ? gruppoHTML() : '<div class="loading">Carico</div>'}</div><div class="row end"><button class="btn" data-close>Chiudi</button></div>`);
+  ping();
+}
+
+// ===================== STORIE (24 ore) =====================
+const ICO_CAM = svg('<path d="M3 8.5A2 2 0 0 1 5 6.5h2.3l1.4-2h6.6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.6"/>');
+const ICO_EYE = svg('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>');
+const visti = () => new Set(store.get('visti', []));
+function segnaVista(id) { const v = store.get('visti', []); if (!v.includes(id)) { v.push(id); store.set('visti', v.slice(-400)); } }
+async function loadStorie() {
+  if (!S.pw || !S.me) return;
+  try { S.storie = await rpc('stories_list', { p_name: S.me }); S.noStorie = false; }
+  catch (e) { if (e.message === 'NO_DB') S.noStorie = true; }
+  drawFab(); drawHub();
+}
+// storie raggruppate per persona: prima le mie, poi quelle non ancora viste, poi le più recenti
+function gruppiStorie() {
+  const lim = Date.now() - 864e5, v = visti(), m = new Map();
+  for (const s of (S.storie || [])) {
+    if (new Date(s.created_at) < lim || !okPath(s.path)) continue;
+    const k = s.author.toLowerCase(); if (!m.has(k)) m.set(k, { author: s.author, items: [] }); m.get(k).items.push(s);
+  }
+  return [...m.values()].map(g => {
+    g.items.sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+    g.mio = same(g.author, S.me); g.nuove = !g.mio && g.items.some(s => !v.has(s.id)); g.ultima = g.items[g.items.length - 1].created_at;
+    return g;
+  }).sort((a, b) => (b.mio - a.mio) || (b.nuove - a.nuove) || (a.ultima < b.ultima ? 1 : -1));
+}
+function drawFab() {
+  const f = $('#fab'); if (!f) return;
+  const gs = gruppiStorie(), nuove = gs.filter(g => g.nuove), top = nuove[0] || gs.find(g => !g.mio) || gs[0];
+  f.classList.toggle('nuove', nuove.length > 0);
+  const last = top ? top.items[top.items.length - 1] : null;
+  f.querySelector('.fab-in').innerHTML = last ? img(last.path) : ICO_CAM;
+  const n = f.querySelector('.fab-n'); n.hidden = !nuove.length; n.textContent = nuove.length;
+}
+function apriStorie() {
+  if (S.noStorie) return info('Storie', '<p>Per usare le storie bisogna aggiornare il database: ricopia <b>installa.sql</b> nel SQL Editor di Supabase e premi Run (non cancella niente).</p>');
+  sheet(`<div id="st-hub"></div><input type="file" id="st-file" accept="image/*" hidden><div class="row end"><button class="btn ghost" data-close>Chiudi</button></div>`, (s, close) => {
+    S.closeHub = close;
+    $('#st-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) { close(); componiStoria(f); } };
+    drawHub();
+  }, () => { S.closeHub = null; });
+  loadStorie();
+}
+function drawHub() {
+  const el = $('#st-hub'); if (!el) return;
+  const gs = gruppiStorie();
+  el.innerHTML = `<h3>Storie <span class="muto" style="font-weight:500">· spariscono dopo 24 ore</span></h3>
+    <div class="st-grid"><button class="st-p st-add" id="st-add"><span class="ring"><span class="in">${avatar(S.me)}</span><b class="plus">+</b></span><span class="nm">Aggiungi</span></button>
+    ${gs.map((g, i) => `<button class="st-p ${g.nuove ? 'nuove' : ''}" data-g="${i}"><span class="ring"><span class="in">${img(g.items[g.items.length - 1].path)}</span></span><span class="nm">${g.mio ? 'La tua' : esc(g.author)}</span></button>`).join('')}</div>
+    ${gs.length ? '' : '<p class="muto" style="margin-top:14px">Nessuna storia nelle ultime 24 ore. Pubblica la prima!</p>'}`;
+  $('#st-add').onclick = () => $('#st-file').click();
+  el.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { if (S.closeHub) S.closeHub(); guardaStorie(gs, +b.dataset.g); });
+}
+function componiStoria(file) {
+  const url = URL.createObjectURL(file);
+  sheet(`<h3>Nuova storia</h3><div class="st-prev"><img src="${esc(url)}" alt=""></div>
+    <label>Scritta (facoltativa)<input id="st-cap" maxlength="150" placeholder="Scrivi qualcosa…" autocomplete="off"></label>
+    <p class="hint">La vedono tutti quelli del gruppo per 24 ore, poi sparisce.</p>
+    <div class="prog" id="st-prog" hidden></div>
+    <div class="row end"><button class="btn ghost" data-close>Annulla</button><button class="btn" id="st-go">Pubblica</button></div>`, (s, close) => {
+    $('#st-go').onclick = async () => {
+      const b = $('#st-go'), pg = $('#st-prog'); b.disabled = true; S.busy++; pg.hidden = false; pg.innerHTML = progHTML(0, 1);
+      try {
+        const path = await uploadOne('storie', file);
+        await rpc('story_add', { p_author: S.me, p_path: path, p_caption: $('#st-cap').value.trim() });
+        close(); toast('Storia pubblicata! Sparisce tra 24 ore'); loadStorie();
+      } catch (e) { toast(msg(e), 'err'); b.disabled = false; pg.hidden = true; }
+      finally { S.busy--; }
+    };
+  }, () => URL.revokeObjectURL(url));
+}
+// visore a schermo intero: tocco a destra = avanti, a sinistra = indietro, tieni premuto = pausa, giù = chiudi
+function guardaStorie(gs, gi) {
+  if (!gs[gi]) return;
+  const DUR = 5500; let g = gi, i = 0, raf = 0, t0 = 0, acc = 0, va = false;
+  { const v = visti(), k = gs[g].items.findIndex(s => !v.has(s.id)); i = k >= 0 && !gs[g].mio ? k : 0; }
+  const el = document.createElement('div'); el.className = 'sv';
+  el.innerHTML = `<div class="sv-bars"></div><div class="sv-top"><div class="sv-who"></div><button class="sv-x" aria-label="Chiudi">✕</button></div>
+    <div class="sv-stage"><img class="sv-img" alt=""><div class="sv-cap"></div></div><div class="sv-bot"></div>`;
+  document.body.appendChild(el); document.body.classList.add('noscroll');
+  const im = el.querySelector('.sv-img');
+  const tick = now => {
+    if (!va) return; const p = Math.min(1, (acc + now - t0) / DUR), b = el.querySelectorAll('.sv-bars b')[i];
+    if (b) b.style.width = p * 100 + '%';
+    if (p >= 1) return avanti();
+    raf = requestAnimationFrame(tick);
+  };
+  const play = () => { if (va || !el.isConnected || document.querySelector('.ov')) return; va = true; t0 = performance.now(); raf = requestAnimationFrame(tick); };
+  const riprendi = () => setTimeout(play, 230);
+  const pausa = () => { if (!va) return; va = false; acc += performance.now() - t0; cancelAnimationFrame(raf); };
+  const key = e => { if (e.key === 'Escape') chiudi(); if (e.key === 'ArrowRight') avanti(); if (e.key === 'ArrowLeft') indietro(); };
+  const chiudi = () => { va = false; cancelAnimationFrame(raf); el.remove(); sblocca(); drawFab(); document.removeEventListener('keydown', key); };
+  const avanti = () => { const G = gs[g]; if (i < G.items.length - 1) i++; else if (g < gs.length - 1) { g++; i = 0; } else return chiudi(); mostra(); };
+  const indietro = () => { if (i > 0) i--; else if (g > 0) { g--; i = gs[g].items.length - 1; } mostra(); };
+  const mostra = () => {
+    va = false; cancelAnimationFrame(raf); acc = 0;
+    const G = gs[g], s = G.items[i];
+    el.querySelector('.sv-bars').innerHTML = G.items.map((_, k) => `<i><b style="width:${k < i ? 100 : 0}%"></b></i>`).join('');
+    el.querySelector('.sv-who').innerHTML = `${avatar(G.author, 's')}<b>${esc(G.author)}</b><span>${esc(quando(s.created_at))}</span>`;
+    const cap = el.querySelector('.sv-cap'); cap.textContent = s.caption || ''; cap.hidden = !s.caption;
+    el.querySelector('.sv-bot').innerHTML = G.mio ? `<button class="btn ghost sm" id="sv-viste">${ICO_EYE} Visto da ${s.views ? s.views.length : 0}</button><button class="btn ghost rosso sm" id="sv-del">Elimina</button>` : '';
+    im.onload = play; im.onerror = () => setTimeout(avanti, 800); im.src = pub(s.path);
+    if (im.complete && im.naturalWidth) play();
+    segnaVista(s.id);
+    if (!G.mio) rpc('story_seen', { p_id: s.id, p_name: S.me }).catch(() => {});
+    else {
+      el.querySelector('#sv-viste').onclick = () => {
+        pausa();
+        sheet(`<h3>Visto da</h3>${(s.views || []).length ? s.views.map(n => `<div class="prs">${avatar(n, 's')}<span class="prs-n">${esc(n)}</span></div>`).join('') : '<p class="muto">Ancora nessuno.</p>'}<div class="row end"><button class="btn" data-close>Ok</button></div>`, null, riprendi);
+      };
+      el.querySelector('#sv-del').onclick = async () => {
+        pausa();
+        if (!await ask('Eliminare questa storia?', 'Sparisce subito per tutti.', 'Elimina', true)) return riprendi();
+        try {
+          await rpc('story_del', { p_id: s.id, p_author: S.me }); toast('Storia eliminata');
+          G.items.splice(i, 1);
+          if (!G.items.length) { gs.splice(g, 1); if (g >= gs.length) { chiudi(); loadStorie(); return; } i = 0; } else if (i >= G.items.length) i = G.items.length - 1;
+          mostra(); loadStorie();
+        } catch (e) { toast(msg(e), 'err'); riprendi(); }
+      };
+    }
+  };
+  el.querySelector('.sv-x').onclick = chiudi;
+  const st = el.querySelector('.sv-stage'); let x0 = 0, y0 = 0, tDown = 0, hold = 0;
+  st.addEventListener('pointerdown', e => { x0 = e.clientX; y0 = e.clientY; tDown = Date.now(); hold = setTimeout(pausa, 180); });
+  st.addEventListener('pointerup', e => {
+    clearTimeout(hold); const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (dy > 90 && Math.abs(dy) > Math.abs(dx)) return chiudi();
+    if (Math.abs(dx) > 60) return dx < 0 ? avanti() : indietro();
+    if (Date.now() - tDown > 250) return play();
+    if (e.clientX < innerWidth / 3) indietro(); else avanti();
+  });
+  st.addEventListener('pointercancel', () => { clearTimeout(hold); play(); });
+  document.addEventListener('keydown', key);
+  mostra();
+}
+
 // ===================== MODALITÀ PROVA =====================
 // Se SUPA_URL / SUPA_KEY sono vuoti il sito funziona lo stesso, con dati finti
 // che vivono solo in questa pagina (si azzerano ricaricando). Stesse regole del database vero.
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: ['Anna', 'Giulia', 'Luca', 'Marco', 'Sara'], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], pcomments: [], pvotes: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
   const desc = (a, b) => a.created_at < b.created_at ? 1 : -1;
   const alfa = (x, y) => x.toLowerCase() < y.toLowerCase() ? -1 : 1;
-  const fotoFinta = (i, emo, scritta) => {
-    const c = document.createElement('canvas'); c.width = 900; c.height = 675; const x = c.getContext('2d');
-    const g = x.createLinearGradient(0, 0, 900, 675); g.addColorStop(0, `hsl(${i * 47 + 300},80%,45%)`); g.addColorStop(1, `hsl(${i * 47 + 200},85%,22%)`);
-    x.fillStyle = g; x.fillRect(0, 0, 900, 675); x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.font = '230px serif'; x.fillText(emo, 450, 290); x.font = 'bold 46px sans-serif'; x.fillStyle = 'rgba(255,255,255,.92)'; x.fillText(scritta, 450, 570);
-    const p = `demo/foto${i}.jpg`; D.files.set(p, c.toDataURL('image/jpeg', .8)); return p;
+  const fotoFinta = (i, emo, scritta, W = 900, H = 675, nome = 'foto') => {
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, `hsl(${i * 47 + 300},80%,45%)`); g.addColorStop(1, `hsl(${i * 47 + 200},85%,22%)`);
+    x.fillStyle = g; x.fillRect(0, 0, W, H); x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = '230px serif'; x.fillText(emo, W / 2, H * .43); x.font = 'bold 46px sans-serif'; x.fillStyle = 'rgba(255,255,255,.92)'; x.fillText(scritta, W / 2, H * .84);
+    const p = `demo/${nome}${i}.jpg`; D.files.set(p, c.toDataURL('image/jpeg', .8)); return p;
   };
+  [['Anna', 60 * 72, null], ['Giulia', 60 * 70, 0], ['Luca', 60 * 60, 60 * 26], ['Marco', 60 * 71, 0], ['Sara', 60 * 50, 20]]
+    .forEach(([name, iscr, visto]) => D.members.push({ name, created_at: t(iscr), last_seen: visto == null ? null : t(visto) }));
+  [['Giulia', 180, '☕', 'Colazione'], ['Giulia', 50, '🐶', 'Buongiorno da Pippo', 'Il nuovo arrivato 🐶'], ['Marco', 360, '🏋️', 'Palestra']]
+    .forEach(([author, min, emo, scritta, caption], i) => D.stories.push({ id: uid(), author, path: fotoFinta(i + 10, emo, scritta, 720, 1280, 'storia'), caption: caption || '', created_at: t(min) }));
   // --- contenuti di esempio ---
   const al = uid(); D.albums.push({ id: al, name: 'Sabato al mare (prova)', created_by: 'Giulia', created_at: t(60 * 30) });
   const fs = [['🏖️', 'Spiaggia'], ['🍕', 'Pizzata'], ['🌅', 'Tramonto'], ['🍹', 'Aperitivo'], ['🎉', 'Festa']].map(([e, s], i) => fotoFinta(i, e, s));
   fs.forEach((p, i) => D.photos.push({ id: uid(), album_id: al, path: p, author: i % 2 ? 'Marco' : 'Giulia', created_at: t(60 * 29 - i) }));
+  [[0, 'Sara', 'Che bella giornata ☀️'], [0, 'Luca', 'Ci voglio tornare!'], [2, 'Anna', 'Questo tramonto 😍']]
+    .forEach(([k, author, body], j) => D.pcomments.push({ id: uid(), photo_id: D.photos[k].id, author, body, created_at: t(60 * 20 - j * 30) }));
   const post = (author, body, min, photos = []) => { const id = uid(); D.posts.push({ id, author, body, photos, created_at: t(min) }); return id; };
   const p1 = post('Marco', 'Stasera da me per il #FantaSanremo? Porto io le birre 🍻', 25);
   const p2 = post('Giulia', 'Ho messo le foto di sabato nella cartella "Sabato al mare" 📸 #mare', 60 * 3, [fs[0], fs[2]]);
   post('Sara', 'Chi si ricorda dove abbiamo lasciato l\'ombrellone? 😂 #mare', 60 * 26);
   const p4 = post('Luca', '#Capodanno: casa di chi quest\'anno? Io voto Anna', 60 * 50);
   const p5 = post('Anna', 'Benvenuti su Pippeghi 24/7! Scrivete qui le novità del gruppo ✨ #pippeghi #capodanno', 60 * 72);
-  [[p1, 'Giulia'], [p1, 'Sara'], [p2, 'Marco'], [p2, 'Anna'], [p2, 'Luca'], [p4, 'Anna'], [p5, 'Marco']].forEach(([post, name]) => D.likes.push({ post, name }));
+  [[p1, 'Giulia'], [p1, 'Sara'], [p2, 'Marco'], [p2, 'Anna'], [p2, 'Luca'], [p4, 'Anna'], [p5, 'Marco'], [p4, 'Sara', -1]].forEach(([post, name, val]) => D.likes.push({ post, name, val: val || 1 }));
   [[p1, 'Luca', 'Ci sono! Porto le patatine', 20], [p4, 'Anna', 'Da me va bene, ma il cotechino lo porti tu 😄', 60 * 40], [p4, 'Marco', '#Capodanno da Anna, deciso!', 60 * 39]]
     .forEach(([post_id, author, body, m]) => D.replies.push({ id: uid(), post_id, author, body, created_at: t(m) }));
   D.ss.push({ id: uid(), name: 'Natale 2026 (prova)', budget: '30 €', gift_date: 'cena del 20 dicembre', organizer: 'Marco', admin_pin: '0000', status: 'open', drawn_at: null, created_at: t(60 * 5), pairs: null, excl: [['Marco', 'Sara']],
@@ -1292,6 +1613,12 @@ function creaDemo() {
   // --- le stesse funzioni del database vero ---
   const pwOk = x => String(x || '').trim().toLowerCase() === D.pw;
   const need = a => { if (!pwOk(a.p_pw)) throw err('PASSWORD_ERRATA'); };
+  // voto generico (stesse regole di post_vote / photo_vote nel database)
+  const vota = (a, L, k, id, nome, val, esiste, errore) => {
+    need(a); const n = clean(nome, 30); if (!n) throw err('NOME_VUOTO'); if (val !== 1 && val !== -1) throw err('VOTO_NON_VALIDO'); if (!esiste()) throw err(errore);
+    const i = L.findIndex(x => x[k] === id && same(x.name, n)), prima = i >= 0 ? L[i].val : 0; if (i >= 0) L.splice(i, 1);
+    if (prima === val) return 0; L.push({ [k]: id, name: n, val }); return val;
+  };
   const ev = i => { const e = D.ss.find(x => x.id === i); if (!e) throw err('EVENTO_NON_TROVATO'); return e; };
   const adm = a => { const e = ev(a.p_event); if (e.admin_pin !== a.p_admin_pin) throw err('PIN_ORGANIZZATORE_ERRATO'); return e; };
   const aperto = e => { if (e.status !== 'open') throw err('SORTEGGIO_GIA_FATTO'); };
@@ -1299,24 +1626,45 @@ function creaDemo() {
   const togli = (e, p) => { e.people = e.people.filter(x => x !== p); e.excl = e.excl.filter(x => !x.includes(p.name)); };
   const F = {
     check_pw: a => pwOk(a.p_pw),
-    members_list: a => { need(a); return D.members.slice().sort(alfa); },
-    member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!D.members.includes(n)) D.members.push(n); },
-    feed: a => { need(a); return D.posts.slice().sort(desc).slice(0, 150).map(p => Object.assign({}, p, { likes: D.likes.filter(l => l.post === p.id).map(l => l.name), replies: D.replies.filter(r => r.post_id === p.id).length })); },
+    members_list: a => { need(a); return D.members.map(m => m.name).sort(alfa); },
+    member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!D.members.some(m => m.name === n)) D.members.push({ name: n, created_at: t(0), last_seen: null }); },
+    presenza: a => {
+      need(a); const n = clean(a.p_name, 30), ora = t(0);
+      D.members.forEach(m => { if (m.name === 'Giulia' || m.name === 'Marco') m.last_seen = ora; });   // amici finti sempre online
+      if (n) { const m = D.members.find(x => same(x.name, n)); if (m) m.last_seen = ora; else D.members.push({ name: n, created_at: ora, last_seen: ora }); }
+      const lim = Date.now() - 150000;
+      return D.members.map(m => ({ name: m.name, created_at: m.created_at, last_seen: m.last_seen, online: !!m.last_seen && new Date(m.last_seen) > lim }))
+        .sort((x, y) => (x.last_seen || '') < (y.last_seen || '') ? 1 : -1);
+    },
+    stories_list: a => {
+      need(a); const lim = Date.now() - 864e5;
+      return D.stories.filter(s => new Date(s.created_at) > lim).sort((x, y) => x.created_at < y.created_at ? -1 : 1)
+        .map(s => ({ id: s.id, author: s.author, path: s.path, caption: s.caption, created_at: s.created_at, views: same(s.author, a.p_name || '') ? D.views.filter(v => v.story === s.id).map(v => v.name) : null }));
+    },
+    story_add: a => { need(a); const p = clean(a.p_path, 300); if (!p) throw err('POST_VUOTO'); const id = uid(); D.stories.push({ id, author: clean(a.p_author, 30), path: p, caption: clean(a.p_caption, 150), created_at: t(0) }); return id; },
+    story_seen: a => { need(a); const n = clean(a.p_name, 30), s = D.stories.find(x => x.id === a.p_id); if (n && s && !same(s.author, n) && !D.views.some(v => v.story === s.id && same(v.name, n))) D.views.push({ story: s.id, name: n }); },
+    story_del: a => { need(a); D.stories = D.stories.filter(s => !(s.id === a.p_id && s.author === a.p_author)); },
+    feed: a => { need(a); return D.posts.slice().sort(desc).slice(0, 150).map(p => Object.assign({}, p, { likes: D.likes.filter(l => l.post === p.id && l.val === 1).map(l => l.name), dislikes: D.likes.filter(l => l.post === p.id && l.val === -1).map(l => l.name), replies: D.replies.filter(r => r.post_id === p.id).length })); },
     post_add: a => { need(a); const b = clean(a.p_body, 4000), ph = (a.p_photos || []).slice(0, 20); if (!b && !ph.length) throw err('POST_VUOTO'); const id = uid(); D.posts.push({ id, author: clean(a.p_author, 30), body: b, photos: ph, created_at: t(0) }); return id; },
     post_del: a => { need(a); D.posts = D.posts.filter(p => !(p.id === a.p_id && p.author === a.p_author)); const ok = new Set(D.posts.map(p => p.id)); D.likes = D.likes.filter(l => ok.has(l.post)); D.replies = D.replies.filter(r => ok.has(r.post_id)); },
     post_like: a => {
       need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!D.posts.some(p => p.id === a.p_id)) throw err('POST_NON_TROVATO');
-      const i = D.likes.findIndex(l => l.post === a.p_id && same(l.name, n)); if (i >= 0) { D.likes.splice(i, 1); return false; }
-      D.likes.push({ post: a.p_id, name: n }); return true;
+      const i = D.likes.findIndex(l => l.post === a.p_id && same(l.name, n) && l.val === 1); if (i >= 0) { D.likes.splice(i, 1); return false; }
+      D.likes = D.likes.filter(l => !(l.post === a.p_id && same(l.name, n))); D.likes.push({ post: a.p_id, name: n, val: 1 }); return true;
     },
+    post_vote: a => vota(a, D.likes, 'post', a.p_id, a.p_name, a.p_val, () => D.posts.some(p => p.id === a.p_id), 'POST_NON_TROVATO'),
+    photo_vote: a => vota(a, D.pvotes, 'photo', a.p_photo, a.p_name, a.p_val, () => D.photos.some(f => f.id === a.p_photo), 'FOTO_NON_TROVATA'),
     post_thread: a => { need(a); return D.replies.filter(r => r.post_id === a.p_id).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(r => ({ id: r.id, author: r.author, body: r.body, created_at: r.created_at })); },
     reply_add: a => { need(a); const b = clean(a.p_body, 2000); if (!b) throw err('POST_VUOTO'); if (!D.posts.some(p => p.id === a.p_id)) throw err('POST_NON_TROVATO'); const id = uid(); D.replies.push({ id, post_id: a.p_id, author: clean(a.p_author, 30), body: b, created_at: t(0) }); return id; },
     reply_del: a => { need(a); D.replies = D.replies.filter(r => !(r.id === a.p_id && r.author === a.p_author)); },
     albums_list: a => { need(a); return D.albums.slice().sort(desc).map(x => { const ph = D.photos.filter(f => f.album_id === x.id).sort(desc); return Object.assign({}, x, { n: ph.length, cover: ph[0] ? ph[0].path : null }); }); },
     album_create: a => { need(a); const n = clean(a.p_name, 60); if (!n) throw err('NOME_VUOTO'); const id = uid(); D.albums.push({ id, name: n, created_by: clean(a.p_author, 30), created_at: t(0) }); return id; },
-    album_photos: a => { need(a); return D.photos.filter(f => f.album_id === a.p_album).sort(desc).map(f => ({ id: f.id, path: f.path, author: f.author, created_at: f.created_at })); },
+    album_photos: a => { need(a); return D.photos.filter(f => f.album_id === a.p_album).sort(desc).map(f => ({ id: f.id, path: f.path, author: f.author, created_at: f.created_at, comments: D.pcomments.filter(c => c.photo_id === f.id).length, likes: D.pvotes.filter(v => v.photo === f.id && v.val === 1).map(v => v.name), dislikes: D.pvotes.filter(v => v.photo === f.id && v.val === -1).map(v => v.name) })); },
+    photo_comments: a => { need(a); return D.pcomments.filter(c => c.photo_id === a.p_photo).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(c => ({ id: c.id, author: c.author, body: c.body, created_at: c.created_at })); },
+    photo_comment_add: a => { need(a); const b = clean(a.p_body, 1000); if (!b) throw err('POST_VUOTO'); if (!D.photos.some(f => f.id === a.p_photo)) throw err('FOTO_NON_TROVATA'); const id = uid(); D.pcomments.push({ id, photo_id: a.p_photo, author: clean(a.p_author, 30), body: b, created_at: t(0) }); return id; },
+    photo_comment_del: a => { need(a); D.pcomments = D.pcomments.filter(c => !(c.id === a.p_id && c.author === a.p_author)); },
     photo_add: a => { need(a); D.photos.push({ id: uid(), album_id: a.p_album, path: clean(a.p_path, 300), author: clean(a.p_author, 30), created_at: t(0) }); },
-    photo_del: a => { need(a); D.photos = D.photos.filter(f => f.id !== a.p_id); },
+    photo_del: a => { need(a); D.photos = D.photos.filter(f => f.id !== a.p_id); D.pcomments = D.pcomments.filter(c => c.photo_id !== a.p_id); D.pvotes = D.pvotes.filter(v => v.photo !== a.p_id); },
     album_del: a => { need(a); if (D.photos.some(f => f.album_id === a.p_album)) throw err('ALBUM_NON_VUOTO'); D.albums = D.albums.filter(x => x.id !== a.p_album); },
     ss_list: a => { need(a); return D.ss.slice().sort(desc).map(e => ({ id: e.id, name: e.name, budget: e.budget, gift_date: e.gift_date, organizer: e.organizer, status: e.status, drawn_at: e.drawn_at, created_at: e.created_at, people: e.people.map(p => p.name).sort(alfa), excl: e.excl.map(x => x.slice()) })); },
     ss_create: a => {

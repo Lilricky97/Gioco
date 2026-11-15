@@ -25,9 +25,11 @@ Richiesta di Ricky:
 5. **FantaSanremo**: per ora "in arrivo".
 
 Decisioni già prese con Ricky:
-- Nome del sito: **"Pippeghi 24/7"** (insegna al neon: "Pippeghi" rosa, "24/7" verde menta). Lo stile neon gli piace.
+- Nome del sito: **"Pippeghi 24/7"**. Lo stile neon gli piace, i font morbidi/tondi **no**: insegna in **Monoton** (rosa, la 5ª lettera è un "tubo difettoso" che sfarfalla), "24/7" in Bebas Neue verde menta che sfarfalla, titoli di sezione in **Bebas Neue** al neon con ronzio, testo in **Archivo**, bottoni maiuscoli squadrati (raggio 6px), card a 8px.
+- Il link deve **restare lo stesso** e aggiornarsi da solo (Ricky non vuole rimandarlo agli amici): si continua a pubblicare sullo stesso branch.
 - Barra in basso: icone disegnate (SVG a linee, verde menta con alone quando attive), **niente emoji** (Ricky le trovava poco professionali). Etichette: Novità, Foto, Gioco, Santa, Sanremo.
-- **Novità in stile X/Twitter**: post con ❤️ mi piace e 💬 risposte, #hashtag cliccabili, "🔥 Di tendenza" = hashtag più usati negli ultimi 30 giorni (a destra su computer, riga scorrevole in alto sul telefono). Ricky deve ancora dire come vuole le altre sezioni e i colori: chiedere/proporre.
+- **Storie 24 ore** stile Instagram: bottone tondo in basso a destra (anello colorato + numero se ci sono storie nuove), "visto da" per l'autore. **Chi è online** (bottone verde in alto, "bussa" ogni 45 s) e **chi si è registrato**. **Commenti alle foto** degli album e **👍 Mi piace / 👎 Non mi piace** su post e foto.
+- **Novità in stile X/Twitter**: post con 👍/👎 e 💬 risposte, #hashtag cliccabili, "🔥 Di tendenza" = hashtag più usati negli ultimi 30 giorni (a destra su computer, riga scorrevole in alto sul telefono). Ricky deve ancora dire come vuole le altre sezioni e i colori: chiedere/proporre.
 - Database: **Supabase** (account di Ricky, organizzazione "Pippeghi 24/7", progetto "Lilricky97's Project", ref `hiypieuddqkwefifiqqc` → URL `https://hiypieuddqkwefifiqqc.supabase.co`, regione eu-west).
 - `sito/installa.sql` = `schema.sql` + `storage.sql` in un file solo (da rigenerare se cambiano), per un unico copia-incolla dal telefono.
 - Accesso: **una password unica del gruppo** (impostata da Ricky in Supabase), poi ognuno sceglie il proprio nome.
@@ -43,10 +45,11 @@ Stato:
   Foto: ridimensionate a 1600px JPEG + miniatura 640px (`<uuid>_t.jpg`), cartelle `novita/` e `album/<id>/`. Dati salvati nel telefono con prefisso `pip_` in localStorage (`pipdemo_` in modalità prova).
 - ✅ Test (tutti verdi):
   - `cd sito && npm i @electric-sql/pglite && node test-database.mjs` – database.
-  - `node prova-locale.mjs` (finto Supabase su http://localhost:8787 col vero schema.sql in PGlite, password `prova`; `LAG=300` = rete lenta) e poi `node test-sito.mjs` – 6 telefoni finti con Playwright (103 controlli, compresa la modalità prova aperta come file): novità con foto, mi piace, risposte, hashtag e tendenze, cartelle, Secret Santa completo (iscrizioni, nome rubato, esclusioni, sorteggio, altro telefono, PIN dimenticato, letterina aggiornata, annulla e rifai). Riavvia `prova-locale.mjs` prima di ogni giro (i dati sono in memoria).
+  - `node prova-locale.mjs` (finto Supabase su http://localhost:8787 col vero schema.sql in PGlite, password `prova`; `LAG=300` = rete lenta) e poi `node test-sito.mjs` – 6 telefoni finti con Playwright (131 controlli, compresa la modalità prova aperta come file): novità con foto, mi piace, risposte, hashtag e tendenze, cartelle, Secret Santa completo (iscrizioni, nome rubato, esclusioni, sorteggio, altro telefono, PIN dimenticato, letterina aggiornata, annulla e rifai). Riavvia `prova-locale.mjs` prima di ogni giro (i dati sono in memoria).
 - ✅ Supabase collegato: Ricky ha eseguito `installa.sql` (verificato dal vivo: `check_pw` risponde, `feed` senza password → PASSWORD_ERRATA, tabelle negate all'anon, bucket `foto` esiste). In `index.html` ci sono `SUPA_URL` e la chiave **anon** (JWT `eyJ…`, pubblica). La password del gruppo la conosce solo Ricky: io non la so e non devo chiederla.
   Per i test la modalità prova è su `http://localhost:8787/prova` (`prova-locale.mjs` svuota URL e chiave).
 - ⏳ Da fare:
+  0. Ricky deve **ricopiare `installa.sql`** nel SQL Editor (https://supabase.com/dashboard/project/hiypieuddqkwefifiqqc/sql/new) per storie, online, commenti foto e 👍/👎 (non cancella niente; testato anche l'aggiornamento sopra il database vecchio). Finché non lo fa, il sito dice "Il database va aggiornato".
   1. Ricky prova il sito vero con la sua password (novità, foto, Secret Santa con più persone).
   2. Link definitivo: chiedere a Ricky il permesso di mettere il sito su `main` (link `https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/main/sito/index.html`) oppure GitHub Pages se lo attiva.
   3. Sezioni/colori: aspettare le richieste di Ricky. FantaSanremo ancora "in arrivo".
