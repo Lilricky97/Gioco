@@ -450,6 +450,71 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .po-bar i{display:block;height:100%;border-radius:3px;background:#5d6bb0;transition:width .3s}
 .po.on .po-bar i{background:var(--menta);box-shadow:0 0 8px var(--menta-g)}
 .poll.chiuso{opacity:.85}
+/* calendario */
+.cal{padding:14px 12px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
+.cal-m{font:400 30px/1 "Bebas Neue",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#fff3fa;text-shadow:0 0 2px #fff,0 0 8px var(--rosa),0 0 18px var(--rosa)}
+.cal-nav{flex:none;width:44px;height:44px;border-radius:8px;border:1px solid var(--line);background:var(--campo);color:var(--menta);font-size:26px;line-height:1;cursor:pointer}
+.cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cw{text-align:center;font:700 12px Archivo,sans-serif;color:var(--muto2);padding:2px 0 4px}
+.cd{aspect-ratio:1;min-width:0;border:1px solid transparent;border-radius:8px;background:rgba(255,255,255,.03);color:var(--testo);font:600 15px Archivo,sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0}
+.cd.pass{color:var(--muto2)}
+.cd.oggi{border-color:var(--menta);color:var(--menta);box-shadow:0 0 10px -3px var(--menta)}
+.cd.sel{background:rgba(255,62,165,.18);border-color:var(--rosa);color:#fff}
+.cd i{display:flex;gap:3px;height:6px}
+.cd i b{width:6px;height:6px;border-radius:50%;background:var(--rosa);box-shadow:0 0 6px var(--rosa)}
+.cd.vado i b{background:var(--menta);box-shadow:0 0 6px var(--menta)}
+.cal-oggi{display:block;margin:8px auto 0}
+.ev-k{font:400 23px "Bebas Neue",sans-serif;letter-spacing:.08em;color:var(--menta);text-shadow:0 0 8px var(--menta-g);margin:20px 0 10px}
+.ev-vuoto{margin:0 0 12px}
+.evc{display:flex;gap:14px;align-items:center;width:100%;text-align:left;cursor:pointer;color:var(--testo);padding:12px 14px}
+.evc.pass{opacity:.65}
+.evc-d{flex:none;width:54px;height:58px;border-radius:8px;border:1.5px solid var(--rosa);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 10px -3px var(--rosa),inset 0 0 10px -5px var(--rosa)}
+.evc-d b{font:400 30px/1 "Bebas Neue",sans-serif;color:#fff3fa}
+.evc-d small{font:700 11px Archivo,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--rosa)}
+.evc-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.evc-t{font-weight:800;font-size:17px;overflow-wrap:anywhere}
+.evc-m{color:var(--muto);font-size:14px;overflow-wrap:anywhere}
+.evc-m em{font-style:normal;color:var(--giallo);font-weight:700}
+.evc-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muto);font-size:13px;margin-top:2px}
+.evc-c{flex:none;width:58px;height:58px;border-radius:8px;overflow:hidden;background:var(--campo)}
+.evc-c img{width:100%;height:100%;object-fit:cover;display:block}
+.ev-pass{display:block;margin:14px auto}
+.ev-cover{display:block;width:100%;padding:0;border:0;border-radius:8px;overflow:hidden;margin:0 0 14px;cursor:zoom-in;background:var(--campo)}
+.ev-cover img{width:100%;max-height:300px;object-fit:cover;display:block}
+.evd-top{display:flex;align-items:flex-start;gap:10px}
+.evd-t{flex:1;min-width:0;font-size:42px;margin:0 0 10px;overflow-wrap:anywhere}
+.evd-i{display:flex;align-items:center;gap:10px;margin:9px 0;overflow-wrap:anywhere}
+.evd-i svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--menta);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.evd-i a{color:var(--menta)}
+.evd-b{margin-top:12px}
+.evd-cal{margin-top:16px}
+.rsvp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rs{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 4px;border-radius:6px;border:1.5px solid var(--line);background:var(--campo);color:var(--testo);cursor:pointer;font:800 12.5px Archivo,sans-serif;text-transform:uppercase;letter-spacing:.03em;text-align:center}
+.rs span{font:400 26px/1 "Bebas Neue",sans-serif;color:var(--muto)}
+.rs.si.on{border-color:var(--menta);background:rgba(70,245,192,.12);color:var(--menta);box-shadow:0 0 14px -4px var(--menta)}
+.rs.forse.on{border-color:var(--giallo);background:rgba(255,216,107,.1);color:var(--giallo);box-shadow:0 0 14px -4px var(--giallo)}
+.rs.no.on{border-color:var(--rosso);background:rgba(255,93,108,.1);color:var(--rosso)}
+.rs.on span{color:inherit}
+.rs-l{margin-top:4px}
+.rs-p{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.rs-p .chip{padding:4px 10px 4px 4px;font-size:14px}
+.dv{display:flex;align-items:center;gap:10px}
+.dv .po{flex:1;min-width:0}
+.dv-top{color:var(--giallo);font-weight:700;font-size:12px;margin-left:4px}
+.ev-rp{padding:12px 0 0;border:0}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:14px 0 0;background:var(--campo);border:1px solid var(--line);border-radius:8px;padding:4px}
+.seg button{border:0;border-radius:6px;padding:10px 4px;background:none;color:var(--muto);font:800 12.5px Archivo,sans-serif;text-transform:uppercase;letter-spacing:.03em;cursor:pointer}
+.seg button.on{background:var(--rosa);color:#22001a;box-shadow:0 0 12px -2px var(--rosa)}
+.row2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:10px}
+.row2 input,.evf-dr input{min-width:0}
+.evf-dr{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:8px}
+.evf-cov{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+#evf-prev img{width:64px;height:64px;object-fit:cover;border-radius:8px;display:block}
+.oggi-b{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 12px;padding:12px 14px;border-radius:8px;border:1.5px solid var(--giallo);background:rgba(255,216,107,.08);color:var(--testo);cursor:pointer;text-align:left;box-shadow:0 0 16px -6px var(--giallo)}
+.oggi-b b{font:400 22px/1 "Bebas Neue",sans-serif;letter-spacing:.08em;color:var(--giallo);text-shadow:0 0 8px rgba(255,216,107,.6)}
+.oggi-b span{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oggi-b i{font-style:normal;color:var(--giallo);font-size:22px}
 .pf{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);margin-top:8px;padding-top:8px;color:var(--muto);font-size:14px}
 .pf .link{color:var(--menta);text-decoration:none;font-weight:700;padding:6px 0}
 .np-opt{margin-bottom:8px}
@@ -503,7 +568,7 @@ const store = {
 };
 const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, album: {}, ss: null,
   draft: { text: '', files: [] }, ui: { rev: {}, adm: {}, me: {}, meLoad: {}, qa: {}, qaLoad: {}, tab: {}, stat: {}, logAll: {} }, mine: {}, busy: 0, refresh: null,
-  thread: {}, replyDraft: {}, liking: {}, vq: {}, lastFeed: '#novita', av: store.get('av') || {} };
+  thread: {}, replyDraft: {}, liking: {}, vq: {}, lastFeed: '#novita', av: store.get('av') || {}, ev: null, evFull: {} };
 
 // ---------- messaggi d'errore in italiano ----------
 const MSG = {
@@ -534,6 +599,15 @@ const MSG = {
   SERVONO_ALMENO_3: 'Servono almeno 3 partecipanti per il sorteggio.',
   ESCLUSIONI_IMPOSSIBILI: 'Con queste esclusioni il sorteggio è impossibile: togline qualcuna.',
   EVENTO_NON_TROVATO: 'Questo Secret Santa non esiste più.',
+  EVENTO_SPARITO: 'Questo evento non esiste più.',
+  TITOLO_VUOTO: 'Scrivi il nome dell\'evento (es. "Cena da Marco").',
+  DATA_VUOTA: 'Scegli il giorno.',
+  DATA_NON_VALIDA: 'Questa data non va bene: controllala.',
+  SERVONO_2_DATE: 'Proponi almeno 2 date diverse.',
+  TROPPE_DATE: 'Al massimo 5 date.',
+  VOTAZIONE_CHIUSA: 'La data è già stata fissata.',
+  RISPOSTA_NON_VALIDA: 'Risposta non valida.',
+  NON_AUTORIZZATO: 'Può farlo solo chi l\'ha creato.',
   NOME_NON_TROVATO: 'Nome non trovato.',
   POST_NON_TROVATO: 'Questo post non esiste più.',
   FOTO_NON_TROVATA: 'Questa foto non esiste più.',
@@ -864,7 +938,8 @@ const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 // tutte le zone del sito (menu ☰); in basso solo Novità e Storie
 const ZONE = [
   { id: 'novita', t: 'Novità', d: 'Post, risposte e #tendenze', f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
-  { id: 'storie', t: 'Storie', d: 'Foto che durano 24 ore', f: viewStorie, ico: svg('<circle cx="12" cy="12" r="8.5" stroke-dasharray="4.2 2.4"/><path d="M12 8.5v7M8.5 12h7"/>') },
+  { id: 'calendario', t: 'Calendario', d: 'Cene, feste e serate', f: viewCalendario, ico: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/>') },
+  { id: 'storie', t: 'Storie', d: 'Foto che durano 24 ore', menu: false, f: viewStorie, ico: svg('<circle cx="12" cy="12" r="8.5" stroke-dasharray="4.2 2.4"/><path d="M12 8.5v7M8.5 12h7"/>') },
   { id: 'foto', t: 'Foto', d: 'Le cartelle del gruppo', f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
   { id: 'sondaggi', t: 'Sondaggi', d: 'Vota e fai votare', f: viewSondaggi, ico: svg('<path d="M4 6.5h9M4 12h16M4 17.5h6"/><circle cx="17" cy="6.5" r="1.4"/><circle cx="13.5" cy="17.5" r="1.4"/>') },
   { id: 'gioco', t: 'Gioco', d: 'Senza Filtro', f: viewGioco, ico: svg('<rect x="4" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 9.2 12.7)"/><path d="m14.6 5.4 3.7.7a2 2 0 0 1 1.6 2.3l-2 11a2 2 0 0 1-2.3 1.6l-3.2-.6"/>') },
@@ -894,7 +969,7 @@ function apriMenu() {
   ov.innerHTML = `<nav class="mz" aria-label="Zone del sito">
     <div class="mz-top"><button class="mz-av" data-a="foto" aria-label="La tua foto utente">${avatar(S.me)}<span class="cam">${ICO_CAM}</span></button><div class="mz-me"><b>${esc(S.me)}</b><span><button class="link" data-a="nome">Cambia nome</button> · <button class="link" data-a="esci">Esci</button></span></div><button class="mz-x" data-close aria-label="Chiudi">✕</button></div>
     <div class="mz-k">Zone del sito</div>
-    <div class="mz-grid">${ZONE.map(z => `<button class="mz-z ${z.id === attiva ? 'on' : ''}" data-zona="${z.id}"><span class="ico">${z.ico}</span><b>${esc(z.t)}</b><small>${esc(z.d)}</small></button>`).join('')}</div>
+    <div class="mz-grid">${ZONE.filter(z => z.menu !== false).map(z => `<button class="mz-z ${z.id === attiva ? 'on' : ''}" data-zona="${z.id}"><span class="ico">${z.ico}</span><b>${esc(z.t)}</b><small>${esc(z.d)}</small></button>`).join('')}</div>
     <button class="mz-grp" data-a="gruppo"><i class="dot"></i><span>Chi c'è nel gruppo</span>${S.people ? `<b>${on} online</b>` : ''}</button>
     <button class="mz-rel" data-a="ricarica">${ICO_RICARICA}<span>Ricarica il sito</span></button>
   </nav>`;
@@ -1060,6 +1135,7 @@ function viewNovita(tag) {
   $('#view').innerHTML = `<h1 class="neon">Novità</h1>
     <div class="trend-row" id="trends-m"></div>
     <div class="x-wrap"><div class="x-main">
+      ${tag ? '' : '<div id="ev-oggi"></div>'}
       ${tag ? `<div class="tag-head"><div><b>#${esc(tag)}</b><span id="tag-n"></span></div><button class="btn ghost xs" data-go="#novita">✕ Tutti i post</button></div>` : ''}
       <section class="card composer">
         <div class="row">${avatar(S.me)}<textarea id="np-text" rows="1" maxlength="4000" placeholder="Che succede, ${esc(S.me)}?"></textarea></div>
@@ -1086,7 +1162,7 @@ function viewNovita(tag) {
   drawPreviews();
   if (S.busy) { $('#np-go').disabled = true; }
   if (S.feed) drawFeed();
-  S.refresh = loadFeed; loadFeed();
+  S.refresh = loadFeed; loadFeed(); drawOggi();
 }
 function drawPreviews() {
   const el = $('#np-prev'); if (!el) return;
@@ -1112,6 +1188,7 @@ async function publish() {
   finally { S.busy--; const b = $('#np-go'); if (b) b.disabled = false; const p = $('#np-prog'); if (p) p.hidden = true; }
 }
 async function loadFeed() {
+  if (!S.evAt || Date.now() - S.evAt > 60000) { S.evAt = Date.now(); loadEventi(); }   // per la striscia "Oggi / Domani"
   try { S.feed = await rpc('feed'); const s = cur().sec; if (s === 'novita' || s === 'tag') drawFeed(); }
   catch (e) { const el = $('#feed'); if (el && !S.feed) el.innerHTML = errBox(e); }
 }
@@ -1881,6 +1958,325 @@ function drawAdm(ev) {
   });
 }
 
+// ===================== CALENDARIO EVENTI =====================
+// giorni e ore "locali" (YYYY-MM-DD e HH:MM), senza fuso orario: il gruppo è in Italia
+const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+const GIORNI = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+const RSVP_T = { si: 'Ci sono', forse: 'Forse', no: 'Non ci sono' };
+const ICO_CAL = svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>');
+const ICO_LUOGO = svg('<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>');
+const cap = t => t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
+const isoD = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const daIso = t => { const [y, m, d] = t.split('-').map(Number); return new Date(y, m - 1, d); };
+const oggiIso = () => isoD(new Date());
+const piuGiorni = (t, k) => { const d = daIso(t); d.setDate(d.getDate() + k); return isoD(d); };
+function dataLunga(day, ora) {
+  const d = daIso(day), anno = d.getFullYear() !== new Date().getFullYear();
+  return `${GIORNI[d.getDay()]} ${d.getDate()} ${MESI[d.getMonth()]}${anno ? ' ' + d.getFullYear() : ''}${ora ? ' · ore ' + ora : ''}`;
+}
+const quandoEv = day => { const o = oggiIso(); return day === o ? 'Oggi' : day === piuGiorni(o, 1) ? 'Domani' : null; };
+const linkCal = id => location.href.split('#')[0] + '#calendario/' + id;
+const miaRisposta = e => ['si', 'forse', 'no'].find(k => e.rsvp[k].some(n => same(n, S.me))) || null;
+
+function viewCalendario(arg) {
+  if (arg) return viewEv(arg);
+  if (!S.ui.cal) S.ui.cal = { mese: oggiIso().slice(0, 7), giorno: null, passati: false };
+  $('#view').innerHTML = `<h1 class="neon m">Calendario</h1>
+    <button class="btn wide" id="ev-new">+ Nuovo evento</button>
+    <section class="card cal" id="cal"></section>
+    <div id="ev-list"><div class="loading">Carico gli eventi</div></div>`;
+  $('#ev-new').onclick = () => nuovoEv(S.ui.cal.giorno && S.ui.cal.giorno >= oggiIso() ? S.ui.cal.giorno : '');
+  drawCal();
+  if (S.ev) drawEvList();
+  S.refresh = loadEventi; loadEventi();
+}
+async function loadEventi() {
+  try {
+    S.ev = await rpc('events_list'); S.noEv = false; S.evAt = Date.now();
+    const c = cur();
+    if (c.sec === 'calendario' && !c.arg) { drawCal(); drawEvList(); }
+    if (c.sec === 'novita') drawOggi();
+  } catch (e) {
+    if (e.message === 'NO_DB') S.noEv = true;
+    const el = $('#ev-list'); if (el && !S.ev) el.innerHTML = errBox(e);
+  }
+}
+function drawCal() {
+  const el = $('#cal'); if (!el) return;
+  const st = S.ui.cal, [y, m] = st.mese.split('-').map(Number), giorni = new Date(y, m, 0).getDate();
+  const vuoti = (new Date(y, m - 1, 1).getDay() + 6) % 7, oggi = oggiIso(), per = {};
+  (S.ev || []).filter(e => e.day).forEach(e => (per[e.day] = per[e.day] || []).push(e));
+  let celle = '<span></span>'.repeat(vuoti);
+  for (let g = 1; g <= giorni; g++) {
+    const d = `${st.mese}-${String(g).padStart(2, '0')}`, L = per[d] || [], vado = L.some(e => miaRisposta(e) === 'si');
+    celle += `<button class="cd${d === oggi ? ' oggi' : ''}${L.length ? ' ev' : ''}${vado ? ' vado' : ''}${d === st.giorno ? ' sel' : ''}${d < oggi ? ' pass' : ''}" data-day="${d}" aria-label="${esc(dataLunga(d))}${L.length ? ': ' + L.length + (L.length === 1 ? ' evento' : ' eventi') : ''}"><span>${g}</span>${L.length ? `<i>${'<b></b>'.repeat(Math.min(3, L.length))}</i>` : ''}</button>`;
+  }
+  el.innerHTML = `<div class="cal-h"><button class="cal-nav" id="cal-prev" aria-label="Mese prima">‹</button><b class="cal-m">${MESI[m - 1]} ${y}</b><button class="cal-nav" id="cal-next" aria-label="Mese dopo">›</button></div>
+    <div class="cal-g">${['L', 'M', 'M', 'G', 'V', 'S', 'D'].map(x => `<span class="cw">${x}</span>`).join('')}${celle}</div>
+    ${st.mese !== oggi.slice(0, 7) || st.giorno ? '<button class="link cal-oggi" id="cal-today">Torna a oggi</button>' : ''}`;
+  const ridisegna = () => { drawCal(); drawEvList(); };
+  const sposta = k => { st.mese = isoD(new Date(y, m - 1 + k, 1)).slice(0, 7); st.giorno = null; ridisegna(); };
+  $('#cal-prev').onclick = () => sposta(-1); $('#cal-next').onclick = () => sposta(1);
+  const t = $('#cal-today'); if (t) t.onclick = () => { st.mese = oggi.slice(0, 7); st.giorno = null; ridisegna(); };
+  el.querySelectorAll('[data-day]').forEach(b => b.onclick = () => { st.giorno = st.giorno === b.dataset.day ? null : b.dataset.day; ridisegna(); });
+}
+function evCardHTML(e) {
+  const d = e.day ? daIso(e.day) : null, io = miaRisposta(e), q = e.day && quandoEv(e.day), chi = e.rsvp.si.length;
+  const quando2 = e.voting ? `🗳️ Si vota la data · ${e.dates.length} proposte`
+    : `${q ? `<em>${q}</em>` : esc(cap(GIORNI[d.getDay()]))}${d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : ''}${e.ora ? ' · ore ' + esc(e.ora) : ''}`;
+  return `<button class="card evc${e.day && e.day < oggiIso() ? ' pass' : ''}" data-go="#calendario/${esc(e.id)}" data-ev="${esc(e.id)}">
+    <span class="evc-d">${d ? `<b>${d.getDate()}</b><small>${MESI[d.getMonth()].slice(0, 3)}</small>` : '<b>?</b><small>data</small>'}</span>
+    <span class="evc-b"><span class="evc-t">${esc(e.title)}</span><span class="evc-m">${quando2}</span>
+      ${e.place ? `<span class="evc-m">📍 ${esc(e.place)}</span>` : ''}
+      <span class="evc-r">${chi ? `<span class="po-av">${e.rsvp.si.slice(0, 4).map(n => avatar(n, 'xs')).join('')}</span>${chi} ${chi === 1 ? 'c\'è' : 'ci sono'}` : e.voting ? '' : 'Nessuno ha ancora risposto'}${io ? `<span class="pill ${io === 'si' ? 'menta' : 'rosa'}">${RSVP_T[io]}</span>` : ''}</span></span>
+    ${e.cover ? `<span class="evc-c">${img(e.cover)}</span>` : ''}</button>`;
+}
+function drawEvList() {
+  const el = $('#ev-list'); if (!el || !S.ev) return;
+  const st = S.ui.cal, oggi = oggiIso();
+  const sez = (t, L, vuoto) => `<h3 class="ev-k">${t}</h3>${L.length ? L.map(evCardHTML).join('') : `<p class="muto ev-vuoto">${vuoto}</p>`}`;
+  let h;
+  if (st.giorno) h = sez(esc(cap(dataLunga(st.giorno))), S.ev.filter(e => e.day === st.giorno), 'Niente in programma.') + '<button class="btn ghost sm" id="ev-qui">+ Evento in questo giorno</button>';
+  else {
+    const vota = S.ev.filter(e => e.voting), pross = S.ev.filter(e => e.day && e.day >= oggi), pass = S.ev.filter(e => e.day && e.day < oggi).reverse();
+    h = (vota.length ? sez('🗳️ Da decidere', vota, '') : '') + sez('Prossimi eventi', pross, 'Nessun evento in programma: organizzane uno! 🎉')
+      + (pass.length ? `<button class="link ev-pass" id="ev-pass">${st.passati ? 'Nascondi gli eventi passati' : `Eventi passati (${pass.length})`}</button>${st.passati ? pass.map(evCardHTML).join('') : ''}` : '');
+  }
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+  const qui = $('#ev-qui'); if (qui) qui.onclick = () => nuovoEv(st.giorno);
+  const ps = $('#ev-pass'); if (ps) ps.onclick = () => { st.passati = !st.passati; drawEvList(); };
+}
+// striscia "Oggi / Domani" in cima alle Novità
+function drawOggi() {
+  const el = $('#ev-oggi'); if (!el) return;
+  const o = oggiIso(), dom = piuGiorni(o, 1);
+  const h = (S.ev || []).filter(e => e.day === o || e.day === dom).slice(0, 3).map(e => `<button class="oggi-b" data-go="#calendario/${esc(e.id)}"><b>${e.day === o ? 'Oggi' : 'Domani'}</b><span>${esc(e.title)}${e.ora ? ' · ' + esc(e.ora) : ''}</span><i>›</i></button>`).join('');
+  if (el.innerHTML !== h) el.innerHTML = h;
+}
+
+// ----- la pagina di un evento -----
+function viewEv(id) {
+  $('#view').innerHTML = `<button class="back" data-go="#calendario">‹ Calendario</button><div id="evd" style="margin-top:8px"><div class="loading">Carico</div></div>`;
+  if (S.evFull[id]) drawEv(id);
+  S.refresh = () => caricaEv(id); caricaEv(id);
+}
+async function caricaEv(id) {
+  try { S.evFull[id] = await rpc('event_get', { p_id: id }); if (cur().sec === 'calendario' && cur().arg === id) drawEv(id); }
+  catch (e) { const el = $('#evd'); if (el && cur().arg === id) { el.dataset.sig = ''; el.innerHTML = errBox(e); } }
+}
+function aggiornaLista(e) {   // tiene allineato il calendario con la pagina dell'evento
+  if (!S.ev) return;
+  const i = S.ev.findIndex(x => x.id === e.id), c = JSON.parse(JSON.stringify(e)); c.body = (c.body || '').slice(0, 140); c.comments = null; c.n_comments = e.comments ? e.comments.length : c.n_comments;
+  if (i >= 0) S.ev[i] = c;
+}
+function drawEv(id, force) {
+  const el = $('#evd'), e = S.evFull[id]; if (!el || !e) return;
+  const sig = JSON.stringify(e) + S.me + !!adminPin(); if (!force && el.dataset.sig === sig) return; el.dataset.sig = sig;
+  conserva(el, () => disegnaEv(el, e));
+}
+function dataVotoHTML(e, d, persone, max, mio) {
+  const on = d.voters.some(n => same(n, S.me)), pc = persone ? Math.round(d.voters.length / persone * 100) : 0, top = max > 0 && d.voters.length === max;
+  return `<div class="dv${top ? ' dv-max' : ''}"><button class="po ${on ? 'on' : ''}" data-dv="${esc(d.id)}"><span class="po-c sq">${on ? ICO_SPUNTA : ''}</span>
+    <span class="po-b"><span class="po-t"><span>${esc(cap(dataLunga(d.day, d.ora)))}${top ? ' <small class="dv-top">la più votata</small>' : ''}</span><span class="po-av">${d.voters.slice(-3).map(n => avatar(n, 'xs')).join('')}</span><b>${d.voters.length}</b></span>
+    <span class="po-bar"><i style="width:${pc}%"></i></span></span></button>${mio ? `<button class="btn ghost xs" data-fix="${esc(d.id)}">Fissa</button>` : ''}</div>`;
+}
+function disegnaEv(el, e) {
+  const io = miaRisposta(e), mio = same(e.author, S.me), adm = !!adminPin(), q = e.day && quandoEv(e.day);
+  const persone = new Set(e.dates.flatMap(d => d.voters.map(n => n.toLowerCase()))).size, max = Math.max(0, ...e.dates.map(d => d.voters.length));
+  const comm = e.comments || [];
+  el.innerHTML = `
+    ${e.cover ? `<button class="ev-cover" id="evd-cover" aria-label="Guarda la copertina">${img(e.cover, true)}</button>` : ''}
+    <section class="card evd">
+      <div class="evd-top"><h1 class="neon evd-t">${esc(e.title)}</h1>${mio || adm ? `<button class="icon pmenu" id="evd-menu" aria-label="Opzioni dell'evento">${ICO_PUNTINI}</button>` : ''}</div>
+      <div class="evd-i">${ICO_CAL}<span>${e.voting ? '<b>Data da decidere</b> · si vota qui sotto' : `<b>${esc(cap(dataLunga(e.day, e.ora)))}</b>${q ? ` <span class="pill rosa">${q}</span>` : ''}`}</span></div>
+      ${e.place ? `<div class="evd-i">${ICO_LUOGO}<a href="${esc('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(e.place))}" target="_blank" rel="noopener">${esc(e.place)}</a></div>` : ''}
+      <div class="evd-i">${avatar(e.author, 'xs')}<span>organizza <b>${esc(e.author)}</b></span></div>
+      ${e.body ? `<div class="tw-t evd-b">${richText(e.body)}</div>` : ''}
+      ${e.day ? `<div class="row wrap evd-cal"><button class="btn ghost sm" id="evd-ics">📲 Salva nel telefono</button><a class="btn ghost sm" id="evd-gcal" href="${esc(gcalLink(e))}" target="_blank" rel="noopener">Google Calendar</a></div>` : ''}
+    </section>
+    ${e.voting ? `<section class="card"><h3>🗳️ Scegliamo la data</h3><p class="hint" style="margin:0 0 8px">Tocca tutte le date in cui ci sei.${mio ? ' Quando vuoi, fissa quella che va bene a più persone.' : ''}</p>
+      <div id="evd-date">${e.dates.map(d => dataVotoHTML(e, d, persone, max, mio)).join('')}</div>
+      <div class="pf"><span>${persone ? `${persone} ${persone === 1 ? 'persona ha' : 'persone hanno'} votato` : 'Ancora nessun voto'}</span></div></section>`
+    : `<section class="card"><h3>Chi viene</h3><div class="rsvp" id="evd-rsvp">${['si', 'forse', 'no'].map(k => `<button class="rs ${k}${io === k ? ' on' : ''}" data-ans="${k}"><b>${RSVP_T[k]}</b><span>${e.rsvp[k].length}</span></button>`).join('')}</div>
+      <div class="rs-l">${['si', 'forse', 'no'].filter(k => e.rsvp[k].length).map(k => `<div class="grp-k">${RSVP_T[k]} · ${e.rsvp[k].length}</div><div class="rs-p">${e.rsvp[k].map(n => `<span class="chip">${avatar(n, 'xs')}${esc(n)}</span>`).join('')}</div>`).join('') || '<p class="hint" style="margin:10px 0 0">Ancora nessuno ha risposto: sii il primo!</p>'}</div></section>`}
+    <section class="card"><h3>💬 Commenti ${comm.length ? `<span class="count">${comm.length}</span>` : ''}</h3>
+      <div id="evd-com">${comm.map(c => `<div class="tw reply">${avatar(c.author, 's')}<div class="tw-b"><div class="tw-h"><b>${esc(c.author)}</b><span>· ${esc(quando(c.created_at))}</span>${same(c.author, S.me) ? `<button class="icon del" data-cdel="${esc(c.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div><div class="tw-t">${richText(c.body)}</div></div></div>`).join('') || '<p class="muto" style="margin:0">Ancora nessun commento.</p>'}</div>
+      <form class="rp ev-rp" id="evd-form" novalidate>${avatar(S.me, 's')}<textarea id="evd-text" rows="1" maxlength="1000" placeholder="Scrivi un commento…"></textarea><button class="btn sm" type="submit">Invia</button></form></section>`;
+  const cv = $('#evd-cover'); if (cv) cv.onclick = () => lightbox([e.cover], 0);
+  const mn = $('#evd-menu'); if (mn) mn.onclick = () => menuEv(e);
+  const ics = $('#evd-ics'); if (ics) ics.onclick = () => salvaIcs(e);
+  el.querySelectorAll('[data-ans]').forEach(b => b.onclick = () => rispondiEv(e, b.dataset.ans));
+  el.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => votaData(e, b.dataset.dv));
+  el.querySelectorAll('[data-fix]').forEach(b => b.onclick = () => fissaData(e, e.dates.find(d => d.id === b.dataset.fix)));
+  el.querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
+    try { await rpc('event_comment_del', { p_id: b.dataset.cdel, p_author: S.me }); toast('Commento eliminato'); await caricaEv(e.id); } catch (ex) { toast(msg(ex), 'err'); }
+  });
+  const ta = $('#evd-text'); ta.oninput = () => autoGrow(ta);
+  $('#evd-form').onsubmit = async ev => {
+    ev.preventDefault(); const t = $('#evd-text'), body = t.value.trim(), b = ev.target.querySelector('button');
+    if (!body) return toast('Scrivi il commento 🙂');
+    b.disabled = true;
+    try { await rpc('event_comment_add', { p_id: e.id, p_author: S.me, p_body: body }); const t2 = $('#evd-text'); if (t2) t2.value = ''; await caricaEv(e.id); }
+    catch (ex) { toast(msg(ex), 'err'); } finally { const b2 = $('#evd-form button'); if (b2) b2.disabled = false; }
+  };
+}
+// Ci sono / Forse / Non ci sono: si vede subito, poi il database conferma (i tocchi veloci partono in fila)
+function inFila(chiave, fai) {
+  const q = S.vq[chiave] || (S.vq[chiave] = { n: 0, p: Promise.resolve() });
+  q.n++; q.p = q.p.then(() => fai(q)).finally(() => { q.n--; });
+}
+function rispondiEv(e, k) {
+  const dopo = miaRisposta(e) === k ? null : k;
+  ['si', 'forse', 'no'].forEach(x => { e.rsvp[x] = e.rsvp[x].filter(n => !same(n, S.me)); });
+  if (dopo) e.rsvp[dopo].push(S.me);
+  drawEv(e.id, true); aggiornaLista(e);
+  inFila('rsvp' + e.id, async q => {
+    try { const r = await rpc('event_rsvp', { p_id: e.id, p_name: S.me, p_ans: dopo }); if (q.n === 1 && r && S.evFull[e.id] === e) { e.rsvp = r; drawEv(e.id, true); aggiornaLista(e); } }
+    catch (ex) { toast(msg(ex), 'err'); if (q.n === 1) caricaEv(e.id); }
+  });
+}
+function votaData(e, dateId) {
+  const d = e.dates.find(x => x.id === dateId); if (!d || !e.voting) return;
+  if (d.voters.some(n => same(n, S.me))) d.voters = d.voters.filter(n => !same(n, S.me)); else d.voters.push(S.me);
+  drawEv(e.id, true); aggiornaLista(e);
+  inFila('data' + e.id, async q => {
+    try { const r = await rpc('event_date_vote', { p_date: dateId, p_name: S.me }); if (q.n === 1 && r && S.evFull[e.id] === e) { e.dates = r; drawEv(e.id, true); aggiornaLista(e); } }
+    catch (ex) { toast(msg(ex), 'err'); if (q.n === 1) caricaEv(e.id); }
+  });
+}
+function fissaData(e, d) {
+  if (!d) return;
+  formSheet({
+    title: 'Fissare questa data?', intro: `<p class="muto">${esc(cap(dataLunga(d.day, d.ora)))} · ${d.voters.length} ${d.voters.length === 1 ? 'voto' : 'voti'}. Dopo, la votazione si chiude e ognuno potrà dire se c'è.</p>`,
+    fields: [{ k: 'a', type: 'check', label: 'Annuncialo nelle Novità', value: true }], ok: 'Fissa la data',
+    submit: async v => {
+      const r = await rpc('event_fix_date', { p_id: e.id, p_author: S.me, p_date: d.id });
+      S.evFull[e.id] = r; aggiornaLista(r); drawEv(e.id, true); toast('Data fissata 📅');
+      if (v.a) annuncia(`📅 Data fissata per «${r.title}»: ${cap(dataLunga(r.day, r.ora))}${r.place ? ' @ ' + r.place : ''}! Dite se ci siete 👉 ${linkCal(r.id)} #evento`);
+      loadEventi();
+    }
+  });
+}
+function menuEv(e) {
+  const mio = same(e.author, S.me);
+  sheet(`<h3>${esc(e.title)}</h3><div class="col" style="margin-top:14px">${mio ? '<button class="btn ghost wide" data-a="mod">Modifica</button>' : ''}
+    <button class="btn ghost rosso wide" data-a="del">${mio ? 'Elimina l\'evento' : 'Elimina (amministratore)'}</button><button class="btn wide" data-close>Annulla</button></div>`, (s, close) => {
+    const m = s.querySelector('[data-a=mod]'); if (m) m.onclick = () => { close(); setTimeout(() => nuovoEv('', e), 220); };
+    s.querySelector('[data-a=del]').onclick = async () => {
+      close();
+      if (!await ask('Eliminare l\'evento?', 'Spariscono anche le risposte, i voti e i commenti.', 'Elimina', true)) return;
+      try {
+        await rpc('event_del', { p_id: e.id, p_author: S.me, p_admin: mio ? '' : (adminPin() || '') });
+        delete S.evFull[e.id]; if (S.ev) S.ev = S.ev.filter(x => x.id !== e.id);
+        toast('Evento eliminato'); location.hash = '#calendario';
+      } catch (ex) { if (/PIN_/.test(ex.message)) store.del('admin'); toast(msg(ex), 'err'); }
+    };
+  });
+}
+// ----- nuovo evento / modifica -----
+function nuovoEv(giorno, ev) {
+  if (S.noEv) return info('Calendario', `<p>${esc(MSG.NO_DB)}</p>`);
+  const mod = !!ev, voto = mod && ev.voting;
+  let cover = mod ? ev.cover : null, file = null, url = null, modo = 'fissa';
+  sheet(`<form id="evf" novalidate><h3>${mod ? 'Modifica evento' : 'Nuovo evento'}</h3>
+    <label>Titolo<input name="t" maxlength="80" placeholder="Es. Cena da Marco" autocomplete="off" value="${esc(mod ? ev.title : '')}"></label>
+    ${mod ? '' : '<div class="seg" role="group" aria-label="Data"><button type="button" class="on" data-m="fissa">Data decisa</button><button type="button" data-m="vota">Scegliamo la data</button></div>'}
+    <div id="evf-fissa" ${voto ? 'hidden' : ''}><div class="row2"><label>Giorno<input type="date" name="d" value="${esc(mod ? ev.day || '' : giorno || '')}"></label><label>Ora <small>(facoltativa)</small><input type="time" name="o" value="${esc(mod ? ev.ora || '' : '')}"></label></div></div>
+    ${voto ? '<p class="hint">La data si decide con la votazione: quando vuoi, fissala dalla pagina dell\'evento.</p>' : ''}
+    ${mod ? '' : '<div id="evf-vota" hidden><p class="hint">Proponi da 2 a 5 date: il gruppo tocca quelle in cui c\'è, poi tu fissi la migliore.</p><div id="evf-date"></div><button type="button" class="link" id="evf-add">+ Aggiungi una data</button></div>'}
+    <label>Luogo <small>(facoltativo)</small><input name="l" maxlength="120" placeholder="Es. Casa di Marco" autocomplete="off" value="${esc(mod ? ev.place : '')}"></label>
+    <label>Descrizione <small>(facoltativa)</small><textarea name="b" rows="3" maxlength="2000" placeholder="Cosa si fa, cosa portare…">${esc(mod ? ev.body : '')}</textarea></label>
+    <div class="evf-cov"><div id="evf-prev"></div><label class="btn ghost sm" style="margin:0"><span id="evf-cl"></span><input type="file" id="evf-file" accept="image/*" hidden></label><button type="button" class="link" id="evf-nocov">Togli la foto</button></div>
+    ${mod ? '' : '<label class="check"><input type="checkbox" name="a" checked> Annuncialo nelle Novità</label>'}
+    <p class="err" hidden></p>
+    <div class="row end"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn" type="submit">${mod ? 'Salva' : 'Crea'}</button></div></form>`, (s, close) => {
+    const f = s.querySelector('form'), e = f.querySelector('.err'), b = f.querySelector('[type=submit]');
+    const anteprima = () => {
+      s.querySelector('#evf-prev').innerHTML = url ? `<img src="${esc(url)}" alt="">` : cover ? img(cover) : '';
+      s.querySelector('#evf-cl').textContent = '📷 ' + (url || cover ? 'Cambia foto' : 'Foto di copertina');
+      s.querySelector('#evf-nocov').hidden = !(url || cover);
+    };
+    anteprima();
+    s.querySelector('#evf-file').onchange = x => { const fl = x.target.files[0]; x.target.value = ''; if (!fl) return; if (url) URL.revokeObjectURL(url); file = fl; url = URL.createObjectURL(fl); anteprima(); };
+    s.querySelector('#evf-nocov').onclick = () => { if (url) URL.revokeObjectURL(url); file = url = null; cover = null; anteprima(); };
+    const box = s.querySelector('#evf-date'), piu = s.querySelector('#evf-add');
+    const riga = () => {
+      if (box.children.length >= 5) return;
+      const r = document.createElement('div'); r.className = 'evf-dr';
+      r.innerHTML = `<input type="date" class="evf-dd" aria-label="Giorno"><input type="time" class="evf-do" aria-label="Ora (facoltativa)"><button type="button" class="icon" aria-label="Togli questa data">✕</button>`;
+      r.querySelector('button').onclick = () => { if (box.children.length > 2) { r.remove(); piu.hidden = false; } };
+      box.appendChild(r); piu.hidden = box.children.length >= 5;
+    };
+    if (!mod) {
+      piu.onclick = riga;
+      s.querySelectorAll('[data-m]').forEach(x => x.onclick = () => {
+        modo = x.dataset.m; s.querySelectorAll('[data-m]').forEach(y => y.classList.toggle('on', y === x));
+        s.querySelector('#evf-fissa').hidden = modo !== 'fissa'; s.querySelector('#evf-vota').hidden = modo !== 'vota';
+        if (modo === 'vota' && !box.children.length) { riga(); riga(); }
+      });
+    }
+    setTimeout(() => { if (!f.elements.t.value) f.elements.t.focus(); }, 250);
+    f.onsubmit = async x => {
+      x.preventDefault(); e.hidden = true;
+      const t = f.elements.t.value.trim(), d = f.elements.d.value, o = f.elements.o.value;
+      const date = modo === 'vota' ? [...box.children].map(r => ({ day: r.querySelector('.evf-dd').value, ora: r.querySelector('.evf-do').value })).filter(z => z.day) : null;
+      const err2 = c => { e.textContent = msg(err(c)); e.hidden = false; };
+      if (!t) return err2('TITOLO_VUOTO');
+      if (!voto && modo === 'fissa' && !d) return err2('DATA_VUOTA');
+      if (date && new Set(date.map(z => z.day + z.ora)).size < 2) return err2('SERVONO_2_DATE');
+      b.disabled = true;
+      try {
+        if (file) cover = await uploadOne('eventi', file);
+        const P = { p_title: t, p_place: f.elements.l.value.trim(), p_body: f.elements.b.value.trim(), p_day: voto || date ? null : d, p_ora: voto || date || !o ? null : o, p_cover: cover || null };
+        if (mod) {
+          const r = await rpc('event_edit', Object.assign({ p_id: ev.id, p_author: S.me }, P));
+          S.evFull[ev.id] = r; aggiornaLista(r); close(); toast('Evento aggiornato'); drawEv(ev.id, true); loadEventi();
+        } else {
+          const id = await rpc('event_add', Object.assign({ p_author: S.me, p_dates: date }, P));
+          close(); toast('Evento creato 🎉');
+          if (f.elements.a.checked) annuncia(date
+            ? `📅 «${t}»: scegliamo la data insieme! Tocca le date in cui ci sei 👉 ${linkCal(id)} #evento`
+            : `📅 Nuovo evento: «${t}» — ${cap(dataLunga(d, o || null))}${P.p_place ? ' @ ' + P.p_place : ''}. Ci sei? 👉 ${linkCal(id)} #evento`);
+          S.ui.cal = Object.assign(S.ui.cal || {}, { mese: (d || (date && date[0].day) || oggiIso()).slice(0, 7), giorno: null, passati: false });
+          location.hash = '#calendario/' + id;
+        }
+      } catch (ex) { e.textContent = msg(ex); e.hidden = false; }
+      finally { b.disabled = false; }
+    };
+  }, () => { if (url) URL.revokeObjectURL(url); });
+}
+// ----- salva nel calendario del telefono -----
+function orariEv(e) {
+  const piatto = t => t.replace(/-/g, '');
+  if (!e.ora) return { tutto: true, s: piatto(e.day), f: piatto(piuGiorni(e.day, 1)) };
+  const [h, mi] = e.ora.split(':').map(Number), a = daIso(e.day); a.setHours(h, mi, 0, 0);
+  const z = new Date(a.getTime() + 3 * 3600e3), f = x => piatto(isoD(x)) + 'T' + String(x.getHours()).padStart(2, '0') + String(x.getMinutes()).padStart(2, '0') + '00';
+  return { tutto: false, s: f(a), f: f(z) };
+}
+function icsEvento(e) {
+  const o = orariEv(e), t = x => String(x || '').replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/([,;])/g, '\\$1');
+  const piega = l => { let out = ''; while ([...l].length > 70) { const p = [...l].slice(0, 70).join(''); out += p + '\r\n '; l = l.slice(p.length); } return out + l; };
+  const desc = (e.body ? e.body + '\n\n' : '') + linkCal(e.id);
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Pippeghi 24/7//Calendario//IT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+    'UID:' + e.id + '@pippeghi247', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, ''),
+    (o.tutto ? 'DTSTART;VALUE=DATE:' : 'DTSTART:') + o.s, (o.tutto ? 'DTEND;VALUE=DATE:' : 'DTEND:') + o.f,
+    'SUMMARY:' + t(e.title), e.place ? 'LOCATION:' + t(e.place) : '', 'DESCRIPTION:' + t(desc), 'URL:' + linkCal(e.id),
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + t(e.title), o.tutto ? 'TRIGGER:-PT6H' : 'TRIGGER:-PT2H', 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR'].filter(Boolean).map(piega).join('\r\n') + '\r\n';
+}
+function salvaIcs(e) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([icsEvento(e)], { type: 'text/calendar;charset=utf-8' }));
+  a.download = (e.title.normalize('NFD').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '') || 'evento') + '.ics';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  toast('Apri il file per aggiungerlo al calendario 📅');
+}
+function gcalLink(e) {
+  const o = orariEv(e);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(e.title) + '&dates=' + o.s + '/' + o.f + (o.tutto ? '' : '&ctz=Europe/Rome')
+    + '&details=' + encodeURIComponent((e.body ? e.body + '\n\n' : '') + linkCal(e.id)) + (e.place ? '&location=' + encodeURIComponent(e.place) : '');
+}
+
 // ===================== FANTASANREMO =====================
 function viewFanta() {
   $('#view').innerHTML = `<h1 class="neon m">FantaSanremo</h1>
@@ -2217,6 +2613,21 @@ function creaDemo() {
   const sond = (author, question, multi, min, opts) => D.polls.push({ id: uid(), author, question, multi, closed: false, created_at: t(min), options: opts.map(([label, voters]) => ({ id: uid(), label, voters })) });
   sond('Giulia', 'Che giorni siete liberi per la cena di Natale?', true, 60 * 26, [['Venerdì 19', ['Giulia', 'Sara']], ['Sabato 20', ['Giulia', 'Marco', 'Luca', 'Anna']], ['Domenica 21', ['Marco']]]);
   sond('Anna', 'Dove facciamo Capodanno?', false, 120, [['Casa di Anna', ['Anna', 'Luca', 'Marco']], ['Montagna', ['Giulia']], ["Mare d'inverno", ['Sara']]]);
+  // calendario di prova: una cena tra qualche giorno, il calcetto domani, una pizzata con la data da votare, un aperitivo passato
+  D.events = [];
+  const evento = (author, title, place, body, day, ora, cover, min, rsvp = [], dates = null) => {
+    const e = { id: uid(), author, title, place, body, day, ora, cover, created_at: t(min), rsvp: rsvp.map(([name, ans]) => ({ name, ans })), comments: [],
+      dates: (dates || []).map(([day, ora, voters]) => ({ id: uid(), day, ora, voters })) };
+    D.events.push(e); return e;
+  };
+  const oggiP = oggiIso();
+  const cena = evento('Giulia', 'Cena di Natale (prova)', 'Casa di Giulia', 'Ognuno porta qualcosa: io faccio le lasagne 🍝 #natale', piuGiorni(oggiP, 5), '20:30', fotoFinta(20, '🎄', 'Cena di Natale', 900, 600, 'evento'), 60 * 30,
+    [['Giulia', 'si'], ['Marco', 'si'], ['Anna', 'si'], ['Sara', 'forse'], ['Luca', 'no']]);
+  cena.comments.push({ id: uid(), author: 'Marco', body: 'Porto il panettone!', created_at: t(60 * 20) });
+  evento('Luca', 'Calcetto (prova)', 'Campo del Pratone', '', piuGiorni(oggiP, 1), '21:00', null, 60 * 5, [['Luca', 'si'], ['Marco', 'si']]);
+  evento('Marco', 'Pizzata – quando? (prova)', 'Da Gino', 'Scegliete le date in cui ci siete 🍕', null, null, null, 60 * 8, [], [
+    [piuGiorni(oggiP, 8), '20:00', ['Marco', 'Giulia']], [piuGiorni(oggiP, 9), '20:30', ['Marco', 'Sara', 'Anna']], [piuGiorni(oggiP, 12), null, ['Sara']]]);
+  evento('Sara', 'Aperitivo al mare (prova)', 'Bagno Sirena', '', piuGiorni(oggiP, -20), '19:00', null, 60 * 24 * 25, [['Sara', 'si'], ['Giulia', 'si'], ['Anna', 'si']]);
   D.couples = []; D.adminFail = 0; D.adminLock = 0;
   // --- le stesse funzioni del database vero ---
   const pwOk = x => String(x || '').trim().toLowerCase() === D.pw;
@@ -2233,6 +2644,14 @@ function creaDemo() {
   const rnd = k => casuale(k);
   const mesc = A => { for (let i = A.length - 1; i > 0; i--) { const j = casuale(i + 1); [A[i], A[j]] = [A[j], A[i]]; } return A; };
   const evt = i => { const e = D.ss.find(x => x.id === i); if (!e) throw err('EVENTO_NON_TROVATO'); return e; };
+  // --- aiuti per il calendario di prova ---
+  const evC = i => { const e = D.events.find(x => x.id === i); if (!e) throw err('EVENTO_SPARITO'); return e; };
+  const covOk = p => p == null || /^eventi\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$/.test(p);
+  const dayOk = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= piuGiorni(oggiIso(), -366) && d <= piuGiorni(oggiIso(), 3653);
+  const evJ = (e, full) => ({ id: e.id, author: e.author, title: e.title, place: e.place, day: e.day, ora: e.ora || null, cover: e.cover || null, created_at: e.created_at, voting: !e.day,
+    rsvp: Object.fromEntries(['si', 'forse', 'no'].map(k => [k, e.rsvp.filter(r => r.ans === k).map(r => r.name)])), n_comments: e.comments.length,
+    dates: e.day ? [] : e.dates.map(d => ({ id: d.id, day: d.day, ora: d.ora || null, voters: d.voters.slice() })),
+    body: full ? e.body : e.body.slice(0, 140), comments: full ? e.comments.map(c => Object.assign({}, c)) : null });
   const logga = (e, m) => e.log.push({ at: t(0), msg: m });
   const persona = (name, pin, wish, pending) => ({ id: uid(), name, pin, wish: wish || '', pending: !!pending, code: null, seen_draw: 0, seen_at: 0, changed_at: 0, bought: false, pin_fail: 0, pin_lock: 0 });
   const nuovoEvento = (name, budget, gift_date, organizer, admin_pin) => { const e = { id: uid(), name, budget, gift_date, organizer, admin_pin, status: 'open', drawn_at: null, created_at: t(0), draw_no: 0, prev_event: null, admin_fail: 0, admin_lock: 0, people: [], excl: [], pairs: null, log: [], questions: [] }; D.ss.push(e); return e; };
@@ -2361,6 +2780,68 @@ function creaDemo() {
     },
     poll_close: a => { need(a); const p = D.polls.find(x => x.id === a.p_poll && x.author === a.p_author); if (p) p.closed = a.p_closed !== false; },
     poll_del: a => { need(a); D.polls = D.polls.filter(x => !(x.id === a.p_poll && x.author === a.p_author)); },
+    // --- calendario (stesse regole di events_list / event_* nel database) ---
+    events_list: a => {
+      need(a); const lim = piuGiorni(oggiIso(), -366), k = e => (e.day || '0000') + (e.ora || '') + e.created_at;
+      return D.events.filter(e => !e.day || e.day >= lim).sort((x, y) => k(x) < k(y) ? -1 : 1).map(e => evJ(e, false));
+    },
+    event_get: a => { need(a); return evJ(evC(a.p_id), true); },
+    event_add: a => {
+      need(a); const t2 = clean(a.p_title, 80), au = clean(a.p_author, 30);
+      if (!au) throw err('NOME_VUOTO'); if (!t2) throw err('TITOLO_VUOTO'); if (!covOk(a.p_cover)) throw err('FOTO_NON_VALIDA');
+      let dates = null, day = null, ora = null;
+      if (Array.isArray(a.p_dates) && a.p_dates.length) {
+        const visti = new Set(); dates = [];
+        for (const d of a.p_dates) {
+          if (!d || !d.day) continue;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(d.day) || (d.ora && !/^\d{2}:\d{2}$/.test(d.ora))) throw err('DATA_NON_VALIDA');
+          const kk = d.day + '|' + (d.ora || ''); if (!visti.has(kk)) { visti.add(kk); dates.push({ day: d.day, ora: d.ora || null }); }
+        }
+        if (dates.length < 2) throw err('SERVONO_2_DATE'); if (dates.length > 5) throw err('TROPPE_DATE');
+        if (dates.some(d => !dayOk(d.day))) throw err('DATA_NON_VALIDA');
+        dates.sort((x, y) => (x.day + (x.ora || '')) < (y.day + (y.ora || '')) ? -1 : 1);
+      } else {
+        if (!a.p_day) throw err('DATA_VUOTA'); if (!dayOk(a.p_day)) throw err('DATA_NON_VALIDA');
+        day = a.p_day; ora = a.p_ora || null;
+      }
+      const e = { id: uid(), author: au, title: t2, place: clean(a.p_place, 120), body: clean(a.p_body, 2000), day, ora, cover: a.p_cover || null, created_at: t(0), rsvp: [], comments: [],
+        dates: (dates || []).map(d => ({ id: uid(), day: d.day, ora: d.ora, voters: [] })) };
+      D.events.push(e); return e.id;
+    },
+    event_edit: a => {
+      need(a); const e = evC(a.p_id); if (!same(e.author, clean(a.p_author, 30))) throw err('NON_AUTORIZZATO');
+      const t2 = clean(a.p_title, 80); if (!t2) throw err('TITOLO_VUOTO'); if (!covOk(a.p_cover)) throw err('FOTO_NON_VALIDA');
+      if (e.day) { if (!a.p_day) throw err('DATA_VUOTA'); if (!dayOk(a.p_day)) throw err('DATA_NON_VALIDA'); e.day = a.p_day; e.ora = a.p_ora || null; }
+      Object.assign(e, { title: t2, place: clean(a.p_place, 120), body: clean(a.p_body, 2000), cover: a.p_cover || null });
+      return evJ(e, true);
+    },
+    event_del: a => {
+      need(a); const e = D.events.find(x => x.id === a.p_id); if (!e) return { ok: true };
+      if (!same(e.author, clean(a.p_author, 30))) { if (!a.p_admin) throw err('NON_AUTORIZZATO'); const x = admG(a.p_admin); if (x) return { err: x }; }
+      D.events = D.events.filter(x => x !== e); return { ok: true };
+    },
+    event_rsvp: a => {
+      need(a); const n = clean(a.p_name, 30), ans = clean(a.p_ans, 10) || null; if (!n) throw err('NOME_VUOTO');
+      const e = evC(a.p_id); if (ans && !['si', 'forse', 'no'].includes(ans)) throw err('RISPOSTA_NON_VALIDA');
+      e.rsvp = e.rsvp.filter(r => !same(r.name, n)); if (ans) e.rsvp.push({ name: n, ans }); return evJ(e, false).rsvp;
+    },
+    event_comment_add: a => {
+      need(a); const b = clean(a.p_body, 1000), au = clean(a.p_author, 30); if (!b) throw err('POST_VUOTO'); if (!au) throw err('NOME_VUOTO');
+      const e = evC(a.p_id), id = uid(); e.comments.push({ id, author: au, body: b, created_at: t(0) }); return id;
+    },
+    event_comment_del: a => { need(a); D.events.forEach(e => { e.comments = e.comments.filter(c => !(c.id === a.p_id && same(c.author, clean(a.p_author, 30)))); }); },
+    event_date_vote: a => {
+      need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO');
+      const e = D.events.find(x => x.dates.some(d => d.id === a.p_date)); if (!e) throw err('EVENTO_SPARITO'); if (e.day) throw err('VOTAZIONE_CHIUSA');
+      const d = e.dates.find(x => x.id === a.p_date);
+      if (d.voters.some(v => same(v, n))) d.voters = d.voters.filter(v => !same(v, n)); else d.voters.push(n);
+      return evJ(e, false).dates;
+    },
+    event_fix_date: a => {
+      need(a); const e = evC(a.p_id); if (!same(e.author, clean(a.p_author, 30))) throw err('NON_AUTORIZZATO'); if (e.day) throw err('VOTAZIONE_CHIUSA');
+      const d = e.dates.find(x => x.id === a.p_date); if (!d) throw err('EVENTO_SPARITO');
+      e.day = d.day; e.ora = d.ora; return evJ(e, true);
+    },
     // --- Secret Santa (stesse regole del database: cappello, blocchi PIN, diario, lettere, ritardatari) ---
     ss_list: a => { need(a); return D.ss.slice().sort(desc).map(e => ({ id: e.id, name: e.name, budget: e.budget, gift_date: e.gift_date, organizer: e.organizer, status: e.status, drawn_at: e.drawn_at, created_at: e.created_at,
       draw_no: e.draw_no, prev_event: e.prev_event, prev_name: e.prev_event ? (D.ss.find(x => x.id === e.prev_event) || {}).name || null : null,

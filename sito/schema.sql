@@ -194,6 +194,51 @@ create table if not exists ss_questions (        -- domande anonime di chi regal
   answered_at timestamptz
 );
 
+create table if not exists events (             -- calendario: cene, feste, serate
+  id uuid primary key default gen_random_uuid(),
+  author text not null,
+  title text not null,
+  place text not null default '',
+  body text not null default '',
+  day date,                                      -- null = data ancora da votare ("scegliamo la data insieme")
+  ora time,                                      -- facoltativa
+  cover text,                                    -- foto di copertina: eventi/<uuid>.jpg
+  created_at timestamptz not null default now()
+);
+
+create table if not exists event_rsvp (         -- Ci sono / Forse / Non ci sono
+  event_id uuid not null references events(id) on delete cascade,
+  name text not null,
+  ans text not null check (ans in ('si', 'forse', 'no')),
+  created_at timestamptz not null default now(),
+  primary key (event_id, name)
+);
+create unique index if not exists event_rsvp_nome on event_rsvp(event_id, lower(name));
+
+create table if not exists event_comments (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events(id) on delete cascade,
+  author text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists event_dates (        -- date proposte (votazione)
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events(id) on delete cascade,
+  pos int not null,
+  day date not null,
+  ora time
+);
+
+create table if not exists event_date_votes (
+  date_id uuid not null references event_dates(id) on delete cascade,
+  event_id uuid not null references events(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  primary key (date_id, name)
+);
+
 alter table app_config enable row level security;
 alter table members   enable row level security;
 alter table stories     enable row level security;
@@ -216,6 +261,11 @@ alter table ss_pairs  enable row level security;
 alter table group_couples enable row level security;
 alter table ss_log       enable row level security;
 alter table ss_questions enable row level security;
+alter table events           enable row level security;
+alter table event_rsvp       enable row level security;
+alter table event_comments   enable row level security;
+alter table event_dates      enable row level security;
+alter table event_date_votes enable row level security;
 -- nessuna policy: dall'esterno si passa solo dalle funzioni qui sotto
 
 -- ---------- utilità ----------
@@ -1328,6 +1378,186 @@ begin
   return json_build_object('ok', true);
 end $$;
 
+-- ---------- CALENDARIO EVENTI ----------
+-- giorno + ora "locali" (senza fuso orario): il gruppo è in Italia
+create or replace function _event_json(p_id uuid, p_full boolean) returns json
+language sql stable security definer set search_path = public, extensions as $$
+  select json_build_object('id', e.id, 'author', e.author, 'title', e.title, 'place', e.place,
+    'day', e.day, 'ora', to_char(e.ora, 'HH24:MI'), 'cover', e.cover, 'created_at', e.created_at, 'voting', e.day is null,
+    'rsvp', json_build_object(
+      'si',    coalesce((select json_agg(r.name order by r.created_at) from event_rsvp r where r.event_id = e.id and r.ans = 'si'), '[]'::json),
+      'forse', coalesce((select json_agg(r.name order by r.created_at) from event_rsvp r where r.event_id = e.id and r.ans = 'forse'), '[]'::json),
+      'no',    coalesce((select json_agg(r.name order by r.created_at) from event_rsvp r where r.event_id = e.id and r.ans = 'no'), '[]'::json)),
+    'n_comments', (select count(*) from event_comments c where c.event_id = e.id),
+    'dates', case when e.day is null then coalesce((select json_agg(json_build_object('id', d.id, 'day', d.day, 'ora', to_char(d.ora, 'HH24:MI'),
+        'voters', coalesce((select json_agg(v.name order by v.created_at) from event_date_votes v where v.date_id = d.id), '[]'::json)) order by d.pos)
+      from event_dates d where d.event_id = e.id), '[]'::json) else '[]'::json end,
+    'body', case when p_full then e.body else left(e.body, 140) end,
+    'comments', case when p_full then coalesce((select json_agg(json_build_object('id', c.id, 'author', c.author, 'body', c.body, 'created_at', c.created_at) order by c.created_at)
+      from event_comments c where c.event_id = e.id), '[]'::json) else null end)
+  from events e where e.id = p_id;
+$$;
+
+create or replace function _event_cover_ok(p text) returns boolean
+language sql immutable as $$ select p is null or p ~ '^eventi/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$' $$;
+
+create or replace function _event_day_ok(d date) returns boolean
+language sql stable as $$ select d between current_date - 366 and current_date + 3653 $$;
+
+create or replace function events_list(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(_event_json(x.id, false) order by x.day nulls first, x.ora nulls first, x.created_at)
+    from (select id, day, ora, created_at from events where day is null or day >= current_date - 366 order by day desc nulls first limit 500) x), '[]'::json);
+end $$;
+
+create or replace function event_get(p_pw text, p_id uuid) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare r json;
+begin
+  perform _need(p_pw);
+  r := _event_json(p_id, true);
+  if r is null then raise exception 'EVENTO_SPARITO'; end if;
+  return r;
+end $$;
+
+-- p_dates = null → data decisa (p_day obbligatorio); altrimenti 2–5 date proposte [{"day":"2026-12-20","ora":"20:30"}, ...]
+create or replace function event_add(p_pw text, p_author text, p_title text, p_place text, p_body text,
+  p_day date, p_ora time, p_cover text, p_dates json) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; t text := _clean(p_title, 80); a text := _clean(p_author, 30); n int; giorni date[]; ore time[];
+begin
+  perform _need(p_pw);
+  if a = '' then raise exception 'NOME_VUOTO'; end if;
+  if t = '' then raise exception 'TITOLO_VUOTO'; end if;
+  if not _event_cover_ok(p_cover) then raise exception 'FOTO_NON_VALIDA'; end if;
+  if p_dates is not null and json_typeof(p_dates) = 'array' and json_array_length(p_dates) > 0 then
+    begin
+      select array_agg(z.day order by z.day, z.ora nulls first), array_agg(z.ora order by z.day, z.ora nulls first) into giorni, ore
+      from (select distinct (d->>'day')::date as day, nullif(d->>'ora', '')::time as ora
+            from json_array_elements(p_dates) d where coalesce(d->>'day', '') <> '') z;
+    exception when others then raise exception 'DATA_NON_VALIDA';
+    end;
+    n := coalesce(array_length(giorni, 1), 0);
+    if n < 2 then raise exception 'SERVONO_2_DATE'; end if;
+    if n > 5 then raise exception 'TROPPE_DATE'; end if;
+    for i in 1..n loop if not _event_day_ok(giorni[i]) then raise exception 'DATA_NON_VALIDA'; end if; end loop;
+    insert into events(author, title, place, body, cover) values (a, t, _clean(p_place, 120), _clean(p_body, 2000), p_cover) returning id into new_id;
+    for i in 1..n loop insert into event_dates(event_id, pos, day, ora) values (new_id, i, giorni[i], ore[i]); end loop;
+  else
+    if p_day is null then raise exception 'DATA_VUOTA'; end if;
+    if not _event_day_ok(p_day) then raise exception 'DATA_NON_VALIDA'; end if;
+    insert into events(author, title, place, body, day, ora, cover) values (a, t, _clean(p_place, 120), _clean(p_body, 2000), p_day, p_ora, p_cover) returning id into new_id;
+  end if;
+  return new_id;
+end $$;
+
+-- solo chi l'ha creato. Giorno e ora si cambiano solo se la data è già decisa (altrimenti si usa "Fissa questa data")
+create or replace function event_edit(p_pw text, p_id uuid, p_author text, p_title text, p_place text, p_body text,
+  p_day date, p_ora time, p_cover text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare e events%rowtype; t text := _clean(p_title, 80);
+begin
+  perform _need(p_pw);
+  select * into e from events where id = p_id for update;
+  if not found then raise exception 'EVENTO_SPARITO'; end if;
+  if lower(e.author) <> lower(_clean(p_author, 30)) then raise exception 'NON_AUTORIZZATO'; end if;
+  if t = '' then raise exception 'TITOLO_VUOTO'; end if;
+  if not _event_cover_ok(p_cover) then raise exception 'FOTO_NON_VALIDA'; end if;
+  if e.day is not null then
+    if p_day is null then raise exception 'DATA_VUOTA'; end if;
+    if not _event_day_ok(p_day) then raise exception 'DATA_NON_VALIDA'; end if;
+    update events set day = p_day, ora = p_ora where id = p_id;
+  end if;
+  update events set title = t, place = _clean(p_place, 120), body = _clean(p_body, 2000), cover = p_cover where id = p_id;
+  return _event_json(p_id, true);
+end $$;
+
+-- chi l'ha creato, oppure l'amministratore col PIN (errori del PIN restituiti, non lanciati: il blocco dopo 5 errori resta)
+create or replace function event_del(p_pw text, p_id uuid, p_author text, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare e events%rowtype; x text;
+begin
+  perform _need(p_pw);
+  select * into e from events where id = p_id;
+  if not found then return json_build_object('ok', true); end if;
+  if lower(e.author) <> lower(_clean(p_author, 30)) then
+    if coalesce(p_admin, '') = '' then raise exception 'NON_AUTORIZZATO'; end if;
+    x := _admin_try(p_admin);
+    if x is not null then return json_build_object('err', x); end if;
+  end if;
+  delete from events where id = p_id;
+  return json_build_object('ok', true);
+end $$;
+
+-- risposta: 'si' / 'forse' / 'no', oppure null per toglierla
+create or replace function event_rsvp(p_pw text, p_id uuid, p_name text, p_ans text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); a text := nullif(_clean(p_ans, 10), '');
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if not exists (select 1 from events where id = p_id) then raise exception 'EVENTO_SPARITO'; end if;
+  if a is not null and a not in ('si', 'forse', 'no') then raise exception 'RISPOSTA_NON_VALIDA'; end if;
+  delete from event_rsvp where event_id = p_id and lower(name) = lower(n);
+  if a is not null then insert into event_rsvp(event_id, name, ans) values (p_id, n, a); end if;
+  return _event_json(p_id, false)->'rsvp';
+end $$;
+
+create or replace function event_comment_add(p_pw text, p_id uuid, p_author text, p_body text) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; b text := _clean(p_body, 1000); a text := _clean(p_author, 30);
+begin
+  perform _need(p_pw);
+  if b = '' then raise exception 'POST_VUOTO'; end if;
+  if a = '' then raise exception 'NOME_VUOTO'; end if;
+  if not exists (select 1 from events where id = p_id) then raise exception 'EVENTO_SPARITO'; end if;
+  insert into event_comments(event_id, author, body) values (p_id, a, b) returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function event_comment_del(p_pw text, p_id uuid, p_author text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from event_comments where id = p_id and lower(author) = lower(_clean(p_author, 30));
+end $$;
+
+-- tocco su una data proposta: metti o togli il voto (si possono scegliere più date). Restituisce le date aggiornate
+create or replace function event_date_vote(p_pw text, p_date uuid, p_name text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); ev uuid;
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  select d.event_id into ev from event_dates d where d.id = p_date;
+  if not found then raise exception 'EVENTO_SPARITO'; end if;
+  if exists (select 1 from events where id = ev and day is not null) then raise exception 'VOTAZIONE_CHIUSA'; end if;
+  if exists (select 1 from event_date_votes where date_id = p_date and lower(name) = lower(n)) then
+    delete from event_date_votes where date_id = p_date and lower(name) = lower(n);
+  else
+    insert into event_date_votes(date_id, event_id, name) values (p_date, ev, n) on conflict do nothing;
+  end if;
+  return _event_json(ev, false)->'dates';
+end $$;
+
+-- chi l'ha creato sceglie la data vincente: l'evento diventa "con data" e la votazione si chiude
+create or replace function event_fix_date(p_pw text, p_id uuid, p_author text, p_date uuid) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare e events%rowtype; d event_dates%rowtype;
+begin
+  perform _need(p_pw);
+  select * into e from events where id = p_id for update;
+  if not found then raise exception 'EVENTO_SPARITO'; end if;
+  if lower(e.author) <> lower(_clean(p_author, 30)) then raise exception 'NON_AUTORIZZATO'; end if;
+  if e.day is not null then raise exception 'VOTAZIONE_CHIUSA'; end if;
+  select * into d from event_dates where id = p_date and event_id = p_id;
+  if not found then raise exception 'EVENTO_SPARITO'; end if;
+  update events set day = d.day, ora = d.ora where id = p_id;
+  return _event_json(p_id, true);
+end $$;
+
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
 grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread,
@@ -1335,9 +1565,11 @@ grant execute on function check_pw, members_list, member_add, presenza, avatars_
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
   ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin,
-  ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer to anon, authenticated;
+  ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer,
+  events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
+  event_date_vote, event_fix_date to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
-  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm from anon, authenticated;
+  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
-  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm from public;
+  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok from public;

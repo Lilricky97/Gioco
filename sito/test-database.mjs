@@ -269,6 +269,67 @@ ok(l3.people.length===1 && l3.excl.length===0,'tolto Luca: sparisce anche dalle 
 await q('select ss_leave($1,$2,$3,$4)',[PW,ev3,'giulia','1111'])
 ok((await one('select ss_list($1)',[PW])).find(e=>e.id===ev3).people.length===0,'Giulia esce col suo PIN')
 ok((await err('select ss_leave($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')]))==='CHIEDI_ORGANIZZATORE','dopo il sorteggio per uscire bisogna chiedere all\'organizzatore')
+// CALENDARIO EVENTI
+const giorno = k => { const d = new Date(Date.now() + k * 864e5); return d.toISOString().slice(0, 10) }
+const COV = 'eventi/0b5c6a3e-1f2d-4c3b-9a8e-7d6c5b4a3f21.jpg'
+const cena = await one('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Ricky','Cena da Marco','Casa di Marco','Porto io il vino #cena',giorno(3),'20:30',COV,null])
+let listaEv = await one('select events_list($1)',[PW]), c1 = listaEv.find(e=>e.id===cena)
+ok(c1 && c1.day===giorno(3) && c1.ora==='20:30' && c1.cover===COV && c1.voting===false && c1.place==='Casa di Marco','evento con giorno, ora, luogo e copertina')
+ok((await err('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Ricky','  ','','',giorno(3),null,null,null]))==='TITOLO_VUOTO','senza titolo: rifiutato')
+ok((await err('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Ricky','Festa','','',null,null,null,null]))==='DATA_VUOTA','senza data (e senza date da votare): rifiutato')
+ok((await err('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Ricky','Festa','','',giorno(9000),null,null,null]))==='DATA_NON_VALIDA','data assurda (tra 25 anni): rifiutata')
+for (const brutto of ['https://x.com/a.jpg','eventi/../novita/x.jpg','avatar/0b5c6a3e-1f2d-4c3b-9a8e-7d6c5b4a3f21.jpg'])
+  ok((await err('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Ricky','Festa','','',giorno(3),null,brutto,null]))==='FOTO_NON_VALIDA','copertina non valida rifiutata: '+brutto)
+ok((await err('select events_list($1)',['x']))==='PASSWORD_ERRATA' && (await err('select event_get($1,$2)',['x',cena]))==='PASSWORD_ERRATA','calendario protetto dalla password')
+// chi viene
+await q('select event_rsvp($1,$2,$3,$4)',[PW,cena,'Marco','si']); await q('select event_rsvp($1,$2,$3,$4)',[PW,cena,'Giulia','forse'])
+let rsv = await one('select event_rsvp($1,$2,$3,$4)',[PW,cena,'marco','no'])
+ok(rsv.no.length===1 && rsv.si.length===0 && rsv.forse[0]==='Giulia','una sola risposta a testa ("marco" cambia idea: da "Ci sono" a "Non ci sono")')
+rsv = await one('select event_rsvp($1,$2,$3,$4)',[PW,cena,'Marco','si']); await q('select event_rsvp($1,$2,$3,$4)',[PW,cena,'Giulia',null])
+rsv = (await one('select event_get($1,$2)',[PW,cena])).rsvp
+ok(rsv.si.length===1 && rsv.forse.length===0 && rsv.no.length===0,'Giulia toglie la sua risposta')
+ok((await err('select event_rsvp($1,$2,$3,$4)',[PW,cena,'Luca','boh']))==='RISPOSTA_NON_VALIDA','risposta strana rifiutata')
+// commenti
+const cm1 = await one('select event_comment_add($1,$2,$3,$4)',[PW,cena,'Marco','Chi passa a prendermi?'])
+await q('select event_comment_add($1,$2,$3,$4)',[PW,cena,'Giulia','Io!'])
+await q('select event_comment_del($1,$2,$3)',[PW,cm1,'Giulia'])
+let fullEv = await one('select event_get($1,$2)',[PW,cena])
+ok(fullEv.comments.length===2 && fullEv.n_comments===2 && fullEv.body==='Porto io il vino #cena','commenti: Giulia non può cancellare quello di Marco')
+await q('select event_comment_del($1,$2,$3)',[PW,cm1,'marco'])
+ok((await one('select event_get($1,$2)',[PW,cena])).comments.length===1,'Marco cancella il suo commento')
+// modifica ed eliminazione
+ok((await err('select event_edit($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,cena,'Marco','Mia!','','',giorno(4),null,null]))==='NON_AUTORIZZATO','solo chi l\'ha creato può modificarlo')
+fullEv = await one('select event_edit($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,cena,'ricky','Cena da Marco 🍝','Casa di Marco','Porto io il vino',giorno(4),'21:00',COV])
+ok(fullEv.title==='Cena da Marco 🍝' && fullEv.day===giorno(4) && fullEv.ora==='21:00','Ricky sposta la cena al giorno dopo alle 21')
+ok((await err('select event_del($1,$2,$3,$4)',[PW,cena,'Marco','']))==='NON_AUTORIZZATO','Marco non può eliminare l\'evento di Ricky')
+ok((await err('select event_del($1,$2,$3,$4)',[PW,cena,'Marco','0000']))==='PIN_ADMIN_ERRATO','con il PIN amministratore sbagliato no')
+// scegliamo la data insieme
+const DATE_P = [{day:giorno(10),ora:'20:00'},{day:giorno(11),ora:''},{day:giorno(12),ora:'21:30'},{day:giorno(10),ora:'20:00'}]
+const pizza = await one('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Giulia','Pizzata','','',null,null,null,JSON.stringify(DATE_P)])
+let pz = await one('select event_get($1,$2)',[PW,pizza])
+ok(pz.voting===true && pz.day===null && pz.dates.length===3 && pz.dates[0].ora==='20:00' && pz.dates[1].ora===null,'votazione con 3 date (il doppione è tolto, l\'ora è facoltativa)')
+ok((await err('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Giulia','X','','',null,null,null,JSON.stringify([{day:giorno(5)}])]))==='SERVONO_2_DATE','con 1 sola data proposta: rifiutato')
+ok((await err('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Giulia','X','','',null,null,null,JSON.stringify([1,2,3,4,5,6].map(k=>({day:giorno(k)})))]))==='TROPPE_DATE','con 6 date: rifiutato')
+ok((await err('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Giulia','X','','',null,null,null,JSON.stringify([{day:'ciao'},{day:giorno(5)}])]))==='DATA_NON_VALIDA','data scritta male: rifiutata')
+await q('select event_date_vote($1,$2,$3)',[PW,pz.dates[0].id,'Marco']); await q('select event_date_vote($1,$2,$3)',[PW,pz.dates[2].id,'Marco'])
+await q('select event_date_vote($1,$2,$3)',[PW,pz.dates[2].id,'Luca'])
+let dts = await one('select event_date_vote($1,$2,$3)',[PW,pz.dates[0].id,'marco'])
+ok(dts[0].voters.length===0 && dts[2].voters.length===2,'più date a testa, e un secondo tocco toglie il voto')
+ok((await err('select event_fix_date($1,$2,$3,$4)',[PW,pizza,'Marco',pz.dates[2].id]))==='NON_AUTORIZZATO','solo chi organizza fissa la data')
+pz = await one('select event_fix_date($1,$2,$3,$4)',[PW,pizza,'Giulia',pz.dates[2].id])
+ok(pz.voting===false && pz.day===giorno(12) && pz.ora==='21:30','Giulia fissa la data più votata')
+ok((await err('select event_date_vote($1,$2,$3)',[PW,(await q('select id from event_dates where event_id=$1',[pizza]))[0].id,'Sara']))==='VOTAZIONE_CHIUSA','dopo, la votazione è chiusa')
+listaEv = await one('select events_list($1)',[PW])
+ok(listaEv.length===2 && listaEv[0].id===cena && listaEv[1].id===pizza,'elenco in ordine di data')
+// elimina: l'amministratore col PIN giusto, e Giulia la sua
+ok((await one('select event_del($1,$2,$3,$4)',[PW,cena,'Marco','4321'])).ok===true,'l\'amministratore elimina un evento col PIN')
+await q('select event_del($1,$2,$3,$4)',[PW,pizza,'Giulia',''])
+ok((await one('select events_list($1)',[PW])).length===0 && (await q('select count(*)::int n from event_dates'))[0].n===0,'eliminati, con risposte, commenti e date')
+for (const t of ['events','event_rsvp','event_comments','event_dates','event_date_votes']) {
+  let negato = false; try { await db.exec(`set role anon; select * from ${t};`) } catch (e) { negato = /permission/.test(e.message) } finally { await db.exec('reset role') }
+  ok(negato, `tabella ${t} chiusa alla chiave pubblica`)
+}
+
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)
 for(let i=0;i<5;i++) await err('select member_kick($1,$2,$3,$4)',[PW,'0000','Luca',true])
 ok((await err('select member_kick($1,$2,$3,$4)',[PW,'4321','Luca',true]))==='PIN_BLOCCATO','5 PIN amministratore sbagliati: blocco di 15 minuti')
