@@ -8,6 +8,14 @@ await db.exec(`insert into app_config(k,v) values ('pw', extensions.crypt('cocor
 const q = async (sql, p=[]) => (await db.query(sql, p)).rows
 const one = async (sql,p)=> Object.values((await q(sql,p))[0])[0]
 const PW='cocorico'
+// Supabase (pg_safeupdate) rifiuta DELETE e UPDATE senza WHERE: qui non si vede, quindi controllo il testo
+{
+  const sch = fs.readFileSync(new URL('./schema.sql', import.meta.url),'utf8').replace(/--[^\n]*/g, '')
+  const senza = [...sch.matchAll(/\b(delete\s+from|update)\s+[a-z_.]+[^;]*;/gi)].map(m => m[0])
+    .filter(st => !/\bwhere\b/i.test(st) && !/\bupdate\s+of\b/i.test(st) && !/^update\s+set\b/i.test(st))
+  if (senza.length) console.log('❌ DELETE/UPDATE senza WHERE (Supabase li blocca):', senza.map(x => x.replace(/\s+/g, ' ').slice(0, 60)))
+  else console.log('✅ nessuna DELETE/UPDATE senza WHERE (Supabase le bloccherebbe)')
+}
 let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('❌',m)} else console.log('✅',m) }
 // errore: sia quello "lanciato" dal database sia quello restituito come {"err": ...}
 const err = async (sql,p)=>{ try{ const r = await q(sql,p); const v = r[0] && Object.values(r[0])[0]; return v && typeof v==='object' && v.err ? v.err : null }catch(e){ return e.message } }

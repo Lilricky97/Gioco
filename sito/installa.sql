@@ -433,7 +433,7 @@ declare e text; it json; x text; y text;
 begin
   perform _need(p_pw);
   e := _admin_try(p_admin); if e is not null then return json_build_object('err', e); end if;
-  delete from group_couples;
+  delete from group_couples where true;   -- "where true": Supabase blocca le DELETE senza WHERE
   for it in select * from json_array_elements(coalesce(p_pairs, '[]'::json)) loop
     x := _clean(it->>0, 30); y := _clean(it->>1, 30);
     if x <> '' and y <> '' and lower(x) <> lower(y) and not exists (select 1 from group_couples
