@@ -103,6 +103,19 @@ select{appearance:none;-webkit-appearance:none;padding-right:36px;background-ima
   border:2px solid var(--c);box-shadow:0 0 10px -2px var(--c),inset 0 0 8px -3px var(--c);background:rgba(0,0,0,.25)}
 .av.xs{width:22px;height:22px;font-size:10px;border-width:1.5px}
 .av.s{width:30px;height:30px;font-size:13px}
+.av.foto{position:relative;overflow:hidden;color:transparent}
+.av.foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+.av.xl{width:128px;height:128px;font-size:54px;border-width:3px}
+.mz-av{position:relative;flex:none;padding:0;border:0;background:none;cursor:pointer;border-radius:50%}
+.mz-av .av{width:48px;height:48px;font-size:20px}
+.cam{position:absolute;right:-3px;bottom:-3px;width:22px;height:22px;border-radius:50%;background:var(--menta);color:#06261c;display:grid;place-items:center;border:2px solid var(--notte2)}
+.cam svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.avs{text-align:center}
+.avs .av-big{position:relative;display:inline-block;margin:8px auto 14px}
+.avs .av-big .cam{width:38px;height:38px;right:0;bottom:2px}
+.avs .av-big .cam svg{width:19px;height:19px}
+.avs .row{justify-content:center}
+.avs .neu{display:inline-block;font:400 20px "Bebas Neue",sans-serif;letter-spacing:.16em;color:var(--giallo);text-shadow:0 0 10px rgba(255,216,107,.45);margin-bottom:2px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:rgba(255,255,255,.03);border-radius:6px;padding:7px 13px;font-weight:600;font-size:15px}
 .chip.on{border-color:var(--menta);color:var(--menta);box-shadow:0 0 12px -4px var(--menta)}
@@ -480,13 +493,14 @@ const store = {
 };
 const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, album: {}, ss: null,
   draft: { text: '', files: [] }, ui: { rev: {}, adm: {}, me: {}, meLoad: {}, qa: {}, qaLoad: {}, tab: {}, stat: {}, logAll: {} }, mine: {}, busy: 0, refresh: null,
-  thread: {}, replyDraft: {}, liking: {}, vq: {}, lastFeed: '#novita' };
+  thread: {}, replyDraft: {}, liking: {}, vq: {}, lastFeed: '#novita', av: store.get('av') || {} };
 
 // ---------- messaggi d'errore in italiano ----------
 const MSG = {
   RETE: 'Niente connessione. Controlla internet e riprova.',
   PASSWORD_ERRATA: 'Password del gruppo sbagliata.',
   SEI_STATO_RIMOSSO: 'Sei stato rimosso dal gruppo.',
+  FOTO_NON_VALIDA: 'Questa foto non va bene, provane un\'altra.',
   NOME_BLOCCATO: 'Questo nome è stato rimosso dal gruppo.',
   PIN_ADMIN_ERRATO: 'PIN amministratore sbagliato.',
   ADMIN_NON_IMPOSTATO: 'Il PIN amministratore non è ancora stato impostato (lo fa Ricky da Supabase).',
@@ -631,9 +645,27 @@ async function uploadOne(folder, file) {
 
 // ---------- piccole utilità di interfaccia ----------
 const COL = ['#ff3ea5', '#46f5c0', '#ffd86b', '#a78bff', '#4cc9ff', '#ff8a4c'];
+// foto utente: S.av = { "nome in minuscolo": "avatar/<uuid>.jpg" }
+const avPath = n => { const p = S.av[String(n ?? '').trim().toLowerCase()]; return okPath(p) && p.startsWith('avatar/') ? p : null; };
+const avImg = p => `<img src="${esc(pub(p))}" alt="" decoding="async" onerror="this.parentNode.classList.remove('foto');this.remove()">`;
 function avatar(n, cls = '') {
   let h = 0; for (const c of String(n)) h = (h * 31 + c.codePointAt(0)) >>> 0;
-  return `<span class="av ${cls}" style="--c:${COL[h % COL.length]}">${esc(([...String(n).trim()][0] || '?').toUpperCase())}</span>`;
+  const p = avPath(n);
+  return `<span class="av ${cls}${p ? ' foto' : ''}" data-av="${esc(n)}" style="--c:${COL[h % COL.length]}">${esc(([...String(n).trim()][0] || '?').toUpperCase())}${p ? avImg(p) : ''}</span>`;
+}
+// aggiorna le foto già sullo schermo (senza ridisegnare la pagina)
+function aggiornaAvatar() {
+  document.querySelectorAll(".av[data-av]").forEach(el => {
+    const p = avPath(el.dataset.av), im = el.querySelector('img');
+    if (!p) { if (im) im.remove(); el.classList.remove('foto'); return; }
+    if (im && im.getAttribute('src') === pub(p)) return;
+    if (im) im.remove(); el.insertAdjacentHTML('beforeend', avImg(p)); el.classList.add('foto');
+  });
+}
+function nuoveFoto(mappa) {
+  const av = {}; for (const [k, v] of Object.entries(mappa || {})) if (okPath(v)) av[k.trim().toLowerCase()] = v;
+  if (JSON.stringify(av) === JSON.stringify(S.av)) return;
+  S.av = av; store.set('av', av); aggiornaAvatar();
 }
 function quando(ts) {
   const d = new Date(ts), now = new Date(), s = (now - d) / 1000;
@@ -786,7 +818,10 @@ function renderLogin(avviso) {
 async function renderChiSei() {
   $('#app').innerHTML = `<main class="gate"><div class="sign">${insegna()}</div><section class="card" id="g-who"><div class="loading">Un attimo</div></section></main>`;
   let members;
-  try { members = await rpc('members_list'); } catch (ex) { if (S.pw) $('#g-who').innerHTML = errBox(ex); return; }
+  try {
+    let av; [members, av] = await Promise.all([rpc('members_list'), rpc('avatars_list').catch(() => null)]);
+    if (av) nuoveFoto(av);
+  } catch (ex) { if (S.pw) $('#g-who').innerHTML = errBox(ex); return; }
   const box = $('#g-who');
   box.innerHTML = `<h2>Chi sei?</h2>
     ${members.length ? `<p class="muto">Tocca il tuo nome:</p><div class="chips">${members.map(n => `<button class="chip" data-n="${esc(n)}">${avatar(n, 's')} ${esc(n)}</button>`).join('')}</div><div class="or">— oppure —</div>` : ''}
@@ -846,7 +881,7 @@ function apriMenu() {
   const ov = document.createElement('div'); ov.className = 'ov mz-ov';
   const on = (S.people || []).filter(p => p.online).length;
   ov.innerHTML = `<nav class="mz" aria-label="Zone del sito">
-    <div class="mz-top">${avatar(S.me)}<div class="mz-me"><b>${esc(S.me)}</b><span><button class="link" data-a="nome">Cambia nome</button> · <button class="link" data-a="esci">Esci</button></span></div><button class="mz-x" data-close aria-label="Chiudi">✕</button></div>
+    <div class="mz-top"><button class="mz-av" data-a="foto" aria-label="La tua foto utente">${avatar(S.me)}<span class="cam">${ICO_CAM}</span></button><div class="mz-me"><b>${esc(S.me)}</b><span><button class="link" data-a="nome">Cambia nome</button> · <button class="link" data-a="esci">Esci</button></span></div><button class="mz-x" data-close aria-label="Chiudi">✕</button></div>
     <div class="mz-k">Zone del sito</div>
     <div class="mz-grid">${ZONE.map(z => `<button class="mz-z ${z.id === attiva ? 'on' : ''}" data-zona="${z.id}"><span class="ico">${z.ico}</span><b>${esc(z.t)}</b><small>${esc(z.d)}</small></button>`).join('')}</div>
     <button class="mz-grp" data-a="gruppo"><i class="dot"></i><span>Chi c'è nel gruppo</span>${S.people ? `<b>${on} online</b>` : ''}</button>
@@ -859,6 +894,7 @@ function apriMenu() {
   ov.querySelectorAll('[data-zona]').forEach(b => b.onclick = () => { const h = '#' + b.dataset.zona; if (location.hash === h || (!location.hash && h === '#novita')) chiudi(); else location.hash = h; });
   ov.querySelector('[data-a=gruppo]').onclick = () => { chiudi(); setTimeout(apriGruppo, 220); };
   ov.querySelector('[data-a=nome]').onclick = () => { chiudi(); renderChiSei(); };
+  ov.querySelector('[data-a=foto]').onclick = () => { chiudi(); setTimeout(apriFoto, 220); };
   ov.querySelector('[data-a=esci]').onclick = () => { chiudi(); logout(); };
 }
 function route() {
@@ -1844,7 +1880,62 @@ async function ping() {
   if (!S.pw || !S.me || !$('#view')) return;
   try { S.people = await rpc('presenza', { p_name: S.me }); S.noPresenza = false; }
   catch (e) { if (e.message === 'NO_DB') S.noPresenza = true; return; }
+  S.conFoto = S.people.some(p => 'avatar' in p);   // il database sa già gestire le foto utente
+  if (S.conFoto) nuoveFoto(Object.fromEntries(S.people.filter(p => p.avatar && !p.banned).map(p => [p.name, p.avatar])));
   drawOnline();
+  invitoFoto();
+}
+
+// ---------- foto utente ----------
+// popup una volta sola (per telefono) a chi non ha ancora la foto
+function invitoFoto() {
+  if (!S.conFoto || !S.me || avPath(S.me) || store.get('avpop')) return;
+  const c = cur();
+  if (document.querySelector('.ov,.lb,.sv') || (c.sec === 'gioco' && c.arg === 'gioca')) return;   // occupato: riprovo al prossimo giro
+  store.set('avpop', 1);
+  sheet(`<div class="avs avpop"><span class="neu">NOVITÀ</span><h3>📸 Da oggi puoi aggiungere la foto utente!</h3>
+    <div class="av-big">${avatar(S.me, 'xl')}<span class="cam">${ICO_CAM}</span></div>
+    <p class="muto">Comparirà accanto al tuo nome nei post, nei commenti, nelle storie e nei sondaggi. Puoi cambiarla quando vuoi toccando la tua foto nel menu ☰.</p>
+    <div class="row"><button class="btn ghost" data-close>Più tardi</button><label class="btn" style="margin:0">Aggiungi foto<input type="file" id="avpop-file" accept="image/*" hidden></label></div></div>`,
+    (s, close) => { s.querySelector('#avpop-file').onchange = e => { const f = e.target.files[0]; if (f) { close(); caricaFoto(f); } }; });
+}
+function apriFoto() {
+  const p = avPath(S.me);
+  sheet(`<div class="avs"><h3>La tua foto utente</h3>
+    <div class="av-big">${avatar(S.me, 'xl')}</div>
+    <p class="muto">${p ? 'Così ti vedono gli altri.' : 'Ancora nessuna foto: per ora c\'è l\'iniziale del tuo nome.'}</p>
+    <div class="row wrap"><label class="btn" style="margin:0">${p ? 'Cambia foto' : 'Scegli una foto'}<input type="file" id="av-file" accept="image/*" hidden></label>
+    ${p ? '<button class="btn ghost rosso" data-a="via">Togli la foto</button>' : ''}<button class="btn ghost" data-close>Chiudi</button></div></div>`,
+    (s, close) => {
+      s.querySelector('#av-file').onchange = e => { const f = e.target.files[0]; if (f) { close(); caricaFoto(f); } };
+      const via = s.querySelector('[data-a=via]');
+      if (via) via.onclick = async () => {
+        via.disabled = true;
+        try { await rpc('member_avatar', { p_name: S.me, p_path: null }); nuoveFoto(Object.assign({}, S.av, { [S.me.toLowerCase()]: null })); close(); toast('Foto tolta'); }
+        catch (ex) { via.disabled = false; toast(msg(ex), 'err'); }
+      };
+    });
+}
+// ritaglia al centro un quadrato 480×480 e lo carica
+async function caricaFoto(file) {
+  if (S.avBusy) return; S.avBusy = true;
+  toast('Carico la foto…');
+  try {
+    const im = await decodeImg(file), path = `avatar/${uid()}.jpg`;
+    let blob;
+    try {
+      const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, l = Math.min(w, h), L = Math.min(480, l);
+      const c = document.createElement('canvas'); c.width = c.height = L;
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, L, L);
+      x.drawImage(im, (w - l) / 2, (h - l) / 2, l, l, 0, 0, L, L);
+      blob = await new Promise((ok, ko) => c.toBlob(b => b ? ok(b) : ko(err('FOTO_ILLEGGIBILE')), 'image/jpeg', .86));
+    } finally { if (im.close) im.close(); }
+    await putFile(path, blob);
+    await rpc('member_avatar', { p_name: S.me, p_path: path });
+    nuoveFoto(Object.assign({}, S.av, { [S.me.toLowerCase()]: path }));
+    toast('Foto utente aggiornata 📸');
+  } catch (ex) { toast(msg(ex), 'err'); }
+  finally { S.avBusy = false; }
 }
 function personaHTML(p, conIscrizione, azione) {
   const stato = p.online ? '<i class="dot"></i>online' : esc(p.last_seen ? 'visto ' + quando(p.last_seen) : 'mai visto online');
@@ -2086,6 +2177,12 @@ function creaDemo() {
   };
   [['Anna', 60 * 72, null], ['Giulia', 60 * 70, 0], ['Luca', 60 * 60, 60 * 26], ['Marco', 60 * 71, 0], ['Sara', 60 * 50, 20]]
     .forEach(([name, iscr, visto]) => D.members.push({ name, created_at: t(iscr), last_seen: visto == null ? null : t(visto) }));
+  [['Giulia', '🌸', 330], ['Marco', '😎', 200]].forEach(([n, emo, hue]) => {   // foto utente finte
+    const c = document.createElement('canvas'); c.width = c.height = 240; const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 240, 240); g.addColorStop(0, `hsl(${hue},85%,60%)`); g.addColorStop(1, `hsl(${hue + 60},80%,30%)`);
+    x.fillStyle = g; x.fillRect(0, 0, 240, 240); x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '150px serif'; x.fillText(emo, 120, 132);
+    const p = `avatar/${uid()}.jpg`; D.files.set(p, c.toDataURL('image/jpeg', .85)); D.members.find(m => m.name === n).avatar = p;
+  });
   [['Giulia', 180, '☕', 'Colazione'], ['Giulia', 50, '🐶', 'Buongiorno da Pippo', 'Il nuovo arrivato 🐶'], ['Marco', 360, '🏋️', 'Palestra']]
     .forEach(([author, min, emo, scritta, caption], i) => D.stories.push({ id: uid(), author, path: fotoFinta(i + 10, emo, scritta, 720, 1280, 'storia'), caption: caption || '', created_at: t(min) }));
   D.scomments.push({ id: uid(), story_id: D.stories[1].id, author: 'Sara', body: 'Che cucciolo!! 😍', created_at: t(30) });
@@ -2185,7 +2282,16 @@ function creaDemo() {
       if (n) { const m = D.members.find(x => same(x.name, n)); if (m && m.banned) throw err('SEI_STATO_RIMOSSO'); if (m) m.last_seen = ora; else D.members.push({ name: n, created_at: ora, last_seen: ora }); }
       const lim = Date.now() - 150000;
       return D.members.map(m => ({ name: m.name, created_at: m.created_at, last_seen: m.last_seen, online: !m.banned && !!m.last_seen && new Date(m.last_seen) > lim, banned: !!m.banned }))
+        .map((x, i) => Object.assign(x, { avatar: D.members[i].avatar || null }))
         .sort((x, y) => (x.last_seen || '') < (y.last_seen || '') ? 1 : -1);
+    },
+    avatars_list: a => { need(a); return Object.fromEntries(D.members.filter(m => m.avatar && !m.banned).map(m => [m.name, m.avatar])); },
+    member_avatar: a => {
+      need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO');
+      if (a.p_path != null && !/^avatar\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$/.test(a.p_path)) throw err('FOTO_NON_VALIDA');
+      let m = D.members.find(x => same(x.name, n)); if (m && m.banned) throw err('SEI_STATO_RIMOSSO');
+      if (!m) { m = { name: n, created_at: t(0), last_seen: null }; D.members.push(m); }
+      m.avatar = a.p_path || null; return { ok: true, avatar: m.avatar };
     },
     stories_list: a => {
       need(a); const lim = Date.now() - 864e5;

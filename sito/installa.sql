@@ -21,6 +21,7 @@ create table if not exists members (
 
 alter table members add column if not exists last_seen timestamptz;   -- per sapere chi è online
 alter table members add column if not exists banned boolean not null default false;   -- rimosso dal gruppo (kick)
+alter table members add column if not exists avatar text;   -- foto utente (percorso nello spazio foto: avatar/<uuid>.jpg)
 
 create table if not exists stories (            -- foto che spariscono dopo 24 ore
   id uuid primary key default gen_random_uuid(),
@@ -276,7 +277,29 @@ begin
     if not found then insert into members(name, last_seen) values (n, now()) on conflict (name) do update set last_seen = now(); end if;
   end if;
   return coalesce((select json_agg(json_build_object('name', name, 'created_at', created_at, 'last_seen', last_seen,
-      'online', coalesce(last_seen > now() - interval '150 seconds', false) and not banned, 'banned', banned) order by last_seen desc nulls last, lower(name)) from members), '[]'::json);
+      'online', coalesce(last_seen > now() - interval '150 seconds', false) and not banned, 'banned', banned, 'avatar', avatar) order by last_seen desc nulls last, lower(name)) from members), '[]'::json);
+end $$;
+
+-- foto utente: { "Nome": "avatar/<uuid>.jpg", ... } (per la schermata "Chi sei?")
+create or replace function avatars_list(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_object_agg(name, avatar) from members where avatar is not null and not banned), '{}'::json);
+end $$;
+
+-- mette (o toglie, con p_path null) la foto utente
+create or replace function member_avatar(p_pw text, p_name text, p_path text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30);
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if p_path is not null and p_path !~ '^avatar/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$' then raise exception 'FOTO_NON_VALIDA'; end if;
+  if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'SEI_STATO_RIMOSSO'; end if;
+  update members set avatar = p_path where lower(name) = lower(n);
+  if not found then insert into members(name, avatar) values (n, p_path); end if;
+  return json_build_object('ok', true, 'avatar', p_path);
 end $$;
 
 -- PIN amministratore con blocco (5 errori → 15 minuti): null se giusto, altrimenti il codice d'errore
@@ -1312,7 +1335,7 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, presenza, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread,
+grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread,
   reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,

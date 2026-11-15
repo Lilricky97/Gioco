@@ -17,8 +17,10 @@ const browser = await chromium.launch()
 const phone = devices['iPhone 13']
 const errori = []
 
-async function telefono(nome) {
+async function telefono(nome, conPopup = false) {
   const ctx = await browser.newContext({ ...phone })
+  // il popup "foto utente" compare una volta sola: lo provo con Ricky e nella modalità prova, agli altri telefoni lo tolgo
+  if (!conPopup) await ctx.addInitScript(() => { localStorage.setItem('pip_avpop', '1'); localStorage.setItem('pipdemo_avpop', '1') })
   const page = await ctx.newPage()
   page.on('pageerror', e => errori.push(`${nome}: ${e.message}`))
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|ERR_|Failed to load resource|autofocusing/.test(m.text())) errori.push(`${nome}: ${m.text()}`) })
@@ -46,6 +48,7 @@ async function entra(page, nome, pw = 'prova') {
   else { await page.fill('#g-name input', nome); await page.click('#g-name button') }
   await page.waitForSelector('.tabs')
 }
+const fotoCaricata = (page, nome) => page.waitForFunction(n => [...document.querySelectorAll(`.av[data-av="${n}"] img`)].some(i => i.complete && i.naturalWidth > 0), nome)
 // immagini di prova (foto grandi, colorate)
 async function immagini(page, n, w = 3000, h = 2000) {
   const out = []
@@ -62,7 +65,7 @@ async function immagini(page, n, w = 3000, h = 2000) {
 }
 
 // ---------------- INGRESSO ----------------
-const ricky = await telefono('Ricky')
+const ricky = await telefono('Ricky', true)
 await ricky.goto(BASE + '/')
 await shot(ricky, '01-password')
 await ricky.fill('#g-in', 'sbagliata'); await ricky.click('#g-pw [type=submit]')
@@ -73,14 +76,39 @@ await ricky.waitForSelector('#g-who h2')
 await ricky.fill('#g-name input', 'Ricky'); await ricky.click('#g-name button')
 await ricky.waitForSelector('.tabs')
 ok(await ricky.evaluate(() => S.me) === 'Ricky', 'entrato come Ricky')
-await ricky.waitForSelector('#feed .empty'); await shot(ricky, '02-novita-vuota')
+await ricky.waitForSelector('#feed .empty')
+
+// ---------------- FOTO UTENTE ----------------
+await ricky.waitForSelector('.ov.in .avpop')
+ok((await ricky.textContent('.avpop')).includes('Da oggi puoi aggiungere la foto utente'), 'popup alla prima apertura: "Da oggi puoi aggiungere la foto utente"')
+await shot(ricky, '00-popup-foto')
+await ricky.setInputFiles('#avpop-file', await immagini(ricky, 1, 1200, 1600))
+await ricky.waitForSelector('.toast:has-text("Foto utente aggiornata")'); ok(true, 'foto utente caricata dal popup')
+await fotoCaricata(ricky, 'Ricky'); await ricky.waitForFunction(() => !document.querySelector('.ov')); ok(true, 'la foto compare subito accanto al proprio nome')
+const st0 = await (await fetch(BASE + '/__prova/stato')).json(), avf = st0.files.filter(f => f.startsWith('avatar/'))
+ok(avf.length === 1 && /^avatar\/[0-9a-f-]{36}\.jpg$/.test(avf[0]), 'salvata come avatar/<codice>.jpg')
+const avDim = await ricky.evaluate(() => { const i = document.querySelector('.av[data-av="Ricky"] img'); return [i.naturalWidth, i.naturalHeight] })
+ok(avDim[0] === 480 && avDim[1] === 480, 'ritagliata quadrata 480×480 (era 1200×1600): ' + avDim)
+await ricky.reload(); await ricky.waitForSelector('#feed .empty'); await ricky.waitForFunction(() => document.querySelector('#on-btn b').textContent === '1'); await ricky.waitForTimeout(400)
+ok(await ricky.locator('.avpop').count() === 0, 'ricaricando la pagina il popup non ricompare')
+// dal menu: togli e rimetti la foto
+await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in .mz-av'); await shot(ricky, '00b-menu-foto')
+await ricky.click('.mz-av'); await ricky.waitForSelector('.sheet [data-a=via]')
+await ricky.click('.sheet [data-a=via]'); ok((await toastText(ricky)).includes('Foto tolta'), 'dal menu ☰: "Togli la foto"')
+await ricky.waitForFunction(() => !document.querySelector('.av[data-av="Ricky"] img')); ok(true, 'torna l\'iniziale del nome')
+await ricky.waitForFunction(() => !document.querySelector('.ov'))
+await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in .mz-av'); await ricky.click('.mz-av'); await ricky.waitForSelector('.sheet #av-file', { state: 'attached' })
+await ricky.setInputFiles('.sheet #av-file', await immagini(ricky, 1, 800, 800))
+await ricky.waitForSelector('.toast:has-text("Foto utente aggiornata")'); await fotoCaricata(ricky, 'Ricky'); ok(true, 'dal menu ☰: "Scegli una foto"')
+await ricky.waitForFunction(() => !document.querySelector('.ov'))
+await shot(ricky, '02-novita-vuota')
 
 // ---------------- NOVITÀ ----------------
 await ricky.fill('#np-text', 'Ciao a tutti! Il sito è online 🎉 #Pippeghi\nGuardate qui https://example.com/prova?x=1&y=2#ancora')
 await ricky.setInputFiles('#np-file', await immagini(ricky, 2))
 ok(await ricky.locator('#np-prev img').count() === 2, 'anteprima delle 2 foto prima di pubblicare')
 await ricky.click('#np-go')
-ok((await toastText(ricky)).includes('Pubblicato'), 'novità pubblicata')
+await ricky.waitForSelector('.toast:has-text("Pubblicato")'); ok(true, 'novità pubblicata')
 await ricky.waitForSelector('#feed .tw .pics img')
 ok(await ricky.locator('#feed .tw').count() === 1 && await ricky.locator('#feed .tw .pics .pic').count() === 2, 'la novità ha 2 foto')
 ok(await ricky.locator('#feed .tw .tw-t a[href="https://example.com/prova?x=1&y=2#ancora"]').count() === 1, 'il link nel testo è cliccabile')
@@ -103,8 +131,12 @@ await ricky.click('.lb-x'); ok(await ricky.locator('.lb').count() === 0, 'visore
 
 // un secondo amico vede la novità
 const marco = await telefono('Marco')
-await entra(marco, 'Marco')
+await marco.goto(BASE + '/'); await marco.fill('#g-in', 'prova'); await marco.click('#g-pw [type=submit]'); await marco.waitForSelector('#g-who [data-n="Ricky"]')
+await fotoCaricata(marco, 'Ricky'); ok(true, '"Chi sei?": accanto a Ricky c\'è la sua foto')
+await marco.fill('#g-name input', 'Marco'); await marco.click('#g-name button'); await marco.waitForSelector('.tabs')
 await marco.waitForSelector('#feed .tw')
+await fotoCaricata(marco, 'Ricky'); ok(await marco.locator('#feed .tw .av.foto[data-av="Ricky"]').count() === 1, 'Marco vede la foto di Ricky accanto al suo post')
+ok(await marco.locator('.avpop').count() === 0 && await marco.locator('#feed .av[data-av="Marco"] img').count() === 0, 'chi non ha la foto ha l\'iniziale')
 ok((await marco.textContent('#feed .tw .tw-h b')) === 'Ricky', 'Marco vede la novità di Ricky')
 // mi piace, risposte e #hashtag
 await marco.click('#feed [data-like]')
@@ -528,7 +560,7 @@ await marco.goto(BASE + '/#novita'); await marco.reload(); await marco.waitForSe
 ok((await marco.textContent('#g-pw .err')).includes('cambiata'), 'password cambiata: richiesta di nuovo')
 
 // ---------------- MODALITÀ PROVA (sito senza database) ----------------
-const pr = await telefono('Prova')
+const pr = await telefono('Prova', true)
 await pr.goto(BASE + '/prova')
 ok((await pr.textContent('.demo-note')).includes('prova'), 'prova: avviso con la password di prova')
 await pr.fill('#g-in', 'LaMiaPasswordVera'); await pr.click('#g-pw [type=submit]'); await pr.waitForSelector('#g-pw .err:not([hidden])')
@@ -542,6 +574,9 @@ await pr.fill('#g-name input', 'Ricky'); await pr.click('#g-name button'); await
 ok(await pr.locator('.demo-bar').count() === 1 && await pr.locator('#feed .tw').count() === 5, 'prova: 5 post di esempio e striscia "modalità prova"')
 await pr.waitForFunction(() => document.querySelector('#on-btn b').textContent === '3')
 ok(true, 'prova: 3 online (Giulia, Marco e io)')
+await pr.waitForSelector('.ov.in .avpop'); await pr.click('.avpop [data-close]'); await pr.waitForFunction(() => !document.querySelector('.ov'))
+ok(true, 'prova: popup della foto utente, "Più tardi"')
+await fotoCaricata(pr, 'Giulia'); ok(await pr.locator('#feed .av.foto').count() >= 2, 'prova: Giulia e Marco hanno la foto utente finta')
 await vai(pr, 'sondaggi'); await pr.waitForSelector('.poll')
 ok(await pr.locator('.poll').count() === 2, 'prova: 2 sondaggi di esempio')
 await pr.click('.poll:has-text("Natale") .po >> nth=0'); await pr.click('.poll:has-text("Natale") .po >> nth=1')
