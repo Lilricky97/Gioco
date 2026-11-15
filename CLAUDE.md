@@ -49,7 +49,7 @@ Stato:
 - ✅ Supabase collegato: Ricky ha eseguito `installa.sql` (verificato dal vivo: `check_pw` risponde, `feed` senza password → PASSWORD_ERRATA, tabelle negate all'anon, bucket `foto` esiste). In `index.html` ci sono `SUPA_URL` e la chiave **anon** (JWT `eyJ…`, pubblica). La password del gruppo la conosce solo Ricky: io non la so e non devo chiederla.
   Per i test la modalità prova è su `http://localhost:8787/prova` (`prova-locale.mjs` svuota URL e chiave).
 - ⏳ Da fare:
-  0. Ricky deve **ricopiare `installa.sql`** nel SQL Editor (https://supabase.com/dashboard/project/hiypieuddqkwefifiqqc/sql/new) per storie, online, commenti foto e 👍/👎 (non cancella niente; testato anche l'aggiornamento sopra il database vecchio). Finché non lo fa, il sito dice "Il database va aggiornato".
+  0. ✅ Ricky ha ricopiato `installa.sql` (verificato dal vivo: tutte le funzioni nuove rispondono PASSWORD_ERRATA senza password, tabelle nuove negate all'anon). Se in futuro cambia `schema.sql`: rigenerare `installa.sql` e chiedergli di ricopiarlo.
   1. Ricky prova il sito vero con la sua password (novità, foto, Secret Santa con più persone).
   2. Link definitivo: chiedere a Ricky il permesso di mettere il sito su `main` (link `https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/main/sito/index.html`) oppure GitHub Pages se lo attiva.
   3. Sezioni/colori: aspettare le richieste di Ricky. FantaSanremo ancora "in arrivo".
