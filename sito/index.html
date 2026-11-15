@@ -562,7 +562,8 @@ const GIOCO_URL = 'https://htmlpreview.github.io/?https://github.com/Lilricky97/
 // indirizzo "vero" del sito (GitHub Pages): serve per le notifiche sul telefono.
 // PAGES_ATTIVO = true solo dopo aver controllato che risponde: allora il vecchio link htmlpreview porta lì da solo
 const SITO_URL = 'https://lilricky97.github.io/Gioco/sito/';
-const PAGES_ATTIVO = false;
+const PAGES_ATTIVO = true;   // GitHub Pages verificato il 15/11/2026
+const FUNZIONE_NOTIFICHE = 'clever-endpoint';   // nome che Supabase ha dato alla funzione delle notifiche (notifiche/notifica.ts)
 const VECCHIO_LINK = 'https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/claude/admiring-brown-om0cj1/sito/index.html';
 // =========================================================
 const DEMO = !SUPA_URL || !SUPA_KEY;   // senza database: modalità prova con dati finti
@@ -2322,7 +2323,7 @@ async function ping() {
 // ---------- notifiche sul telefono ----------
 // funzionano solo sul nuovo indirizzo (GitHub Pages): serve il file sw.js accanto al sito.
 // Su iPhone solo aprendo il sito dall'icona sulla schermata Home (regola di Apple, da iOS 16.4)
-const FN_NOTIFICHE = SUPA_URL + '/functions/v1/notifica';
+const FN_NOTIFICHE = SUPA_URL + '/functions/v1/' + FUNZIONE_NOTIFICHE;
 const TIPI_NOTIF = [['storie', 'pubblica una storia'], ['post', 'scrive nelle Novità'], ['eventi', 'crea un evento (e il promemoria il giorno prima)']];
 const suIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const daApp = () => navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);

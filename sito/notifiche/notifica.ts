@@ -1,7 +1,8 @@
 // ============================================================
 //  PIPPEGHI 24/7 – funzione "notifica" (Supabase Edge Function)
 //  Va incollata UNA volta su Supabase: Edge Functions → Deploy a new function → Via Editor,
-//  nome: notifica. Non serve impostare niente altro.
+//  (su Supabase si chiama "clever-endpoint": il nome è in FUNZIONE_NOTIFICHE in index.html e in progetto.sql).
+//  Non serve impostare niente altro.
 //
 //  Come lavora:
 //  - il database la chiama con {"id": numero} ogni volta che c'è una notifica nuova

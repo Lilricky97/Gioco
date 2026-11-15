@@ -1778,11 +1778,11 @@ create policy "covo upload foto" on storage.objects for insert to anon, authenti
 
 -- ============================================================
 --  PIPPEGHI 24/7 – impostazioni di QUESTO progetto Supabase (notifiche sul telefono)
---  Indirizzo della funzione "notifica" e chiave PUBBLICA (anon, la stessa che c'è nel sito).
+--  Indirizzo della funzione delle notifiche (su Supabase si chiama "clever-endpoint") e chiave PUBBLICA (anon, la stessa che c'è nel sito).
 --  Nessun segreto qui: le chiavi delle notifiche le crea la funzione da sola e restano nel database.
 -- ============================================================
 insert into app_config(k, v) values
-  ('notif_url', 'https://hiypieuddqkwefifiqqc.supabase.co/functions/v1/notifica'),
+  ('notif_url', 'https://hiypieuddqkwefifiqqc.supabase.co/functions/v1/clever-endpoint'),
   ('notif_key', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpeXBpZXVkZHFrd2VmaWZpcXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ3MDAyODgsImV4cCI6MjExMDI3NjI4OH0.AErX76Ioe3c4ja6owNQwdAWjwl49gdA4giHI0AdMmIs')
 on conflict (k) do update set v = excluded.v;
 

@@ -76,7 +76,7 @@ http.createServer(async (req, res) => {
     }
 
     // finta funzione "notifica" di Supabase: la prima volta crea la chiave pubblica (come quella vera)
-    if (p === '/functions/v1/notifica') {
+    if (/^\/functions\/v1\/[\w-]+$/.test(p)) {
       if (req.method === 'OPTIONS') { res.writeHead(200, { 'Access-Control-Allow-Origin': '*' }); return res.end('ok') }
       let pub = (await db.query(`select v from app_config where k='vapid_pub'`)).rows[0]?.v
       if (!pub) {
