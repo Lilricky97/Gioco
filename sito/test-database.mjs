@@ -9,7 +9,8 @@ const q = async (sql, p=[]) => (await db.query(sql, p)).rows
 const one = async (sql,p)=> Object.values((await q(sql,p))[0])[0]
 const PW='cocorico'
 let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('❌',m)} else console.log('✅',m) }
-const err = async (sql,p)=>{ try{ await q(sql,p); return null }catch(e){ return e.message } }
+// errore: sia quello "lanciato" dal database sia quello restituito come {"err": ...}
+const err = async (sql,p)=>{ try{ const r = await q(sql,p); const v = r[0] && Object.values(r[0])[0]; return v && typeof v==='object' && v.err ? v.err : null }catch(e){ return e.message } }
 // password
 ok(await one('select check_pw($1)',[PW])===true,'password giusta')
 ok(await one('select check_pw($1)',['sbagliata'])===false,'password sbagliata rifiutata')
@@ -127,50 +128,119 @@ ok((await err('select poll_vote($1,$2,$3,$4)',[PW,pl,o1,'Luca']))?.includes('SON
 await q('select poll_del($1,$2,$3)',[PW,pl,'Giulia']); ok((await one('select polls_list($1)',[PW])).some(x=>x.id===pl),'Giulia non può eliminare il sondaggio di Ricky')
 await q('select poll_del($1,$2,$3)',[PW,pl,'Ricky']); ok(!(await one('select polls_list($1)',[PW])).some(x=>x.id===pl) && (await q('select count(*)::int n from poll_votes where poll_id=$1',[pl]))[0].n===0,'Ricky lo elimina (con i voti)')
 ok((await err('select polls_list($1)',['x']))?.includes('PASSWORD_ERRATA'),'sondaggi protetti dalla password')
-// SECRET SANTA
+// SECRET SANTA — regola d'oro: tutto a caso, ognuno fa UN regalo e ne riceve UNO, nessuno a se stesso, coppie escluse
 const names=['Ricky','Marco','Giulia','Sara','Luca','Anna','Paolo','Elena','Gianni','Chiara','Fede']
-const ev = await one('select ss_create($1,$2,$3,$4,$5,$6)',[PW,'Natale 2026','30€','20/12','Ricky','1234'])
-for(const [i,n] of names.entries()) await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev,n,String(1000+i),'Vorrei '+n])
-ok((await err('select ss_join($1,$2,$3,$4,$5)',[PW,ev,'Marco','9999','x']))?.includes('NOME_GIA_PRESO'),'nome già preso con PIN diverso bloccato')
-ok((await err('select ss_draw($1,$2,$3)',[PW,ev,'0000']))?.includes('PIN_ORGANIZZATORE_ERRATO'),'sorteggio con PIN organizzatore sbagliato bloccato')
-await q('select ss_set_excl($1,$2,$3,$4)',[PW,ev,'1234',JSON.stringify([['Ricky','Giulia'],['Marco','Sara'],['Luca','Anna']])])
-// 300 sorteggi di prova
-let bad=0; const seen=new Set()
+const pinDi = n => String(1000+names.indexOf(n))
+const ev = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Natale 2026','30€','20/12','Ricky','1234',null])
+for(const n of names){ const r = await one('select ss_join($1,$2,$3,$4,$5)',[PW,ev,n,pinDi(n),'Vorrei '+n]); if(!r.ok) console.log(r) }
+ok((await err('select ss_join($1,$2,$3,$4,$5)',[PW,ev,'Marco','9999','x']))==='NOME_GIA_PRESO','nome già preso con PIN diverso bloccato')
+ok((await err('select ss_draw($1,$2,$3)',[PW,ev,'0000']))==='PIN_ORGANIZZATORE_ERRATO','sorteggio con PIN organizzatore sbagliato bloccato')
+ok((await err('select ss_tabella($1,$2)',[PW,ev]))===null && (await one('select ss_tabella($1,$2)',[PW,ev])).aperta===false,'verifica con le lettere chiusa prima del sorteggio')
+// coppie del gruppo (le mette l'amministratore) + esclusioni speciali dell'evento
+ok((await err('select couples_set($1,$2,$3)',[PW,'0000',JSON.stringify([['Ricky','Giulia']])]))==='PIN_ADMIN_ERRATO','coppie del gruppo: serve il PIN amministratore')
+await q('select couples_set($1,$2,$3)',[PW,'4321',JSON.stringify([['Ricky','Giulia'],['giulia','RICKY'],['Elena','Elena']])])
+ok(JSON.stringify(await one('select couples_list($1)',[PW]))==='[["Giulia","Ricky"]]','coppie del gruppo salvate (doppioni e "se stesso" ignorati)')
+await q('select ss_set_excl($1,$2,$3,$4)',[PW,ev,'1234',JSON.stringify([['Marco','Sara'],['Luca','Anna']])])
+const vietate = ['Giulia,Ricky','Marco,Sara','Anna,Luca']
+// 300 sorteggi
+let bad=0, reciproci=0; const seen=new Set()
 for(let t=0;t<300;t++){
   await q('select ss_undo($1,$2,$3)',[PW,ev,'1234'])
-  await q('select ss_draw($1,$2,$3)',[PW,ev,'1234'])
+  const d = await one('select ss_draw($1,$2,$3)',[PW,ev,'1234']); if(!d.ok){ bad++; console.log(d) }
   const c = await one('select ss_check($1,$2)',[PW,ev]); if(!c.ok){bad++; console.log(c)}
   const pairs = await q(`select g.name gn, r.name rn from ss_pairs s join ss_people g on g.id=s.giver join ss_people r on r.id=s.receiver where s.event_id=$1`,[ev])
-  for(const p of pairs){ const k=[p.gn,p.rn].sort().join(); if(['Giulia,Ricky','Marco,Sara','Anna,Luca'].includes(k)) bad++; if(p.gn===p.rn) bad++ }
+  const dai = new Set(pairs.map(p=>p.gn)), ricevono = new Set(pairs.map(p=>p.rn))
+  if(pairs.length!==names.length || dai.size!==names.length || ricevono.size!==names.length) bad++
+  for(const p of pairs){ if(vietate.includes([p.gn,p.rn].sort().join())) bad++; if(p.gn===p.rn) bad++ }
+  const m = Object.fromEntries(pairs.map(p=>[p.gn,p.rn])); if(pairs.some(p=>m[p.rn]===p.gn)) reciproci++
   seen.add(pairs.map(p=>p.gn+'>'+p.rn).sort().join('|'))
 }
-ok(bad===0,'300 sorteggi: nessuno a se stesso, nessuna coppia esclusa, catena unica')
-ok(seen.size>250,'sorteggi diversi tra loro ('+seen.size+'/300)')
+ok(bad===0,'300 sorteggi: ognuno fa 1 regalo e ne riceve 1, nessuno a se stesso, coppie rispettate')
+ok(seen.size>290,'sorteggi diversi tra loro ('+seen.size+'/300)')
+ok(reciproci>0,'come col cappello vero, a volte due si pescano a vicenda ('+reciproci+' volte su 300)')
 // privacy
-ok((await err('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Marco','0000']))?.includes('PIN_ERRATO'),'PIN sbagliato non rivela niente')
-const rv = await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Marco','1001']); ok(rv.drawn && rv.to && rv.to!=='Marco' && rv.wish.startsWith('Vorrei'),'Marco vede solo il suo: '+rv.to+' ('+rv.wish+')')
-const lst = JSON.stringify(await one('select ss_list($1)',[PW])); ok(!lst.includes('"to"') && !lst.includes('receiver'),'la lista pubblica non contiene le coppie')
-ok((await err('select ss_join($1,$2,$3,$4,$5)',[PW,ev,'Nuovo','5555','x']))?.includes('SORTEGGIO_GIA_FATTO'),'dopo il sorteggio non si entra più')
-await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev,'Marco','1001','Nuovo desiderio'])
+ok((await err('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Marco','0000']))==='PIN_ERRATO','PIN sbagliato non rivela niente')
+const rv = await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')]); ok(rv.drawn && rv.to && rv.to!=='Marco' && rv.wish.startsWith('Vorrei'),'Marco vede solo il suo: '+rv.to+' ('+rv.wish+')')
+const lst = JSON.stringify(await one('select ss_list($1)',[PW])); ok(!lst.includes('"to"') && !lst.includes('receiver') && !lst.includes('"code"'),'la lista pubblica non contiene coppie né lettere')
+// tabella di verifica con lettere finte
+const tb = await one('select ss_tabella($1,$2)',[PW,ev])
+const da = tb.righe.map(r=>r.da), aa = tb.righe.map(r=>r.a)
+ok(tb.aperta && tb.righe.length===11 && new Set(da).size===11 && new Set(aa).size===11 && tb.righe.every(r=>r.da!==r.a) && tb.check.ok,'tabella con lettere: ognuna una volta a sinistra e una a destra')
+ok(JSON.stringify(da)===JSON.stringify(['A','B','C','D','E','F','G','H','I','J','K']),'righe in ordine alfabetico (A…K)')
+ok(!JSON.stringify(tb).includes('Marco') && !JSON.stringify(tb).includes('Ricky'),'nella tabella nessun nome vero')
+// chi ha guardato (solo organizzatore)
+ok((await err('select ss_status($1,$2,$3)',[PW,ev,'9999']))==='PIN_ORGANIZZATORE_ERRATO','"chi ha guardato": solo con PIN organizzatore')
+let stt = await one('select ss_status($1,$2,$3)',[PW,ev,'1234'])
+ok(stt.people.find(p=>p.name==='Marco').seen===true && stt.people.find(p=>p.name==='Sara').seen===false,'l\'organizzatore vede che Marco ha guardato e Sara no')
+ok(!JSON.stringify(stt).includes('"to"') && !JSON.stringify(stt).includes('code'),'…senza vedere abbinamenti né lettere')
+// letterina aggiornata dopo il sorteggio
+await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev,'Marco',pinDi('Marco'),'Nuovo desiderio'])
 const santaOfMarco = (await q(`select g.name from ss_pairs s join ss_people g on g.id=s.giver join ss_people r on r.id=s.receiver where s.event_id=$1 and r.name='Marco'`,[ev]))[0].name
-const rs = await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,santaOfMarco,String(1000+names.indexOf(santaOfMarco))]); ok(rs.to==='Marco'&&rs.wish==='Nuovo desiderio','la letterina aggiornata arriva a chi fa il regalo')
-// esclusioni impossibili
-const ev2 = await one('select ss_create($1,$2,$3,$4,$5,$6)',[PW,'Prova','','','Ricky','1234'])
+const rs = await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,santaOfMarco,pinDi(santaOfMarco)]); ok(rs.to==='Marco'&&rs.wish==='Nuovo desiderio','la letterina aggiornata arriva a chi fa il regalo')
+// regalo preso
+await q('select ss_bought($1,$2,$3,$4,$5)',[PW,ev,santaOfMarco,pinDi(santaOfMarco),true])
+ok((await one('select ss_status($1,$2,$3)',[PW,ev,'1234'])).people.find(p=>p.name===santaOfMarco).bought===true,'regalo preso ✓ visibile all\'organizzatore')
+// domande anonime
+ok((await one('select ss_ask($1,$2,$3,$4,$5)',[PW,ev,santaOfMarco,pinDi(santaOfMarco),'Che taglia porti?'])).ok===true,'domanda anonima inviata')
+let ib = await one('select ss_inbox($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')])
+ok(ib.per_me.length===1 && ib.per_me[0].question==='Che taglia porti?' && !JSON.stringify(ib).includes(santaOfMarco),'Marco riceve la domanda senza sapere chi l\'ha fatta')
+const estraneo = names.find(n=>n!=='Marco' && n!==santaOfMarco)
+ok((await err('select ss_answer($1,$2,$3,$4,$5,$6)',[PW,ev,estraneo,pinDi(estraneo),ib.per_me[0].id,'M']))==='DOMANDA_NON_TROVATA','un altro non può rispondere al posto di Marco')
+await q('select ss_answer($1,$2,$3,$4,$5,$6)',[PW,ev,'Marco',pinDi('Marco'),ib.per_me[0].id,'Una M'])
+ib = await one('select ss_inbox($1,$2,$3,$4)',[PW,ev,santaOfMarco,pinDi(santaOfMarco)])
+ok(ib.mie.length===1 && ib.mie[0].answer==='Una M','chi ha chiesto vede la risposta')
+// blocco dei PIN dopo 5 errori
+for(let i=0;i<4;i++) await err('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Sara','0000'])
+ok((await err('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Sara','0001']))==='PIN_BLOCCATO','5 PIN sbagliati: Sara è bloccata')
+ok((await err('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Sara',pinDi('Sara')]))==='PIN_BLOCCATO','…anche col PIN giusto, per 15 minuti')
+await q('select ss_reset_pin($1,$2,$3,$4,$5)',[PW,ev,'1234','sara','4321'])
+ok((await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Sara','4321'])).drawn===true,'l\'organizzatore le dà un PIN nuovo e si sblocca')
+ok((await one('select ss_list($1)',[PW])).find(e=>e.id===ev).log.some(l=>l.msg.includes('nuovo PIN a Sara')),'il "Nuovo PIN" finisce nel diario (niente sbirciate di nascosto)')
+const ev9 = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Blocco','','','Ricky','1234',null])
+for(let i=0;i<5;i++) await err('select ss_admin_check($1,$2,$3)',[PW,ev9,'0000'])
+ok((await err('select ss_admin_check($1,$2,$3)',[PW,ev9,'1234']))==='PIN_BLOCCATO','5 PIN organizzatore sbagliati: area organizzatore bloccata')
+// ritardatario dopo il sorteggio: aspetta, poi entra e cambia UNA sola persona
+const prima = Object.fromEntries((await q(`select g.name gn, r.name rn from ss_pairs s join ss_people g on g.id=s.giver join ss_people r on r.id=s.receiver where s.event_id=$1`,[ev])).map(p=>[p.gn,p.rn]))
+const jn = await one('select ss_join($1,$2,$3,$4,$5)',[PW,ev,'Nuovo','5555','x']); ok(jn.ok && jn.pending===true,'dopo il sorteggio chi arriva resta "in attesa"')
+ok((await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Nuovo','5555'])).drawn===false,'chi è in attesa non ha ancora un abbinamento')
+ok((await one('select ss_admit($1,$2,$3,$4)',[PW,ev,'1234','Nuovo'])).ok,'l\'organizzatore lo fa entrare')
+const dopo = Object.fromEntries((await q(`select g.name gn, r.name rn from ss_pairs s join ss_people g on g.id=s.giver join ss_people r on r.id=s.receiver where s.event_id=$1`,[ev])).map(p=>[p.gn,p.rn]))
+const cambiati = names.filter(n=>prima[n]!==dopo[n])
+ok(cambiati.length===1 && (await one('select ss_check($1,$2)',[PW,ev])).ok && dopo['Nuovo'] && Object.values(dopo).includes('Nuovo'),'ritardatario: cambia l\'abbinamento di 1 sola persona ('+cambiati[0]+') e la regola d\'oro resta')
+const avvisato = await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,cambiati[0],pinDi(cambiati[0])])
+ok(avvisato.to==='Nuovo','chi è cambiato ora fa il regalo al nuovo arrivato')
+ok((await one('select ss_tabella($1,$2)',[PW,ev])).righe.length===12,'la tabella con le lettere ora ha 12 righe')
+// chi si ritira dopo il sorteggio
+const k = await one('select ss_kick($1,$2,$3,$4)',[PW,ev,'1234','Paolo'])
+ok(k.ok && k.cambiati>=1 && k.cambiati<=2 && (await one('select ss_check($1,$2)',[PW,ev])).ok,'Paolo si ritira: cambiano solo '+k.cambiati+' abbinamenti e la regola d\'oro resta')
+// sorteggio rifatto: chi aveva guardato viene avvisato
+await q('select ss_undo($1,$2,$3)',[PW,ev,'1234']); await q('select ss_draw($1,$2,$3)',[PW,ev,'1234'])
+ok((await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')])).rifatto===true,'sorteggio rifatto: Marco viene avvisato di riguardare')
+ok((await one('select ss_list($1)',[PW])).find(e=>e.id===ev).log.some(l=>l.msg.includes('annullato il sorteggio')),'"annulla sorteggio" finisce nel diario')
+ok((await one('select ss_inbox($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')])).per_me.length===0,'con un sorteggio nuovo le domande vecchie spariscono')
+// esclusioni impossibili: dice chi è il problema
+const ev2 = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Prova','','','Ricky','1234',null])
 for(const n of ['A','B','C']) await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev2,n,'1111',''])
 await q('select ss_set_excl($1,$2,$3,$4)',[PW,ev2,'1234',JSON.stringify([['A','B']])])
-ok((await err('select ss_draw($1,$2,$3)',[PW,ev2,'1234']))?.includes('ESCLUSIONI_IMPOSSIBILI'),'esclusioni impossibili segnalate')
-ok((await err('select ss_draw($1,$2,$3)',[PW,ev2,'1234']))!==null,'—')
-// organizzatore: controllo PIN e nuovo PIN a chi lo dimentica
-ok(await one('select ss_admin_check($1,$2,$3)',[PW,ev,'1234'])===true,'PIN organizzatore giusto riconosciuto')
-ok(await one('select ss_admin_check($1,$2,$3)',[PW,ev,'9999'])===false,'PIN organizzatore sbagliato rifiutato')
-ok((await err('select ss_reset_pin($1,$2,$3,$4,$5)',[PW,ev,'9999','Marco','4321']))?.includes('PIN_ORGANIZZATORE_ERRATO'),'nuovo PIN senza PIN organizzatore bloccato')
-await q('select ss_reset_pin($1,$2,$3,$4,$5)',[PW,ev,'1234','marco','4321'])
-ok((await err('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Marco','1001']))?.includes('PIN_ERRATO'),'dopo il reset il vecchio PIN non va più')
-const rv2 = await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,'MARCO','4321']); ok(rv2.to===rv.to && rv2.me==='Marco','col nuovo PIN (e nome in maiuscolo) vede lo stesso abbinamento')
-// nomi con maiuscole diverse = stessa persona
-const ev3 = await one('select ss_create($1,$2,$3,$4,$5,$6)',[PW,'Maiuscole','','','Ricky','1234'])
+const imp = await one('select ss_draw($1,$2,$3)',[PW,ev2,'1234'])
+ok(imp.err==='ESCLUSIONI_IMPOSSIBILI' && /A|B|C/.test(imp.chi),'esclusioni impossibili segnalate con i nomi ('+imp.chi+')')
+// l'anno dopo: nessuno ripesca la stessa persona
+const evN = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Natale 2027','','','Ricky','1234',ev])
+for(const n of names.filter(n=>n!=='Paolo')) await q('select ss_join($1,$2,$3,$4,$5)',[PW,evN,n,pinDi(n),''])
+await q('select ss_join($1,$2,$3,$4,$5)',[PW,evN,'Nuovo','5555',''])
+const anno1 = Object.fromEntries((await q(`select g.name gn, r.name rn from ss_pairs s join ss_people g on g.id=s.giver join ss_people r on r.id=s.receiver where s.event_id=$1`,[ev])).map(p=>[p.gn,p.rn]))
+let ripetuti = 0
+for(let t=0;t<40;t++){
+  await q('select ss_undo($1,$2,$3)',[PW,evN,'1234']); const d = await one('select ss_draw($1,$2,$3)',[PW,evN,'1234'])
+  if(d.rilassato) ripetuti += 100
+  for(const p of await q(`select g.name gn, r.name rn from ss_pairs s join ss_people g on g.id=s.giver join ss_people r on r.id=s.receiver where s.event_id=$1`,[evN])) if(anno1[p.gn]===p.rn) ripetuti++
+}
+ok(ripetuti===0,'"Rifai per il prossimo anno": in 40 sorteggi nessuno ripesca la stessa persona dell\'anno prima')
+ok((await one('select ss_list($1)',[PW])).find(e=>e.id===evN).excl.length===2,'le esclusioni speciali vengono copiate nel nuovo anno')
+// nomi con maiuscole diverse = stessa persona; uscita prima del sorteggio
+const ev3 = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Maiuscole','','','Ricky','1234',null])
 await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev3,'Giulia','1111','a'])
-ok((await err('select ss_join($1,$2,$3,$4,$5)',[PW,ev3,'giulia','2222','b']))?.includes('NOME_GIA_PRESO'),'"giulia" non può rubare il posto a "Giulia"')
+ok((await err('select ss_join($1,$2,$3,$4,$5)',[PW,ev3,'giulia','2222','b']))==='NOME_GIA_PRESO','"giulia" non può rubare il posto a "Giulia"')
 await q('select ss_join($1,$2,$3,$4,$5)',[PW,ev3,'Luca','3333',''])
 await q('select ss_set_excl($1,$2,$3,$4)',[PW,ev3,'1234',JSON.stringify([['Giulia','Luca']])])
 await q('select ss_kick($1,$2,$3,$4)',[PW,ev3,'1234','LUCA'])
@@ -178,4 +248,8 @@ const l3 = (await one('select ss_list($1)',[PW])).find(e=>e.id===ev3)
 ok(l3.people.length===1 && l3.excl.length===0,'tolto Luca: sparisce anche dalle esclusioni')
 await q('select ss_leave($1,$2,$3,$4)',[PW,ev3,'giulia','1111'])
 ok((await one('select ss_list($1)',[PW])).find(e=>e.id===ev3).people.length===0,'Giulia esce col suo PIN')
+ok((await err('select ss_leave($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')]))==='CHIEDI_ORGANIZZATORE','dopo il sorteggio per uscire bisogna chiedere all\'organizzatore')
+// blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)
+for(let i=0;i<5;i++) await err('select member_kick($1,$2,$3,$4)',[PW,'0000','Luca',true])
+ok((await err('select member_kick($1,$2,$3,$4)',[PW,'4321','Luca',true]))==='PIN_BLOCCATO','5 PIN amministratore sbagliati: blocco di 15 minuti')
 console.log(fails? `\n${fails} TEST FALLITI` : '\nTUTTI I TEST OK')

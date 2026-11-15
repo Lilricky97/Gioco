@@ -155,6 +155,44 @@ create table if not exists ss_pairs (
   primary key (event_id, giver)
 );
 
+-- Secret Santa: aggiunte (sorteggio n°, blocchi PIN, lettere finte, chi ha guardato, ritardatari, regalo preso, anno prima)
+alter table ss_events add column if not exists draw_no int not null default 0;
+alter table ss_events add column if not exists prev_event uuid;
+alter table ss_events add column if not exists admin_fail int not null default 0;
+alter table ss_events add column if not exists admin_lock timestamptz;
+alter table ss_people add column if not exists code text;
+alter table ss_people add column if not exists pending boolean not null default false;
+alter table ss_people add column if not exists seen_draw int not null default 0;
+alter table ss_people add column if not exists seen_at timestamptz;
+alter table ss_people add column if not exists changed_at timestamptz;
+alter table ss_people add column if not exists bought boolean not null default false;
+alter table ss_people add column if not exists pin_fail int not null default 0;
+alter table ss_people add column if not exists pin_lock timestamptz;
+update ss_events set draw_no = 1 where status = 'drawn' and draw_no = 0;
+
+create table if not exists group_couples (       -- coppie del gruppo: escluse in automatico da ogni Secret Santa
+  a text not null, b text not null,
+  primary key (a, b)
+);
+
+create table if not exists ss_log (              -- diario del Secret Santa (visibile a tutti)
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references ss_events(id) on delete cascade,
+  at timestamptz not null default now(),
+  msg text not null
+);
+
+create table if not exists ss_questions (        -- domande anonime di chi regala al suo destinatario
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references ss_events(id) on delete cascade,
+  giver uuid not null references ss_people(id) on delete cascade,
+  receiver uuid not null references ss_people(id) on delete cascade,
+  question text not null,
+  answer text,
+  created_at timestamptz not null default now(),
+  answered_at timestamptz
+);
+
 alter table app_config enable row level security;
 alter table members   enable row level security;
 alter table stories     enable row level security;
@@ -174,6 +212,9 @@ alter table ss_events enable row level security;
 alter table ss_people enable row level security;
 alter table ss_excl   enable row level security;
 alter table ss_pairs  enable row level security;
+alter table group_couples enable row level security;
+alter table ss_log       enable row level security;
+alter table ss_questions enable row level security;
 -- nessuna policy: dall'esterno si passa solo dalle funzioni qui sotto
 
 -- ---------- utilità ----------
@@ -233,23 +274,72 @@ begin
       'online', coalesce(last_seen > now() - interval '150 seconds', false) and not banned, 'banned', banned) order by last_seen desc nulls last, lower(name)) from members), '[]'::json);
 end $$;
 
--- amministratore: controlla il PIN (set = esiste un PIN, ok = è giusto)
+-- PIN amministratore con blocco (5 errori → 15 minuti): null se giusto, altrimenti il codice d'errore
+create or replace function _admin_try(p_admin text) returns text
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare f int; l timestamptz;
+begin
+  if not exists (select 1 from app_config where k = 'admin') then return 'ADMIN_NON_IMPOSTATO'; end if;
+  select v::timestamptz into l from app_config where k = 'admin_lock';
+  if l is not null and l > now() then return 'PIN_BLOCCATO'; end if;
+  if _admin_ok(p_admin) then delete from app_config where k = 'admin_fail'; return null; end if;
+  f := coalesce((select v::int from app_config where k = 'admin_fail'), 0) + 1;
+  if f >= 5 then
+    insert into app_config(k, v) values ('admin_lock', (now() + interval '15 minutes')::text) on conflict (k) do update set v = excluded.v;
+    delete from app_config where k = 'admin_fail';
+    return 'PIN_BLOCCATO';
+  end if;
+  insert into app_config(k, v) values ('admin_fail', f::text) on conflict (k) do update set v = excluded.v;
+  return 'PIN_ADMIN_ERRATO';
+end $$;
+
+-- amministratore: controlla il PIN (set = esiste un PIN, ok = è giusto, err = sbagliato/bloccato)
 create or replace function admin_check(p_pw text, p_admin text) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare e text;
 begin
   perform _need(p_pw);
-  return json_build_object('set', exists (select 1 from app_config where k = 'admin'), 'ok', _admin_ok(p_admin));
+  e := _admin_try(p_admin);
+  return json_build_object('set', e is distinct from 'ADMIN_NON_IMPOSTATO', 'ok', e is null, 'err', e);
 end $$;
 
 -- rimuove (p_ban = true) o riammette (false) una persona; i suoi post restano
-create or replace function member_kick(p_pw text, p_admin text, p_name text, p_ban boolean) returns void
-language plpgsql security definer set search_path = public, extensions as $$
+drop function if exists member_kick(text, text, text, boolean);
+create or replace function member_kick(p_pw text, p_admin text, p_name text, p_ban boolean) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare e text;
 begin
   perform _need(p_pw);
-  if not exists (select 1 from app_config where k = 'admin') then raise exception 'ADMIN_NON_IMPOSTATO'; end if;
-  if not _admin_ok(p_admin) then raise exception 'PIN_ADMIN_ERRATO'; end if;
+  e := _admin_try(p_admin); if e is not null then return json_build_object('err', e); end if;
   update members set banned = coalesce(p_ban, true) where lower(name) = lower(_clean(p_name, 30));
   if not found then raise exception 'NOME_NON_TROVATO'; end if;
+  return json_build_object('ok', true);
+end $$;
+
+-- coppie del gruppo: le vede chiunque è entrato, le cambia solo l'amministratore.
+-- Ogni Secret Santa le esclude in automatico (non si pescano a vicenda)
+create or replace function couples_list(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(json_build_array(a, b) order by lower(a), lower(b)) from group_couples), '[]'::json);
+end $$;
+
+create or replace function couples_set(p_pw text, p_admin text, p_pairs json) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare e text; it json; x text; y text;
+begin
+  perform _need(p_pw);
+  e := _admin_try(p_admin); if e is not null then return json_build_object('err', e); end if;
+  delete from group_couples;
+  for it in select * from json_array_elements(coalesce(p_pairs, '[]'::json)) loop
+    x := _clean(it->>0, 30); y := _clean(it->>1, 30);
+    if x <> '' and y <> '' and lower(x) <> lower(y) and not exists (select 1 from group_couples
+         where (lower(a) = lower(x) and lower(b) = lower(y)) or (lower(a) = lower(y) and lower(b) = lower(x))) then
+      insert into group_couples(a, b) values (case when lower(x) <= lower(y) then x else y end, case when lower(x) <= lower(y) then y else x end);
+    end if;
+  end loop;
+  return json_build_object('ok', true);
 end $$;
 
 -- ---------- storie (24 ore) ----------
@@ -575,208 +665,656 @@ begin
 end $$;
 
 -- ---------- SECRET SANTA ----------
+-- Regola d'oro: tutto a caso come dal cappello, ognuno fa UN regalo e ne riceve UNO,
+-- nessuno pesca se stesso, le coppie (del gruppo e dell'evento) non si pescano a vicenda.
+-- Le funzioni che controllano un PIN restituiscono {"err": ...} invece di "lanciare" l'errore:
+-- così il conteggio dei tentativi sbagliati resta salvato (dopo 5 errori: blocco di 15 minuti).
+
+-- funzioni che cambiano il tipo di risultato: si tolgono le versioni vecchie
+drop function if exists ss_create(text, text, text, text, text, text);
+drop function if exists ss_join(text, uuid, text, text, text);
+drop function if exists ss_leave(text, uuid, text, text);
+drop function if exists ss_kick(text, uuid, text, text);
+drop function if exists ss_set_excl(text, uuid, text, json);
+drop function if exists ss_draw(text, uuid, text);
+drop function if exists ss_admin_check(text, uuid, text);
+drop function if exists ss_reset_pin(text, uuid, text, text, text);
+drop function if exists ss_undo(text, uuid, text);
+drop function if exists ss_event_del(text, uuid, text);
+
+-- numeri casuali "veri" (crittografici, pgcrypto): mescola 1..n senza sbilanciamenti
+create or replace function _rnd(k int) returns int
+language plpgsql volatile set search_path = public, extensions as $$
+declare b bytea; x bigint; lim bigint;
+begin
+  if k <= 1 then return 0; end if;
+  lim := 4294967296 - (4294967296 % k);
+  loop
+    b := extensions.gen_random_bytes(4);
+    x := (get_byte(b,0)::bigint << 24) | (get_byte(b,1)::bigint << 16) | (get_byte(b,2)::bigint << 8) | get_byte(b,3)::bigint;
+    exit when x < lim;
+  end loop;
+  return (x % k)::int;
+end $$;
+
+create or replace function _shuffle(n int) returns int[]
+language plpgsql volatile set search_path = public, extensions as $$
+declare a int[]; b bytea; i int; j int; t int; x bigint;
+begin
+  if n < 1 then return '{}'; end if;
+  a := array(select generate_series(1, n));
+  b := extensions.gen_random_bytes(4 * n);
+  for i in reverse n..2 loop
+    x := (get_byte(b,4*i-4)::bigint << 24) | (get_byte(b,4*i-3)::bigint << 16) | (get_byte(b,4*i-2)::bigint << 8) | get_byte(b,4*i-1)::bigint;
+    if x < 4294967296 - (4294967296 % i) then j := (x % i)::int + 1; else j := _rnd(i) + 1; end if;
+    t := a[i]; a[i] := a[j]; a[j] := t;
+  end loop;
+  return a;
+end $$;
+
+-- lettera finta n° k (0 → A, 25 → Z, 26 → AA, 27 → AB …)
+create or replace function _ss_code(k int) returns text
+language sql immutable as $$
+  select case when k < 26 then chr(65 + k) else chr(65 + k / 26 - 1) || chr(65 + k % 26) end
+$$;
+
+create or replace function _ss_log(p_event uuid, p_msg text) returns void
+language sql security definer set search_path = public, extensions as $$
+  insert into ss_log(event_id, msg) values (p_event, left(p_msg, 300));
+$$;
+
+-- chi NON può regalare a chi: matrice n×n "appiattita" (riga = chi regala, colonna = chi riceve)
+-- vietati: se stesso, coppie del gruppo, esclusioni dell'evento (in tutte e due le direzioni)
+-- e, se con_prev, gli stessi abbinamenti del Secret Santa dell'anno prima (solo in quella direzione)
+create or replace function _ss_vietati(p_event uuid, nms text[], con_prev boolean) returns boolean[]
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare n int := coalesce(array_length(nms, 1), 0); m boolean[]; ln text[]; i int; ia int; ib int; r record; pe uuid;
+begin
+  if n = 0 then return '{}'; end if;
+  m := array_fill(false, array[n * n]);
+  ln := array(select lower(x) from unnest(nms) with ordinality as u(x, k) order by k);
+  for i in 1..n loop m[(i - 1) * n + i] := true; end loop;
+  for r in select lower(a) as a, lower(b) as b from group_couples
+           union select lower(a), lower(b) from ss_excl where event_id = p_event loop
+    ia := array_position(ln, r.a); ib := array_position(ln, r.b);
+    if ia is not null and ib is not null then m[(ia - 1) * n + ib] := true; m[(ib - 1) * n + ia] := true; end if;
+  end loop;
+  if con_prev then
+    select prev_event into pe from ss_events where id = p_event;
+    if pe is not null then
+      for r in select lower(g.name) as a, lower(rc.name) as b from ss_pairs s
+               join ss_people g on g.id = s.giver join ss_people rc on rc.id = s.receiver where s.event_id = pe loop
+        ia := array_position(ln, r.a); ib := array_position(ln, r.b);
+        if ia is not null and ib is not null then m[(ia - 1) * n + ib] := true; end if;
+      end loop;
+    end if;
+  end if;
+  return m;
+end $$;
+
+-- esiste almeno un sorteggio valido? (abbinamento completo tra chi regala e chi riceve, percorsi aumentanti)
+-- restituisce {"ok":true,"p":[...]} con un abbinamento valido (in ordine casuale), oppure {"ok":false,"chi":[indici]}
+-- dove "chi" sono le persone che insieme hanno troppe esclusioni
+create or replace function _ss_match(n int, m boolean[]) returns json
+language plpgsql volatile set search_path = public, extensions as $$
+declare ml int[]; mr int[]; par int[]; vis boolean[]; q int[]; ordg int[]; ordr int[];
+  s int; si int; head int; u int; v int; k int; x int; y int; libero int; chi int[];
+begin
+  ml := array_fill(0, array[n]); mr := array_fill(0, array[n]);
+  ordg := _shuffle(n); ordr := _shuffle(n);
+  for si in 1..n loop
+    s := ordg[si];
+    par := array_fill(0, array[n]); vis := array_fill(false, array[n]);
+    q := array[s]; vis[s] := true; head := 1; libero := 0;
+    while head <= array_length(q, 1) and libero = 0 loop
+      u := q[head]; head := head + 1;
+      for k in 1..n loop
+        v := ordr[k];
+        if not m[(u - 1) * n + v] and par[v] = 0 then
+          par[v] := u;
+          if mr[v] = 0 then libero := v; exit; end if;
+          if not vis[mr[v]] then vis[mr[v]] := true; q := q || mr[v]; end if;
+        end if;
+      end loop;
+    end loop;
+    if libero = 0 then
+      chi := array(select i from generate_series(1, n) i where vis[i]);
+      return json_build_object('ok', false, 'chi', chi);
+    end if;
+    v := libero;
+    loop
+      x := par[v]; y := ml[x];
+      ml[x] := v; mr[v] := x;
+      exit when x = s;
+      v := y;
+    end loop;
+  end loop;
+  return json_build_object('ok', true, 'p', ml);
+end $$;
+
+-- il cappello: ripesca tutto finché nessuno ha pescato se stesso o qualcuno di vietato.
+-- Ogni sorteggio valido ha la stessa probabilità. Se dopo 3000 volte non esce (casi rarissimi,
+-- con tantissime esclusioni) usa l'abbinamento valido trovato da _ss_match.
+create or replace function _ss_cappello(n int, m boolean[], riserva int[]) returns int[]
+language plpgsql volatile set search_path = public, extensions as $$
+declare p int[]; ok boolean; t int; i int;
+begin
+  for t in 1..3000 loop
+    p := _shuffle(n); ok := true;
+    for i in 1..n loop
+      if m[(i - 1) * n + p[i]] then ok := false; exit; end if;
+    end loop;
+    if ok then return p; end if;
+  end loop;
+  return riserva;
+end $$;
+
+-- nuove lettere finte, mescolate a caso (non seguono l'ordine di iscrizione)
+create or replace function _ss_lettere(p_event uuid) returns void
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare ids uuid[]; c int[]; i int;
+begin
+  update ss_people set code = null where event_id = p_event;
+  select array_agg(id order by id) into ids from ss_people where event_id = p_event and not pending
+    and id in (select giver from ss_pairs where event_id = p_event);
+  if ids is null then return; end if;
+  c := _shuffle(array_length(ids, 1));
+  for i in 1..array_length(ids, 1) loop
+    update ss_people set code = _ss_code(c[i] - 1) where id = ids[i];
+  end loop;
+end $$;
+
+-- Secret Santa già sorteggiati col sistema vecchio: assegna le lettere finte
+do $$ declare e uuid; begin
+  for e in select distinct s.event_id from ss_pairs s join ss_people p on p.id = s.giver where p.code is null loop
+    perform _ss_lettere(e);
+  end loop;
+end $$;
+
+-- PIN personale con blocco: {"id":...} se giusto, {"err":"PIN_ERRATO"|"PIN_BLOCCATO"} se no
+create or replace function _ss_pin(p_event uuid, p_name text, p_pin text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare me ss_people%rowtype;
+begin
+  select * into me from ss_people where event_id = p_event and lower(name) = lower(_clean(p_name, 30)) for update;
+  if not found then return json_build_object('err', 'PIN_ERRATO'); end if;
+  if me.pin_lock is not null and me.pin_lock > now() then return json_build_object('err', 'PIN_BLOCCATO'); end if;
+  if me.pin <> extensions.crypt(coalesce(p_pin, ''), me.pin) then
+    if me.pin_fail + 1 >= 5 then
+      update ss_people set pin_fail = 0, pin_lock = now() + interval '15 minutes' where id = me.id;
+      return json_build_object('err', 'PIN_BLOCCATO');
+    end if;
+    update ss_people set pin_fail = pin_fail + 1 where id = me.id;
+    return json_build_object('err', 'PIN_ERRATO');
+  end if;
+  if me.pin_fail > 0 then update ss_people set pin_fail = 0 where id = me.id; end if;
+  return json_build_object('id', me.id, 'name', me.name);
+end $$;
+
+-- PIN organizzatore con blocco: null se giusto, altrimenti il codice d'errore
+create or replace function _ss_adm(p_event uuid, p_admin_pin text) returns text
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare ev ss_events%rowtype;
+begin
+  select * into ev from ss_events where id = p_event;
+  if not found then return 'EVENTO_NON_TROVATO'; end if;
+  if ev.admin_lock is not null and ev.admin_lock > now() then return 'PIN_BLOCCATO'; end if;
+  if ev.admin_pin <> extensions.crypt(coalesce(p_admin_pin, ''), ev.admin_pin) then
+    if ev.admin_fail + 1 >= 5 then
+      update ss_events set admin_fail = 0, admin_lock = now() + interval '15 minutes' where id = p_event;
+      return 'PIN_BLOCCATO';
+    end if;
+    update ss_events set admin_fail = admin_fail + 1 where id = p_event;
+    return 'PIN_ORGANIZZATORE_ERRATO';
+  end if;
+  if ev.admin_fail > 0 then update ss_events set admin_fail = 0 where id = p_event; end if;
+  return null;
+end $$;
+
 create or replace function ss_list(p_pw text) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
 begin
   perform _need(p_pw);
   return coalesce((select json_agg(x order by x.created_at desc) from (
-    select e.id, e.name, e.budget, e.gift_date, e.organizer, e.status, e.drawn_at, e.created_at,
-      coalesce((select json_agg(p.name order by lower(p.name)) from ss_people p where p.event_id = e.id), '[]'::json) as people,
-      coalesce((select json_agg(json_build_array(x.a, x.b)) from ss_excl x where x.event_id = e.id), '[]'::json) as excl
+    select e.id, e.name, e.budget, e.gift_date, e.organizer, e.status, e.drawn_at, e.created_at, e.draw_no, e.prev_event,
+      (select p.name from ss_events p where p.id = e.prev_event) as prev_name,
+      coalesce((select json_agg(p.name order by lower(p.name)) from ss_people p where p.event_id = e.id and not p.pending), '[]'::json) as people,
+      coalesce((select json_agg(p.name order by p.created_at) from ss_people p where p.event_id = e.id and p.pending), '[]'::json) as pending,
+      coalesce((select json_agg(json_build_array(x.a, x.b)) from ss_excl x where x.event_id = e.id), '[]'::json) as excl,
+      coalesce((select json_agg(json_build_object('at', l.at, 'msg', l.msg) order by l.at desc)
+        from (select at, msg from ss_log where event_id = e.id order by at desc limit 30) l), '[]'::json) as log
     from ss_events e) x), '[]'::json);
 end $$;
 
-create or replace function ss_create(p_pw text, p_name text, p_budget text, p_date text, p_organizer text, p_admin_pin text) returns uuid
+create or replace function ss_create(p_pw text, p_name text, p_budget text, p_date text, p_organizer text, p_admin_pin text, p_prev uuid) returns uuid
 language plpgsql security definer set search_path = public, extensions as $$
-declare new_id uuid;
+declare new_id uuid; pn text;
 begin
   perform _need(p_pw);
-  if _clean(p_name,80) = '' then raise exception 'NOME_VUOTO'; end if;
-  if coalesce(p_admin_pin,'') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
-  insert into ss_events(name, budget, gift_date, organizer, admin_pin)
-  values (_clean(p_name,80), _clean(p_budget,40), _clean(p_date,40), _clean(p_organizer,30), extensions.crypt(p_admin_pin, extensions.gen_salt('bf')))
+  if _clean(p_name, 80) = '' then raise exception 'NOME_VUOTO'; end if;
+  if coalesce(p_admin_pin, '') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
+  if p_prev is not null then
+    select name into pn from ss_events where id = p_prev and status = 'drawn';
+    if pn is null then raise exception 'EVENTO_NON_TROVATO'; end if;
+  end if;
+  insert into ss_events(name, budget, gift_date, organizer, admin_pin, prev_event)
+  values (_clean(p_name, 80), _clean(p_budget, 40), _clean(p_date, 40), _clean(p_organizer, 30),
+          extensions.crypt(p_admin_pin, extensions.gen_salt('bf')), p_prev)
   returning id into new_id;
+  if p_prev is not null then
+    insert into ss_excl(event_id, a, b) select new_id, a, b from ss_excl where event_id = p_prev on conflict do nothing;
+    perform _ss_log(new_id, 'Creato da ' || _clean(p_organizer, 30) || ' come seguito di «' || pn || '»: nessuno ripescherà la stessa persona dell''anno prima');
+  else
+    perform _ss_log(new_id, 'Creato da ' || _clean(p_organizer, 30));
+  end if;
   return new_id;
 end $$;
 
-create or replace function _ss_admin(p_event uuid, p_admin_pin text) returns void
-language plpgsql stable security definer set search_path = public, extensions as $$
+-- iscrizione: nome + PIN personale (se il nome c'è già serve lo stesso PIN: così si aggiorna la letterina).
+-- Dopo il sorteggio ci si può solo "mettere in attesa": poi l'organizzatore fa entrare (ss_admit)
+create or replace function ss_join(p_pw text, p_event uuid, p_name text, p_pin text, p_wish text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); ev ss_events%rowtype; ex ss_people%rowtype; r json;
 begin
-  if not exists (select 1 from ss_events where id = p_event and admin_pin = extensions.crypt(coalesce(p_admin_pin,''), admin_pin)) then
-    raise exception 'PIN_ORGANIZZATORE_ERRATO';
+  perform _need(p_pw);
+  select * into ev from ss_events where id = p_event for update;
+  if not found then raise exception 'EVENTO_NON_TROVATO'; end if;
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if coalesce(p_pin, '') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
+  select * into ex from ss_people where event_id = p_event and lower(name) = lower(n);
+  if found then
+    r := _ss_pin(p_event, n, p_pin);
+    if r->>'err' = 'PIN_ERRATO' then return json_build_object('err', 'NOME_GIA_PRESO'); end if;
+    if r->>'err' is not null then return r; end if;
+    update ss_people set wish = _clean(p_wish, 1000) where id = ex.id;
+    return json_build_object('ok', true, 'me', ex.name, 'pending', ex.pending);
   end if;
+  insert into ss_people(event_id, name, pin, wish, pending)
+  values (p_event, n, extensions.crypt(p_pin, extensions.gen_salt('bf')), _clean(p_wish, 1000), ev.status <> 'open');
+  if ev.status <> 'open' then perform _ss_log(p_event, n || ' chiede di entrare dopo il sorteggio'); end if;
+  return json_build_object('ok', true, 'me', n, 'pending', ev.status <> 'open');
 end $$;
 
--- iscrizione: nome + PIN personale (se il nome c'è già, serve lo stesso PIN)
-create or replace function ss_join(p_pw text, p_event uuid, p_name text, p_pin text, p_wish text) returns void
+-- chi si ritira da solo: prima del sorteggio (o se è ancora in attesa). Dopo, lo toglie l'organizzatore
+create or replace function ss_leave(p_pw text, p_event uuid, p_name text, p_pin text) returns json
 language plpgsql security definer set search_path = public, extensions as $$
-declare n text := _clean(p_name,30); ex ss_people%rowtype; st text;
+declare ev ss_events%rowtype; me ss_people%rowtype; r json;
+begin
+  perform _need(p_pw);
+  select * into ev from ss_events where id = p_event for update;
+  if not found then raise exception 'EVENTO_NON_TROVATO'; end if;
+  r := _ss_pin(p_event, p_name, p_pin);
+  if r->>'err' is not null then return r; end if;
+  select * into me from ss_people where id = (r->>'id')::uuid;
+  if ev.status <> 'open' and not me.pending then return json_build_object('err', 'CHIEDI_ORGANIZZATORE'); end if;
+  delete from ss_excl where event_id = p_event and (lower(a) = lower(me.name) or lower(b) = lower(me.name));
+  delete from ss_people where id = me.id;
+  if me.pending then perform _ss_log(p_event, me.name || ' ha ritirato la richiesta di entrare'); end if;
+  return json_build_object('ok', true);
+end $$;
+
+-- i miei dati (senza abbinamento): per entrare col PIN e per la letterina
+create or replace function ss_me(p_pw text, p_event uuid, p_name text, p_pin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare me ss_people%rowtype; r json; st text;
+begin
+  perform _need(p_pw);
+  r := _ss_pin(p_event, p_name, p_pin);
+  if r->>'err' is not null then return r; end if;
+  select * into me from ss_people where id = (r->>'id')::uuid;
+  select status into st from ss_events where id = p_event;
+  return json_build_object('me', me.name, 'my_wish', me.wish, 'pending', me.pending, 'bought', me.bought,
+    'drawn', st = 'drawn' and exists (select 1 from ss_pairs where event_id = p_event and giver = me.id));
+end $$;
+
+-- ognuno vede SOLO a chi fa il regalo (con nome + PIN); segna "ha guardato"
+create or replace function ss_reveal(p_pw text, p_event uuid, p_name text, p_pin text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare me ss_people%rowtype; rec ss_people%rowtype; ev ss_events%rowtype; r json; rifatto boolean; cambiato boolean;
+begin
+  perform _need(p_pw);
+  r := _ss_pin(p_event, p_name, p_pin);
+  if r->>'err' is not null then return r; end if;
+  select * into me from ss_people where id = (r->>'id')::uuid;
+  select * into ev from ss_events where id = p_event;
+  select rc.* into rec from ss_pairs s join ss_people rc on rc.id = s.receiver where s.event_id = p_event and s.giver = me.id;
+  if not found then
+    return json_build_object('drawn', false, 'me', me.name, 'my_wish', me.wish, 'pending', me.pending, 'bought', me.bought);
+  end if;
+  rifatto := me.seen_draw > 0 and me.seen_draw < ev.draw_no;
+  cambiato := me.changed_at is not null and me.seen_at is not null and me.changed_at > me.seen_at and not rifatto;
+  update ss_people set seen_draw = ev.draw_no, seen_at = now() where id = me.id;
+  return json_build_object('drawn', true, 'me', me.name, 'to', rec.name, 'wish', rec.wish, 'my_wish', me.wish,
+    'bought', me.bought, 'draw_no', ev.draw_no, 'rifatto', rifatto, 'cambiato', cambiato);
+end $$;
+
+-- organizzatore: esclusioni speciali di questo evento (le coppie del gruppo valgono già in automatico)
+create or replace function ss_set_excl(p_pw text, p_event uuid, p_admin_pin text, p_pairs json) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare ev ss_events%rowtype; it json; e text;
+begin
+  perform _need(p_pw);
+  select * into ev from ss_events where id = p_event for update;
+  e := _ss_adm(p_event, p_admin_pin); if e is not null then return json_build_object('err', e); end if;
+  if ev.status <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
+  delete from ss_excl where event_id = p_event;
+  for it in select * from json_array_elements(coalesce(p_pairs, '[]'::json)) loop
+    if (it->>0) is not null and (it->>1) is not null and lower(it->>0) <> lower(it->>1) then
+      insert into ss_excl(event_id, a, b) values (p_event, least(it->>0, it->>1), greatest(it->>0, it->>1)) on conflict do nothing;
+    end if;
+  end loop;
+  return json_build_object('ok', true);
+end $$;
+
+-- IL SORTEGGIO
+create or replace function ss_draw(p_pw text, p_event uuid, p_admin_pin text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare ev ss_events%rowtype; e text; ids uuid[]; nms text[]; n int; m boolean[]; res json; p int[]; i int;
+  rilassato boolean := false; chi text;
+begin
+  perform _need(p_pw);
+  select * into ev from ss_events where id = p_event for update;
+  e := _ss_adm(p_event, p_admin_pin); if e is not null then return json_build_object('err', e); end if;
+  if ev.status <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
+  update ss_people set pending = false where event_id = p_event and pending;
+  select array_agg(id order by id), array_agg(name order by id) into ids, nms from ss_people where event_id = p_event;
+  n := coalesce(array_length(ids, 1), 0);
+  if n < 3 then raise exception 'SERVONO_ALMENO_3'; end if;
+  m := _ss_vietati(p_event, nms, true);
+  res := _ss_match(n, m);
+  if not (res->>'ok')::boolean and ev.prev_event is not null then
+    m := _ss_vietati(p_event, nms, false); rilassato := true;
+    res := _ss_match(n, m);
+  end if;
+  if not (res->>'ok')::boolean then
+    select string_agg(nms[x::int], ', ' order by lower(nms[x::int])) into chi from json_array_elements_text(res->'chi') as u(x);
+    return json_build_object('err', 'ESCLUSIONI_IMPOSSIBILI', 'chi', chi);
+  end if;
+  p := _ss_cappello(n, m, array(select x::int from json_array_elements_text(res->'p') with ordinality as u(x, k) order by k));
+  delete from ss_questions where event_id = p_event;
+  delete from ss_pairs where event_id = p_event;
+  for i in 1..n loop
+    insert into ss_pairs(event_id, giver, receiver) values (p_event, ids[i], ids[p[i]]);
+  end loop;
+  update ss_people set changed_at = null, bought = false where event_id = p_event;
+  update ss_events set status = 'drawn', drawn_at = now(), draw_no = draw_no + 1 where id = p_event;
+  perform _ss_lettere(p_event);
+  perform _ss_log(p_event, 'Sorteggio n° ' || (ev.draw_no + 1) || ' fatto (' || n || ' persone)'
+    || case when rilassato then ': non è stato possibile evitare tutti gli abbinamenti dell''anno prima' else '' end);
+  return json_build_object('ok', true, 'n', n, 'rilassato', rilassato);
+end $$;
+
+-- annulla il sorteggio (per rifarlo): finisce nel diario
+create or replace function ss_undo(p_pw text, p_event uuid, p_admin_pin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare ev ss_events%rowtype; e text;
+begin
+  perform _need(p_pw);
+  select * into ev from ss_events where id = p_event for update;
+  e := _ss_adm(p_event, p_admin_pin); if e is not null then return json_build_object('err', e); end if;
+  delete from ss_questions where event_id = p_event;
+  delete from ss_pairs where event_id = p_event;
+  update ss_people set code = null, pending = false, changed_at = null where event_id = p_event;
+  update ss_events set status = 'open', drawn_at = null where id = p_event;
+  if ev.status = 'drawn' then perform _ss_log(p_event, ev.organizer || ' ha annullato il sorteggio n° ' || ev.draw_no); end if;
+  return json_build_object('ok', true);
+end $$;
+
+-- un ritardatario entra dopo il sorteggio: si sceglie a caso un "biglietto" A→B (meglio se A non ha ancora guardato)
+-- e diventa A→Nuovo→B. Cambia l'abbinamento di UNA sola persona (A)
+create or replace function ss_admit(p_pw text, p_event uuid, p_admin_pin text, p_name text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare ev ss_events%rowtype; e text; nu ss_people%rowtype; ids uuid[]; nms text[]; n int; m boolean[]; ni int;
+  cand uuid[]; scelto uuid; ricevente uuid; giro int; con_prev boolean;
+begin
+  perform _need(p_pw);
+  select * into ev from ss_events where id = p_event for update;
+  e := _ss_adm(p_event, p_admin_pin); if e is not null then return json_build_object('err', e); end if;
+  select * into nu from ss_people where event_id = p_event and lower(name) = lower(_clean(p_name, 30)) and pending;
+  if not found then raise exception 'NOME_NON_TROVATO'; end if;
+  if ev.status <> 'drawn' then update ss_people set pending = false where id = nu.id; return json_build_object('ok', true); end if;
+  select array_agg(id order by id), array_agg(name order by id) into ids, nms
+    from ss_people where event_id = p_event and (not pending or id = nu.id);
+  n := array_length(ids, 1); ni := array_position(ids, nu.id);
+  for giro in 1..2 loop
+    con_prev := giro = 1;
+    m := _ss_vietati(p_event, nms, con_prev);
+    -- prima chi non ha ancora guardato, poi tutti
+    select array_agg(s.giver) into cand from ss_pairs s join ss_people g on g.id = s.giver
+      where s.event_id = p_event and g.seen_draw < ev.draw_no
+        and not m[(array_position(ids, s.giver) - 1) * n + ni] and not m[(ni - 1) * n + array_position(ids, s.receiver)];
+    if cand is null then
+      select array_agg(s.giver) into cand from ss_pairs s
+        where s.event_id = p_event
+          and not m[(array_position(ids, s.giver) - 1) * n + ni] and not m[(ni - 1) * n + array_position(ids, s.receiver)];
+    end if;
+    exit when cand is not null;
+  end loop;
+  if cand is null then return json_build_object('err', 'RITARDATARIO_IMPOSSIBILE'); end if;
+  scelto := cand[_rnd(array_length(cand, 1)) + 1];
+  select receiver into ricevente from ss_pairs where event_id = p_event and giver = scelto;
+  update ss_pairs set receiver = nu.id where event_id = p_event and giver = scelto;
+  insert into ss_pairs(event_id, giver, receiver) values (p_event, nu.id, ricevente);
+  update ss_people set pending = false where id = nu.id;
+  update ss_people set changed_at = now(), bought = false where id = scelto;
+  delete from ss_questions where event_id = p_event and giver = scelto;
+  perform _ss_lettere(p_event);
+  perform _ss_log(p_event, nu.name || ' è entrato dopo il sorteggio: è cambiato l''abbinamento di 1 persona');
+  return json_build_object('ok', true, 'cambiati', 1);
+end $$;
+
+-- l'organizzatore toglie qualcuno. Prima del sorteggio (o se in attesa): via e basta.
+-- Dopo: chi regalava a lui regala a chi riceveva da lui (1 persona cambia); se non si può, si scambiano 2 biglietti
+create or replace function ss_kick(p_pw text, p_event uuid, p_admin_pin text, p_name text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare ev ss_events%rowtype; e text; x ss_people%rowtype; pg uuid; qr uuid; ids uuid[]; nms text[]; n int; m boolean[];
+  c uuid; d uuid; giro int; cambiati int := 0; r record; trovato boolean := false;
+begin
+  perform _need(p_pw);
+  select * into ev from ss_events where id = p_event for update;
+  e := _ss_adm(p_event, p_admin_pin); if e is not null then return json_build_object('err', e); end if;
+  select * into x from ss_people where event_id = p_event and lower(name) = lower(_clean(p_name, 30));
+  if not found then raise exception 'NOME_NON_TROVATO'; end if;
+  if ev.status = 'drawn' and not x.pending then
+    if (select count(*) from ss_people where event_id = p_event and not pending) <= 3 then raise exception 'SERVONO_ALMENO_3'; end if;
+    select giver into pg from ss_pairs where event_id = p_event and receiver = x.id;   -- chi regalava a X
+    select receiver into qr from ss_pairs where event_id = p_event and giver = x.id;   -- a chi regalava X
+    delete from ss_pairs where event_id = p_event and (giver = x.id or receiver = x.id);
+    select array_agg(id order by id), array_agg(name order by id) into ids, nms
+      from ss_people where event_id = p_event and not pending and id <> x.id;
+    n := array_length(ids, 1);
+    for giro in 1..2 loop
+      m := _ss_vietati(p_event, nms, giro = 1);
+      -- 1) pg regala a qr (cambia solo pg)
+      if pg <> qr and not m[(array_position(ids, pg) - 1) * n + array_position(ids, qr)] then
+        insert into ss_pairs(event_id, giver, receiver) values (p_event, pg, qr);
+        update ss_people set changed_at = now(), bought = false where id = pg;
+        delete from ss_questions where event_id = p_event and giver = pg;
+        cambiati := 1; trovato := true; exit;
+      end if;
+      -- 2) scambio con un altro biglietto c→d: pg→d e c→qr (cambiano pg e c)
+      for r in select s.giver as c, s.receiver as d from ss_pairs s where s.event_id = p_event order by _rnd(1000000) loop
+        if r.c <> pg and r.d <> pg and r.c <> qr and r.d <> qr
+           and not m[(array_position(ids, pg) - 1) * n + array_position(ids, r.d)]
+           and not m[(array_position(ids, r.c) - 1) * n + array_position(ids, qr)] then
+          update ss_pairs set receiver = qr where event_id = p_event and giver = r.c;
+          insert into ss_pairs(event_id, giver, receiver) values (p_event, pg, r.d);
+          update ss_people set changed_at = now(), bought = false where id in (pg, r.c);
+          delete from ss_questions where event_id = p_event and giver in (pg, r.c);
+          cambiati := 2; trovato := true; exit;
+        end if;
+      end loop;
+      exit when trovato;
+    end loop;
+    if not trovato then raise exception 'RITIRO_IMPOSSIBILE'; end if;
+  end if;
+  delete from ss_excl where event_id = p_event and (lower(a) = lower(x.name) or lower(b) = lower(x.name));
+  delete from ss_people where id = x.id;
+  if ev.status = 'drawn' then perform _ss_lettere(p_event); end if;
+  perform _ss_log(p_event, ev.organizer || ' ha tolto ' || x.name
+    || case when cambiati = 1 then ': è cambiato l''abbinamento di 1 persona'
+            when cambiati = 2 then ': è cambiato l''abbinamento di 2 persone' else '' end);
+  return json_build_object('ok', true, 'cambiati', cambiati);
+end $$;
+
+-- controlla il PIN dell'organizzatore (per sbloccare l'area organizzatore)
+create or replace function ss_admin_check(p_pw text, p_event uuid, p_admin_pin text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare e text;
+begin
+  perform _need(p_pw);
+  e := _ss_adm(p_event, p_admin_pin);
+  if e is not null then return json_build_object('err', e); end if;
+  return json_build_object('ok', true);
+end $$;
+
+-- chi ha dimenticato il PIN: l'organizzatore gliene imposta uno nuovo (finisce nel diario)
+create or replace function ss_reset_pin(p_pw text, p_event uuid, p_admin_pin text, p_name text, p_new_pin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare ev ss_events%rowtype; e text; nm text;
+begin
+  perform _need(p_pw);
+  select * into ev from ss_events where id = p_event for update;
+  e := _ss_adm(p_event, p_admin_pin); if e is not null then return json_build_object('err', e); end if;
+  if coalesce(p_new_pin, '') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
+  update ss_people set pin = extensions.crypt(p_new_pin, extensions.gen_salt('bf')), pin_fail = 0, pin_lock = null
+   where event_id = p_event and lower(name) = lower(_clean(p_name, 30)) returning name into nm;
+  if nm is null then raise exception 'NOME_NON_TROVATO'; end if;
+  perform _ss_log(p_event, ev.organizer || ' ha dato un nuovo PIN a ' || nm);
+  return json_build_object('ok', true);
+end $$;
+
+create or replace function ss_event_del(p_pw text, p_event uuid, p_admin_pin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare e text;
+begin
+  perform _need(p_pw);
+  e := _ss_adm(p_event, p_admin_pin); if e is not null then return json_build_object('err', e); end if;
+  delete from ss_events where id = p_event;
+  return json_build_object('ok', true);
+end $$;
+
+-- per l'organizzatore: chi ha già guardato e chi ha preso il regalo (MAI gli abbinamenti)
+create or replace function ss_status(p_pw text, p_event uuid, p_admin_pin text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare e text; dn int;
+begin
+  perform _need(p_pw);
+  e := _ss_adm(p_event, p_admin_pin); if e is not null then return json_build_object('err', e); end if;
+  select draw_no into dn from ss_events where id = p_event;
+  return json_build_object('people', coalesce((select json_agg(json_build_object('name', name, 'pending', pending,
+      'seen', not pending and seen_draw = dn and dn > 0, 'bought', bought) order by lower(name))
+    from ss_people where event_id = p_event), '[]'::json));
+end $$;
+
+-- verifica pubblica: controlla che il sorteggio rispetti la regola d'oro SENZA rivelare le coppie
+create or replace function ss_check(p_pw text, p_event uuid) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare n int; np int; self int; givers int; receivers int; fuori int; vietate int; ids uuid[]; nms text[]; m boolean[]; r record;
+begin
+  perform _need(p_pw);
+  select array_agg(id order by id), array_agg(name order by id) into ids, nms from ss_people where event_id = p_event and not pending;
+  n := coalesce(array_length(ids, 1), 0);
+  select count(*), count(*) filter (where giver = receiver), count(distinct giver), count(distinct receiver)
+    into np, self, givers, receivers from ss_pairs where event_id = p_event;
+  select count(*) into fuori from ss_pairs where event_id = p_event and not (giver = any(coalesce(ids, '{}')) and receiver = any(coalesce(ids, '{}')));
+  vietate := 0;
+  if n > 0 then
+    m := _ss_vietati(p_event, nms, false);
+    for r in select giver, receiver from ss_pairs where event_id = p_event loop
+      if r.giver = any(ids) and r.receiver = any(ids) and r.giver <> r.receiver
+         and m[(array_position(ids, r.giver) - 1) * n + array_position(ids, r.receiver)] then vietate := vietate + 1; end if;
+    end loop;
+  end if;
+  return json_build_object('people', n, 'pairs', np, 'self', self, 'givers', givers, 'receivers', receivers,
+    'excluded_pairs', vietate, 'ok', n > 0 and np = n and self = 0 and givers = n and receivers = n and fuori = 0 and vietate = 0);
+end $$;
+
+-- tabella di verifica con le lettere finte: si apre solo dopo il sorteggio; nessuno sa quale lettera è chi
+create or replace function ss_tabella(p_pw text, p_event uuid) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare st text;
 begin
   perform _need(p_pw);
   select status into st from ss_events where id = p_event;
   if st is null then raise exception 'EVENTO_NON_TROVATO'; end if;
-  if n = '' then raise exception 'NOME_VUOTO'; end if;
-  if coalesce(p_pin,'') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
-  select * into ex from ss_people where event_id = p_event and lower(name) = lower(n);
-  if found then
-    if ex.pin <> extensions.crypt(p_pin, ex.pin) then raise exception 'NOME_GIA_PRESO'; end if;
-    update ss_people set wish = _clean(p_wish,1000) where id = ex.id;
-  else
-    if st <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
-    insert into ss_people(event_id, name, pin, wish) values (p_event, n, extensions.crypt(p_pin, extensions.gen_salt('bf')), _clean(p_wish,1000));
-  end if;
+  if st <> 'drawn' then return json_build_object('aperta', false); end if;
+  return json_build_object('aperta', true, 'check', ss_check(p_pw, p_event),
+    'righe', coalesce((select json_agg(json_build_object('da', g.code, 'a', rc.code) order by length(g.code), g.code)
+      from ss_pairs s join ss_people g on g.id = s.giver join ss_people rc on rc.id = s.receiver where s.event_id = p_event), '[]'::json));
 end $$;
 
-create or replace function ss_leave(p_pw text, p_event uuid, p_name text, p_pin text) returns void
+-- regalo preso ✓
+create or replace function ss_bought(p_pw text, p_event uuid, p_name text, p_pin text, p_val boolean) returns json
 language plpgsql security definer set search_path = public, extensions as $$
-declare ex ss_people%rowtype;
+declare r json;
 begin
   perform _need(p_pw);
-  if (select status from ss_events where id = p_event) <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
-  select * into ex from ss_people where event_id = p_event and lower(name) = lower(_clean(p_name,30));
-  if not found or ex.pin <> extensions.crypt(coalesce(p_pin,''), ex.pin) then raise exception 'PIN_ERRATO'; end if;
-  delete from ss_people where id = ex.id;
-  delete from ss_excl where event_id = p_event and (a = ex.name or b = ex.name);
+  r := _ss_pin(p_event, p_name, p_pin);
+  if r->>'err' is not null then return r; end if;
+  update ss_people set bought = coalesce(p_val, true) where id = (r->>'id')::uuid;
+  return json_build_object('ok', true);
 end $$;
 
--- l'organizzatore toglie qualcuno (prima del sorteggio)
-create or replace function ss_kick(p_pw text, p_event uuid, p_admin_pin text, p_name text) returns void
+-- domande anonime: chi regala chiede al suo destinatario; il destinatario non sa mai chi chiede
+create or replace function ss_ask(p_pw text, p_event uuid, p_name text, p_pin text, p_question text) returns json
 language plpgsql security definer set search_path = public, extensions as $$
-begin
-  perform _need(p_pw); perform _ss_admin(p_event, p_admin_pin);
-  if (select status from ss_events where id = p_event) <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
-  delete from ss_excl where event_id = p_event
-    and (a in (select name from ss_people where event_id = p_event and lower(name) = lower(p_name))
-      or b in (select name from ss_people where event_id = p_event and lower(name) = lower(p_name)));
-  delete from ss_people where event_id = p_event and lower(name) = lower(p_name);
-end $$;
-
-create or replace function ss_set_excl(p_pw text, p_event uuid, p_admin_pin text, p_pairs json) returns void
-language plpgsql security definer set search_path = public, extensions as $$
-declare it json;
-begin
-  perform _need(p_pw); perform _ss_admin(p_event, p_admin_pin);
-  if (select status from ss_events where id = p_event) <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
-  delete from ss_excl where event_id = p_event;
-  for it in select * from json_array_elements(coalesce(p_pairs,'[]'::json)) loop
-    if (it->>0) is not null and (it->>1) is not null and (it->>0) <> (it->>1) then
-      insert into ss_excl(event_id, a, b) values (p_event, least(it->>0, it->>1), greatest(it->>0, it->>1)) on conflict do nothing;
-    end if;
-  end loop;
-end $$;
-
--- sorteggio: un'unica catena (A→B→C→…→A), nessuno a se stesso, rispetta le esclusioni
-create or replace function ss_draw(p_pw text, p_event uuid, p_admin_pin text) returns int
-language plpgsql security definer set search_path = public, extensions as $$
-declare ids uuid[]; nms text[]; n int; ord int[]; tries int := 0; ok boolean; i int; g int; r int;
-begin
-  perform _need(p_pw); perform _ss_admin(p_event, p_admin_pin);
-  if (select status from ss_events where id = p_event) <> 'open' then raise exception 'SORTEGGIO_GIA_FATTO'; end if;
-  select array_agg(id order by id), array_agg(name order by id) into ids, nms from ss_people where event_id = p_event;
-  n := coalesce(array_length(ids,1),0);
-  if n < 3 then raise exception 'SERVONO_ALMENO_3'; end if;
-  loop
-    tries := tries + 1;
-    select array_agg(x order by random()) into ord from generate_series(1, n) x;
-    ok := true;
-    for i in 1..n loop
-      g := ord[i]; r := ord[(i % n) + 1];
-      if exists (select 1 from ss_excl where event_id = p_event and a = least(nms[g], nms[r]) and b = greatest(nms[g], nms[r])) then
-        ok := false; exit;
-      end if;
-    end loop;
-    exit when ok;
-    if tries >= 20000 then raise exception 'ESCLUSIONI_IMPOSSIBILI'; end if;
-  end loop;
-  delete from ss_pairs where event_id = p_event;
-  for i in 1..n loop
-    insert into ss_pairs(event_id, giver, receiver) values (p_event, ids[ord[i]], ids[ord[(i % n) + 1]]);
-  end loop;
-  update ss_events set status = 'drawn', drawn_at = now() where id = p_event;
-  return n;
-end $$;
-
--- controlla il PIN dell'organizzatore (per sbloccare l'area organizzatore)
-create or replace function ss_admin_check(p_pw text, p_event uuid, p_admin_pin text) returns boolean
-language plpgsql stable security definer set search_path = public, extensions as $$
+declare r json; me uuid; rc uuid; qt text := _clean(p_question, 500);
 begin
   perform _need(p_pw);
-  return exists (select 1 from ss_events where id = p_event and admin_pin = extensions.crypt(coalesce(p_admin_pin,''), admin_pin));
+  r := _ss_pin(p_event, p_name, p_pin);
+  if r->>'err' is not null then return r; end if;
+  me := (r->>'id')::uuid;
+  select receiver into rc from ss_pairs where event_id = p_event and giver = me;
+  if rc is null then return json_build_object('err', 'SORTEGGIO_NON_FATTO'); end if;
+  if qt = '' then return json_build_object('err', 'POST_VUOTO'); end if;
+  if (select count(*) from ss_questions where event_id = p_event and giver = me) >= 30 then return json_build_object('err', 'TROPPE_DOMANDE'); end if;
+  insert into ss_questions(event_id, giver, receiver, question) values (p_event, me, rc, qt);
+  return json_build_object('ok', true);
 end $$;
 
--- chi ha dimenticato il PIN: l'organizzatore gliene imposta uno nuovo (senza vedere gli abbinamenti)
-create or replace function ss_reset_pin(p_pw text, p_event uuid, p_admin_pin text, p_name text, p_new_pin text) returns void
+create or replace function ss_inbox(p_pw text, p_event uuid, p_name text, p_pin text) returns json
 language plpgsql security definer set search_path = public, extensions as $$
-begin
-  perform _need(p_pw); perform _ss_admin(p_event, p_admin_pin);
-  if coalesce(p_new_pin,'') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
-  update ss_people set pin = extensions.crypt(p_new_pin, extensions.gen_salt('bf'))
-   where event_id = p_event and lower(name) = lower(_clean(p_name,30));
-  if not found then raise exception 'NOME_NON_TROVATO'; end if;
-end $$;
-
--- annulla il sorteggio (per rifarlo)
-create or replace function ss_undo(p_pw text, p_event uuid, p_admin_pin text) returns void
-language plpgsql security definer set search_path = public, extensions as $$
-begin
-  perform _need(p_pw); perform _ss_admin(p_event, p_admin_pin);
-  delete from ss_pairs where event_id = p_event;
-  update ss_events set status = 'open', drawn_at = null where id = p_event;
-end $$;
-
-create or replace function ss_event_del(p_pw text, p_event uuid, p_admin_pin text) returns void
-language plpgsql security definer set search_path = public, extensions as $$
-begin
-  perform _need(p_pw); perform _ss_admin(p_event, p_admin_pin);
-  delete from ss_events where id = p_event;
-end $$;
-
--- ognuno vede SOLO a chi fa il regalo (con nome + PIN)
-create or replace function ss_reveal(p_pw text, p_event uuid, p_name text, p_pin text) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
-declare me ss_people%rowtype; rec ss_people%rowtype;
+declare r json; me uuid; rc uuid;
 begin
   perform _need(p_pw);
-  select * into me from ss_people where event_id = p_event and lower(name) = lower(_clean(p_name,30));
-  if not found or me.pin <> extensions.crypt(coalesce(p_pin,''), me.pin) then raise exception 'PIN_ERRATO'; end if;
-  select r.* into rec from ss_pairs s join ss_people r on r.id = s.receiver where s.event_id = p_event and s.giver = me.id;
-  if not found then return json_build_object('drawn', false, 'me', me.name, 'my_wish', me.wish); end if;
-  return json_build_object('drawn', true, 'me', me.name, 'to', rec.name, 'wish', rec.wish, 'my_wish', me.wish);
+  r := _ss_pin(p_event, p_name, p_pin);
+  if r->>'err' is not null then return r; end if;
+  me := (r->>'id')::uuid;
+  select receiver into rc from ss_pairs where event_id = p_event and giver = me;
+  return json_build_object(
+    'per_me', coalesce((select json_agg(json_build_object('id', q.id, 'question', q.question, 'answer', q.answer,
+        'created_at', q.created_at, 'answered_at', q.answered_at) order by q.created_at)
+      from ss_questions q where q.event_id = p_event and q.receiver = me
+        and exists (select 1 from ss_pairs s where s.event_id = p_event and s.giver = q.giver and s.receiver = me)), '[]'::json),
+    'mie', coalesce((select json_agg(json_build_object('id', q.id, 'question', q.question, 'answer', q.answer,
+        'created_at', q.created_at, 'answered_at', q.answered_at) order by q.created_at)
+      from ss_questions q where q.event_id = p_event and q.giver = me and q.receiver = rc), '[]'::json));
 end $$;
 
--- verifica pubblica: controlla che il sorteggio sia valido SENZA rivelare le coppie
-create or replace function ss_check(p_pw text, p_event uuid) returns json
-language plpgsql stable security definer set search_path = public, extensions as $$
-declare n int; np int; self int; dup int; excl int; cyc int; cur uuid; start uuid; steps int := 0;
+create or replace function ss_answer(p_pw text, p_event uuid, p_name text, p_pin text, p_question uuid, p_answer text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare r json; a text := _clean(p_answer, 500);
 begin
   perform _need(p_pw);
-  select count(*) into n from ss_people where event_id = p_event;
-  select count(*) into np from ss_pairs where event_id = p_event;
-  select count(*) into self from ss_pairs where event_id = p_event and giver = receiver;
-  select count(*) - count(distinct receiver) into dup from ss_pairs where event_id = p_event;
-  select count(*) into excl from ss_pairs s join ss_people g on g.id = s.giver join ss_people r on r.id = s.receiver
-    join ss_excl x on x.event_id = s.event_id and x.a = least(g.name, r.name) and x.b = greatest(g.name, r.name)
-    where s.event_id = p_event;
-  select giver into start from ss_pairs where event_id = p_event limit 1;
-  cur := start;
-  if start is not null then
-    loop
-      select receiver into cur from ss_pairs where event_id = p_event and giver = cur;
-      steps := steps + 1;
-      exit when cur = start or steps > n + 1 or cur is null;
-    end loop;
-  end if;
-  return json_build_object('people', n, 'pairs', np, 'self', self, 'dup_receivers', dup, 'excluded_pairs', excl,
-    'single_chain', (steps = n and cur = start),
-    'ok', (np = n and self = 0 and dup = 0 and excl = 0 and steps = n and cur = start));
+  r := _ss_pin(p_event, p_name, p_pin);
+  if r->>'err' is not null then return r; end if;
+  if a = '' then return json_build_object('err', 'POST_VUOTO'); end if;
+  update ss_questions set answer = a, answered_at = now() where id = p_question and event_id = p_event and receiver = (r->>'id')::uuid;
+  if not found then return json_build_object('err', 'DOMANDA_NON_TROVATA'); end if;
+  return json_build_object('ok', true);
 end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, presenza, admin_check, member_kick, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread,
+grant execute on function check_pw, members_list, member_add, presenza, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread,
   reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
-  ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin to anon, authenticated;
-revoke execute on function _ok, _need, _ss_admin, _poll_json, _admin_ok from anon, authenticated;
-revoke execute on function _ok, _need, _ss_admin, _poll_json, _admin_ok from public;
+  ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin,
+  ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer to anon, authenticated;
+drop function if exists _ss_admin(uuid, text);
+revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
+  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm from anon, authenticated;
+revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
+  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm from public;

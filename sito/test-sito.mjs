@@ -306,30 +306,45 @@ await marco.click('#ss-adm summary'); await marco.fill('#adm-in [name=p]', '0000
 await marco.waitForSelector('#adm-body .err:not([hidden])')
 ok((await marco.textContent('#adm-body .err')).includes('organizzatore sbagliato'), 'Marco col PIN sbagliato non sblocca l\'area organizzatore')
 
-// esclusioni (coppie) e sorteggio
+// coppie del gruppo: l'amministratore mette Ricky ↔ Giulia (valgono in automatico in ogni Secret Santa)
+await ricky.evaluate(() => ping()); await ricky.click('#on-btn'); await ricky.waitForSelector('#gruppo [data-adm-open]')
+await ricky.click('#gruppo [data-adm-open]'); await ricky.fill('#adm-form [name=p]', '9999'); await ricky.click('#adm-form button')
+await ricky.waitForSelector('#cp-a')
+await ricky.selectOption('#cp-a', 'Ricky'); await ricky.selectOption('#cp-b', 'Giulia'); await ricky.click('[data-couple]')
+await ricky.waitForFunction(() => [...document.querySelectorAll('#gruppo .excl span')].some(s => s.textContent.includes('Giulia') && s.textContent.includes('Ricky')))
+ok(true, 'coppia del gruppo Ricky ↔ Giulia salvata dall\'amministratore')
+await shot(ricky, '09a-coppie-gruppo')
+await ricky.click('#gruppo [data-adm-lock]'); await ricky.click('.sheet [data-close]'); await ricky.waitForTimeout(250)
+
+// esclusione speciale dell'evento e sorteggio
 await ricky.reload(); await apriAdm(ricky); await ricky.waitForSelector('#adm-body [data-x=draw]')
+ok((await ricky.textContent('#adm-body')).includes('Coppie del gruppo (automatiche)') && (await ricky.textContent('#adm-body')).includes('Giulia ↔ Ricky'), 'nell\'area organizzatore la coppia del gruppo compare in automatico')
 const escl = [['Ricky', 'Giulia'], ['Marco', 'Sara']]
-for (const [a, b] of escl) {
-  await ricky.selectOption('#ex-a', a); await ricky.selectOption('#ex-b', b); await ricky.click('[data-x=addex]')
-  await ricky.waitForFunction(([a, b]) => [...document.querySelectorAll('.excl span')].some(s => s.textContent.includes(a) && s.textContent.includes(b)), [a, b])
-}
-ok(await ricky.locator('.excl').count() === 2, '2 esclusioni salvate')
+await ricky.selectOption('#ex-a', 'Marco'); await ricky.selectOption('#ex-b', 'Sara'); await ricky.click('[data-x=addex]')
+await ricky.waitForFunction(() => [...document.querySelectorAll('.excl span')].some(s => s.textContent.includes('Marco') && s.textContent.includes('Sara')))
+ok(await ricky.locator('.excl').count() === 2, 'una coppia del gruppo + una esclusione solo per questo evento')
 await ricky.selectOption('#ex-a', 'Luca'); await ricky.selectOption('#ex-b', 'Luca'); await ricky.click('[data-x=addex]')
 ok((await toastText(ricky)).includes('due persone diverse'), 'esclusione con se stesso bloccata')
+ok((await ricky.textContent('#ss-ver')).includes('Si apre dopo il sorteggio'), 'verifica con le lettere: chiusa prima del sorteggio')
 await shot(ricky, '09-organizzatore')
 // Giulia guarda prima del sorteggio
 await amici.Giulia.page.reload(); await amici.Giulia.page.waitForSelector('#ss-me')
 ok((await amici.Giulia.page.textContent('#ss-me')).includes('torna qui'), 'prima del sorteggio: "torna qui"')
 
-await ricky.click('[data-x=draw]'); await ricky.click('.sheet [data-ok]')
-await ricky.waitForSelector('#ss-me [data-a=reveal]')
+async function sorteggia(annuncio) {
+  await ricky.click('[data-x=draw]'); await ricky.waitForSelector('.sheet [name=a]')
+  if (!annuncio) await ricky.uncheck('.sheet [name=a]')
+  await ricky.click('.sheet [type=submit]'); await ricky.waitForSelector('#ss-me [data-a=reveal]')
+}
+await sorteggia(true)
 ok((await ricky.textContent('#ev .pill')).includes('Sorteggio fatto'), 'sorteggio fatto')
+ok((await ricky.textContent('#ev')).includes('Sorteggio n° 1 fatto'), 'il diario lo registra')
 
 async function scopri(p) {
   await p.reload(); await p.waitForSelector('#ss-me [data-a=reveal]')
   await p.click('#ss-me [data-a=reveal]')
   await p.waitForSelector('.rv-name', { timeout: 8000 })
-  return { to: (await p.textContent('.rv-name')).trim(), wish: (await p.textContent('.letter p')).trim() }
+  return { to: (await p.textContent('.rv-name')).trim(), wish: (await p.textContent('.letter p')).trim(), avviso: await p.locator('.reveal .avviso').count() ? await p.textContent('.reveal .avviso') : '' }
 }
 const abb = {}
 for (const [n, a] of Object.entries(amici)) {
@@ -338,20 +353,58 @@ for (const [n, a] of Object.entries(amici)) {
 }
 await amici.Luca.page.waitForTimeout(1400); await shot(amici.Luca.page, '10-scoperto')
 const nomi = Object.keys(amici)
-ok(nomi.every(n => abb[n] !== n), 'nessuno ha pescato se stesso')
-ok(new Set(Object.values(abb)).size === nomi.length, 'ognuno riceve un solo regalo')
-ok(escl.every(([a, b]) => abb[a] !== b && abb[b] !== a), 'esclusioni rispettate (Ricky↔Giulia, Marco↔Sara)')
-let giro = 0, x = 'Ricky'; do { x = abb[x]; giro++ } while (x !== 'Ricky' && giro < 20)
-ok(giro === nomi.length, 'un unico giro che passa da tutti')
-// la verifica pubblica
-await marco.click('#ss-check'); await marco.waitForSelector('#ss-check-out .h')
-ok((await marco.textContent('#ss-check-out .h')).includes('regolare'), 'verifica pubblica: sorteggio regolare')
+const regolaDoro = A => nomi.every(n => A[n] && A[n] !== n) && new Set(Object.values(A)).size === Object.keys(A).length && escl.every(([a, b]) => A[a] !== b && A[b] !== a)
+ok(regolaDoro(abb), 'regola d\'oro: ognuno fa un regalo e ne riceve uno, nessuno a se stesso, coppie rispettate')
+// l'annuncio nelle Novità porta dritto al Secret Santa
+await marco.goto(BASE + '/#novita'); await marco.waitForSelector('#feed .tw')
+const annuncio = marco.locator('#feed .tw', { hasText: 'Sorteggio fatto per il Secret Santa' })
+ok(await annuncio.count() === 1, 'annuncio automatico nelle Novità (#SecretSanta)')
+await annuncio.locator('a.htag', { hasText: 'apri nel sito' }).click(); await marco.waitForSelector('#ss-me #reveal')
+ok(marco.url().endsWith('#santa/' + evId), 'il link dell\'annuncio apre il Secret Santa dentro il sito')
+// la verifica con le lettere finte
+await marco.click('#ver-open'); await marco.waitForSelector('.ver-grid .ver-r')
+const righe = await marco.$$eval('.ver-r', rs => rs.map(r => [...r.querySelectorAll('b')].map(b => b.textContent)))
+const sx = righe.map(r => r[0]), dx = righe.map(r => r[1])
+ok(righe.length === 6 && new Set(sx).size === 6 && new Set(dx).size === 6 && sx.every(l => dx.includes(l)) && righe.every(r => r[0] !== r[1]), 'verifica: 6 lettere, ognuna una volta a sinistra e una a destra, nessuna a se stessa')
+ok((await marco.textContent('.ver-ok')).includes('Sorteggio regolare') && !nomi.some(n => (righe.flat().join(' ')).includes(n)), 'verifica: "Sorteggio regolare" e nessun nome vero nella tabella')
 await shot(marco, '11-verifica')
 
-// dopo il sorteggio non si entra più
+// regalo preso e chi ha già guardato (solo l'organizzatore)
+await marco.check('#ss-bought'); ok((await toastText(marco)).includes('Regalo preso'), 'Marco segna "Ho preso il regalo"')
+await ricky.reload(); await apriAdm(ricky); await ricky.waitForFunction(() => (document.querySelector('#adm-stato') || {}).textContent?.includes('hanno guardato'))
+const stato = await ricky.textContent('#adm-stato')
+ok(stato.includes('6 su 6 hanno guardato') && stato.includes('1 su 6 hanno preso il regalo'), 'organizzatore: 6 su 6 hanno guardato, 1 ha preso il regalo')
+ok(!Object.values(abb).some(r => stato.includes(r + ' ') && false) && !stato.includes('→'), '…senza vedere chi fa il regalo a chi')
+await shot(ricky, '11b-stato')
+
+// domande anonime: il Babbo Natale di Marco chiede la taglia
+const santaDiMarco = nomi.find(n => abb[n] === 'Marco'), sp = amici[santaDiMarco].page
+await sp.reload(); await sp.waitForSelector('#qa-new')
+await sp.fill('#qa-new [name=q]', 'Che taglia porti?'); await sp.click('#qa-new button')
+ok((await toastText(sp)).includes('Domanda inviata'), `${santaDiMarco} manda una domanda anonima a Marco`)
+await marco.reload(); await marco.waitForSelector('.qa-f')
+ok((await marco.textContent('.qa')).includes('Che taglia porti?') && (await marco.textContent('.qa')).includes('Dal tuo Babbo Natale segreto') && !(await marco.textContent('.qa')).includes(santaDiMarco), 'Marco la riceve senza sapere chi gliel\'ha fatta')
+await marco.fill('.qa-f [name=a]', 'Una M'); await marco.click('.qa-f button'); await marco.waitForSelector('.qa-a')
+await sp.reload(); await sp.waitForFunction(() => (document.querySelector('.qa') || {}).textContent?.includes('Una M'))
+ok(true, `${santaDiMarco} legge la risposta "Una M"`)
+await shot(marco, '11c-domande')
+
+// dopo il sorteggio: Paolo chiede di entrare, l'organizzatore lo fa entrare e cambia UNA sola persona
 const nuovo = await telefono('Paolo'); await entra(nuovo, 'Paolo')
-await nuovo.goto(BASE + '/#santa/' + evId); await nuovo.waitForSelector('#ss-me [data-a=login]')
-ok(await nuovo.locator('#ss-join').count() === 0, 'dopo il sorteggio niente modulo di iscrizione')
+await nuovo.goto(BASE + '/#santa/' + evId); await nuovo.waitForSelector('#ss-me [data-a=late]')
+ok(await nuovo.locator('#ss-join').count() === 0, 'dopo il sorteggio niente iscrizione diretta')
+await nuovo.click('#ss-me [data-a=late]'); await nuovo.fill('.sheet [name=p]', '7777'); await nuovo.fill('.sheet [name=w]', 'Letterina di Paolo: vorrei una cosa bella'); await nuovo.click('.sheet [type=submit]')
+await nuovo.waitForSelector('#ss-me [data-a=leave]')
+ok((await nuovo.textContent('#ss-me')).includes('In attesa'), 'Paolo resta "in attesa"')
+await ricky.reload(); await apriAdm(ricky); await ricky.waitForSelector('[data-x=admit]')
+await ricky.click('[data-x=admit][data-n=Paolo]'); ok((await toastText(ricky)).includes('è cambiato l\'abbinamento di 1 persona'), 'l\'organizzatore fa entrare Paolo')
+amici.Paolo = { page: nuovo, pin: '7777' }; nomi.push('Paolo')
+const abb3 = {}
+for (const [n, a] of Object.entries(amici)) { const r = await scopri(a.page); abb3[n] = r.to; if (abb[n] && abb[n] !== r.to) ok(r.avviso.includes('cambiato'), `${n} viene avvisato che il suo abbinamento è cambiato`) }
+const cambiati = Object.keys(abb).filter(n => abb[n] !== abb3[n])
+ok(cambiati.length === 1 && regolaDoro(abb3) && Object.values(abb3).includes('Paolo'), `ritardatario: è cambiato solo l'abbinamento di ${cambiati.join(', ')}, regola d'oro rispettata`)
+await ricky.reload(); await ricky.waitForSelector('#ss-ver')
+ok((await ricky.textContent('#ev')).includes('Paolo è entrato dopo il sorteggio'), 'nel diario: "Paolo è entrato dopo il sorteggio"')
 
 // Anna da un ALTRO telefono (senza PIN salvato)
 const anna2 = await telefono('Anna-2'); await entra(anna2, 'Anna')
@@ -362,21 +415,23 @@ await anna2.fill('.sheet [name=p]', '0000'); await anna2.click('.sheet [type=sub
 await anna2.waitForSelector('.sheet .err:not([hidden])'); ok((await anna2.textContent('.sheet .err')).includes('PIN sbagliato'), 'PIN sbagliato: non rivela niente')
 await anna2.fill('.sheet [name=p]', amici.Anna.pin); await anna2.click('.sheet [type=submit]')
 await anna2.waitForSelector('.rv-name')
-ok((await anna2.textContent('.rv-name')).trim() === abb.Anna, 'Anna dall\'altro telefono vede lo stesso abbinamento')
+ok((await anna2.textContent('.rv-name')).trim() === abb3.Anna, 'Anna dall\'altro telefono vede lo stesso abbinamento')
 await shot(anna2, '12-altro-telefono')
 
-// Luca dimentica il PIN: l'organizzatore gliene dà uno nuovo
+// Luca dimentica il PIN: l'organizzatore gliene dà uno nuovo (e finisce nel diario)
 await ricky.reload(); await apriAdm(ricky); await ricky.waitForSelector('#adm-body [data-x=reset]')
 await ricky.click('[data-x=reset][data-n=Luca]'); await ricky.fill('.sheet [name=p]', '9999'); await ricky.click('.sheet [type=submit]')
 await ricky.waitForSelector('.sheet h3:text("PIN cambiato")')
 ok((await ricky.textContent('.sheet:has(h3:text("PIN cambiato"))')).includes('9999'), 'organizzatore: nuovo PIN per Luca mostrato')
-ok(!(await ricky.textContent('.sheet:has(h3:text("PIN cambiato"))')).includes(abb.Luca), '…senza rivelare a chi fa il regalo Luca')
+ok(!(await ricky.textContent('.sheet:has(h3:text("PIN cambiato"))')).includes(abb3.Luca), '…senza rivelare a chi fa il regalo Luca')
+await ricky.click('.sheet [data-close]'); await ricky.waitForTimeout(250)
+ok((await ricky.textContent('#ev')).includes('ha dato un nuovo PIN a Luca'), 'il "Nuovo PIN" finisce nel diario, visibile a tutti')
 const luca = amici.Luca.page
-await luca.reload(); await luca.waitForSelector('#ss-me [data-a=reveal]'); await luca.click('#ss-me [data-a=reveal]')
-ok((await toastText(luca)).includes('PIN è cambiato'), 'Luca col vecchio PIN salvato: avviso "PIN cambiato"')
+await luca.reload(); ok((await toastText(luca)).includes('PIN è cambiato'), 'Luca col vecchio PIN salvato: avviso "PIN cambiato"')
 await luca.waitForSelector('#ss-me [data-a=login]'); await luca.click('#ss-me [data-a=login]')
 await luca.selectOption('.sheet select', 'Luca'); await luca.fill('.sheet [name=p]', '9999'); await luca.click('.sheet [type=submit]')
-await luca.waitForSelector('.rv-name'); ok((await luca.textContent('.rv-name')).trim() === abb.Luca, 'Luca col nuovo PIN vede lo stesso abbinamento')
+await luca.waitForSelector('.rv-name'); ok((await luca.textContent('.rv-name')).trim() === abb3.Luca, 'Luca col nuovo PIN vede lo stesso abbinamento')
+amici.Luca.pin = '9999'
 
 // Marco cambia letterina dopo il sorteggio: il suo Babbo la vede aggiornata
 await marco.reload(); await marco.waitForSelector('#ss-me [data-a=wish]'); await marco.click('#ss-me [data-a=wish]')
@@ -384,24 +439,30 @@ await marco.waitForSelector('.sheet textarea')
 ok((await marco.inputValue('.sheet textarea')) === 'Letterina di Marco: vorrei una cosa bella', 'letterina attuale precaricata')
 await marco.fill('.sheet textarea', 'Ho cambiato idea: calzini con le renne 🦌'); await marco.click('.sheet [type=submit]')
 ok((await toastText(marco)).includes('salvata'), 'letterina salvata')
-const santaDiMarco = nomi.find(n => abb[n] === 'Marco')
-const r2 = await scopri(amici[santaDiMarco].page)
-ok(r2.to === 'Marco' && r2.wish.includes('renne'), `${santaDiMarco} vede la letterina nuova di Marco`)
+const santa3 = nomi.find(n => abb3[n] === 'Marco')
+const r2 = await scopri(amici[santa3].page)
+ok(r2.to === 'Marco' && r2.wish.includes('renne'), `${santa3} vede la letterina nuova di Marco`)
 
-// annulla e rifai il sorteggio: nessuno vede il vecchio abbinamento
+// annulla e rifai il sorteggio: chi aveva guardato viene avvisato
 await ricky.reload(); await apriAdm(ricky); await ricky.waitForSelector('[data-x=undo]')
 await ricky.click('[data-x=undo]'); await ricky.click('.sheet [data-ok]')
 await ricky.waitForSelector('[data-x=draw]')
 const g = amici.Giulia.page
 await g.reload(); await g.waitForSelector('#ss-me'); ok((await g.textContent('#ss-me')).includes('torna qui'), 'sorteggio annullato: Giulia torna in attesa')
-await ricky.click('[data-x=draw]'); await ricky.click('.sheet [data-ok]'); await ricky.waitForSelector('#ss-me [data-a=reveal]')
-const abb2 = {}
-for (const [n, a] of Object.entries(amici)) {
-  if (n === 'Luca') a.page = luca
-  abb2[n] = (await scopri(a.page)).to
-}
-let giro2 = 0; x = 'Ricky'; do { x = abb2[x]; giro2++ } while (x !== 'Ricky' && giro2 < 20)
-ok(giro2 === nomi.length && nomi.every(n => abb2[n] !== n) && escl.every(([a, b]) => abb2[a] !== b && abb2[b] !== a), 'secondo sorteggio valido')
+await sorteggia(false)
+const abb2 = {}; let avvisati = 0
+for (const [n, a] of Object.entries(amici)) { const r = await scopri(a.page); abb2[n] = r.to; if (r.avviso.includes('rifatto')) avvisati++ }
+ok(regolaDoro(abb2), 'secondo sorteggio valido (regola d\'oro)')
+ok(avvisati === nomi.length, 'tutti quelli che avevano già guardato vedono "il sorteggio è stato rifatto"')
+ok((await ricky.textContent('#ev')).includes('annullato il sorteggio n° 1'), 'nel diario: sorteggio annullato')
+
+// un furbo prova tutti i PIN di Paolo: dopo 5 tentativi è bloccato
+const furbo = await telefono('Furbo'); await entra(furbo, 'Furbo')
+await furbo.goto(BASE + '/#santa/' + evId); await furbo.waitForSelector('#ss-me [data-a=login]')
+await furbo.click('#ss-me [data-a=login]'); await furbo.selectOption('.sheet select', 'Paolo')
+for (let i = 0; i < 5; i++) { await furbo.fill('.sheet [name=p]', String(1000 + i)); await furbo.click('.sheet [type=submit]'); await furbo.waitForSelector('.sheet .err:not([hidden])') }
+ok((await furbo.textContent('.sheet .err')).includes('Troppi PIN sbagliati'), 'chi prova tutti i PIN viene bloccato dopo 5 tentativi')
+await furbo.close()
 
 // ---------------- ALTRE SEZIONI ----------------
 await vai(ricky, 'gioco'); await ricky.waitForSelector('.game')
@@ -431,7 +492,9 @@ await vai(ricky, 'fanta'); await ricky.waitForSelector('.soon'); await shot(rick
 await vai(ricky, 'santa'); await ricky.waitForSelector('#ss-list .ss-item'); await shot(ricky, '15-santa-lista')
 // elimina il post e prova "cambia nome"
 await ricky.click('[data-tab=novita]'); await ricky.waitForSelector('#feed [data-del]')
-await ricky.click('#feed [data-del]'); await ricky.click('.sheet [data-ok]'); await ricky.waitForFunction(() => document.querySelectorAll('#feed .tw').length === 1)
+const primaDel = await ricky.locator('#feed .tw').count()
+await ricky.locator('#feed .tw', { hasText: 'Il sito è online' }).locator('[data-del]').click(); await ricky.click('.sheet [data-ok]')
+await ricky.waitForFunction(n => document.querySelectorAll('#feed .tw').length === n - 1, primaDel)
 ok(!(await ricky.textContent('#trends-m')).includes('pippeghi'), 'post eliminato: sparisce anche dalle tendenze')
 await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in'); await ricky.waitForTimeout(300); await shot(ricky, '16-menu'); await ricky.click('.mz [data-a=esci]')
 await ricky.waitForSelector('#g-pw'); ok(true, 'esci: torna alla password')
@@ -514,11 +577,11 @@ await vai(pr, 'santa'); await pr.waitForSelector('.ss-item'); await pr.click('.s
 await pr.fill('#ss-join [name=pin]', '5555'); await pr.click('#ss-join [type=submit]'); await pr.waitForSelector('#ss-me [data-a=wish]')
 await apriAdm(pr); ok((await pr.textContent('#adm-body')).includes('0000'), 'prova: suggerito il PIN organizzatore 0000')
 await pr.fill('#adm-in [name=p]', '0000'); await pr.click('#adm-in button'); await pr.waitForSelector('[data-x=draw]')
-await pr.click('[data-x=draw]'); await pr.click('.sheet [data-ok]'); await pr.waitForSelector('#ss-me [data-a=reveal]')
+await pr.click('[data-x=draw]'); await pr.waitForSelector('.sheet [name=a]'); await pr.uncheck('.sheet [name=a]'); await pr.click('.sheet [type=submit]'); await pr.waitForSelector('#ss-me [data-a=reveal]')
 await pr.click('#ss-me [data-a=reveal]'); await pr.waitForSelector('.rv-name')
 const dTo = (await pr.textContent('.rv-name')).trim()
 ok(['Marco', 'Giulia', 'Sara', 'Luca'].includes(dTo), 'prova: sorteggio fatto, Ricky fa il regalo a ' + dTo)
-await pr.click('#ss-check'); await pr.waitForSelector('#ss-check-out .h'); ok((await pr.textContent('#ss-check-out .h')).includes('regolare'), 'prova: verifica sorteggio ok')
+await pr.click('#ver-open'); await pr.waitForSelector('.ver-ok'); ok((await pr.textContent('.ver-ok')).includes('regolare') && await pr.locator('.ver-r').count() === 5, 'prova: verifica con 5 lettere, sorteggio regolare')
 await pr.setViewportSize({ width: 320, height: 640 })
 for (const [tab, dopo] of [['novita'], ['sondaggi'], ['foto', '#albums .album'], ['gioco'], ['santa', '.ss-item'], ['fanta']]) {
   await vai(pr, tab); await pr.waitForTimeout(250)

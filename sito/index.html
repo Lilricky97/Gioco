@@ -431,6 +431,27 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .pf .link{color:var(--menta);text-decoration:none;font-weight:700;padding:6px 0}
 .np-opt{margin-bottom:8px}
 
+/* ---------- secret santa: aggiunte ---------- */
+.chip.attesa{border-style:dashed;color:var(--muto)}
+.avviso{background:rgba(255,216,107,.1);border:1px solid rgba(255,216,107,.45);color:var(--giallo);border-radius:6px;padding:10px 12px;font-weight:600;font-size:14.5px;text-align:left;margin:0 0 12px}
+.avviso-t{color:var(--giallo)}
+.qa{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.qa-k{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muto);margin:12px 0 6px}
+.qa-q{background:var(--campo);border-radius:6px;padding:10px 12px;margin:0 0 8px}
+.qa-q p{margin:0 0 6px;overflow-wrap:anywhere}.qa-q p:last-child{margin:0}
+.qa-a{color:var(--menta);font-weight:600}
+.qa form input,#qa-new input{min-width:0}
+#qa-new{margin-top:10px}
+.ver-ok{font-weight:800;color:var(--menta);font-size:17px;margin:0 0 6px}.ver-ok.ko{color:var(--rosso)}
+.ver-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;margin:12px 0 8px}
+.ver-r{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--campo);border:1px solid var(--line);border-radius:6px;padding:8px 6px;font-family:"Bebas Neue",sans-serif;font-size:22px;letter-spacing:.06em}
+.ver-r b{font-weight:400;color:var(--testo)}.ver-r span{color:var(--rosa);font-family:Archivo,sans-serif;font-size:16px}
+.diario{display:flex;flex-direction:column;gap:6px}
+.log-r{font-size:14.5px;line-height:1.4;padding-left:10px;border-left:2px solid var(--line)}
+.log-r span{display:block;color:var(--muto2);font-size:12.5px}
+.st{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;font-size:13px}
+.st .si{color:var(--menta);font-weight:700}.st .no{color:var(--muto2)}
+
 /* ---------- fantasanremo ---------- */
 .soon{text-align:center;padding:34px 18px}
 .soon .mic{font-size:64px;filter:drop-shadow(0 0 16px var(--rosa-g))}
@@ -458,7 +479,7 @@ const store = {
   del(k) { try { localStorage.removeItem(PFX + k); } catch (e) {} }
 };
 const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, album: {}, ss: null,
-  draft: { text: '', files: [] }, ui: { rev: {}, adm: {} }, mine: {}, busy: 0, refresh: null,
+  draft: { text: '', files: [] }, ui: { rev: {}, adm: {}, me: {}, meLoad: {}, qa: {}, qaLoad: {}, tab: {}, stat: {}, logAll: {} }, mine: {}, busy: 0, refresh: null,
   thread: {}, replyDraft: {}, liking: {}, vq: {}, lastFeed: '#novita' };
 
 // ---------- messaggi d'errore in italiano ----------
@@ -476,6 +497,13 @@ const MSG = {
   PIN_NON_VALIDO: 'Il PIN deve avere da 4 a 8 cifre (solo numeri).',
   PIN_DIVERSI: 'I due PIN non coincidono.',
   PIN_ERRATO: 'PIN sbagliato.',
+  PIN_BLOCCATO: 'Troppi PIN sbagliati: per sicurezza è bloccato per 15 minuti. Se l\'hai dimenticato chiedi un nuovo PIN all\'organizzatore.',
+  CHIEDI_ORGANIZZATORE: 'Il sorteggio è già fatto: per uscire chiedi all\'organizzatore di toglierti.',
+  RITARDATARIO_IMPOSSIBILE: 'Con le coppie e le esclusioni attuali non si riesce a farlo entrare senza rifare il sorteggio.',
+  RITIRO_IMPOSSIBILE: 'Con le coppie e le esclusioni attuali non si riesce a toglierlo senza rifare il sorteggio.',
+  SORTEGGIO_NON_FATTO: 'Il sorteggio non è ancora stato fatto.',
+  TROPPE_DOMANDE: 'Hai già fatto tante domande: aspetta le risposte 🙂',
+  DOMANDA_NON_TROVATA: 'Questa domanda non è per te.',
   PIN_ORGANIZZATORE_ERRATO: 'PIN organizzatore sbagliato.',
   NOME_GIA_PRESO: 'C\'è già qualcuno iscritto con questo nome (con un altro PIN). Se sei tu, entra col tuo PIN; se no, usa un nome diverso, es. "Marco B."',
   SORTEGGIO_GIA_FATTO: 'Il sorteggio è già stato fatto.',
@@ -500,11 +528,14 @@ const MSG = {
 };
 function msg(e) {
   const c = (e && e.message) || String(e);
+  if (c === 'ESCLUSIONI_IMPOSSIBILI' && e.data && e.data.chi) return `Con queste coppie ed esclusioni il sorteggio è impossibile: il problema riguarda ${e.data.chi}. Togli qualche esclusione.`;
   if (MSG[c]) return MSG[c];
   if (/timeout|canceling statement/i.test(c)) return MSG.LENTO;
   return 'Errore: ' + c;
 }
 const err = code => new Error(code);
+// le funzioni del database che controllano un PIN rispondono {"err": "..."}: lo trasformo in errore
+function errInRisposta(d) { if (d && typeof d === 'object' && !Array.isArray(d) && d.err) { const e = err(d.err); e.data = d; throw e; } return d; }
 
 // ---------- collegamento a Supabase ----------
 function headers(extra) {
@@ -514,7 +545,7 @@ function headers(extra) {
 }
 async function rpc(fn, args = {}) {
   if (DEMO) {
-    try { return await demoDB().rpc(fn, Object.assign({ p_pw: S.pw }, args)); }
+    try { return errInRisposta(await demoDB().rpc(fn, Object.assign({ p_pw: S.pw }, args))); }
     catch (e) {
       if (e.message === 'PASSWORD_ERRATA' && fn !== 'check_pw') logout('Password sbagliata: inseriscila di nuovo.');
       if (e.message === 'SEI_STATO_RIMOSSO') { S.me = null; store.del('me'); store.del('admin'); logout(MSG.SEI_STATO_RIMOSSO); }
@@ -535,7 +566,7 @@ async function rpc(fn, args = {}) {
     if (c === 'SEI_STATO_RIMOSSO') { S.me = null; store.del('me'); store.del('admin'); logout(MSG.SEI_STATO_RIMOSSO); }
     throw err(c);
   }
-  return d;
+  return errInRisposta(d);
 }
 const okPath = p => typeof p === 'string' && /^[a-z0-9_\-\/]+\.jpg$/i.test(p) && !p.includes('..');
 const pub = p => DEMO ? (demoDB().files.get(p) || '') : `${SUPA_URL}/storage/v1/object/public/foto/${p}`;
@@ -877,7 +908,11 @@ function richText(t) {
   const re = /(https?:\/\/[^\s<>"']+[^\s<>"'.,;:!?)\]])|(^|[^\p{L}\p{N}_&#])#([\p{L}\p{N}_]{2,40})/gu;
   let out = '', last = 0, m;
   while ((m = re.exec(t))) {
-    if (m[1]) { out += esc(t.slice(last, m.index)) + `<a href="${esc(m[1])}" target="_blank" rel="noopener">${esc(m[1])}</a>`; last = m.index + m[1].length; }
+    if (m[1]) {
+      const base = location.href.split('#')[0] + '#', interno = m[1].startsWith(base) && m[1].length > base.length;
+      out += esc(t.slice(last, m.index)) + (interno ? `<a class="htag" data-go="#${esc(m[1].slice(base.length))}">apri nel sito →</a>` : `<a href="${esc(m[1])}" target="_blank" rel="noopener">${esc(m[1])}</a>`);
+      last = m.index + m[1].length;
+    }
     else if (/\p{L}/u.test(m[3])) {
       const st = m.index + m[2].length;
       out += esc(t.slice(last, st)) + `<a class="htag" data-go="#tag/${encodeURIComponent(m[3].toLowerCase())}">#${esc(m[3])}</a>`;
@@ -1380,20 +1415,26 @@ function drawPill() {
 }
 
 // ===================== SECRET SANTA =====================
+// Regola d'oro: tutto a caso come dal cappello, ognuno fa UN regalo e ne riceve UNO,
+// nessuno pesca se stesso, le coppie non si pescano. Il sorteggio lo fa il database.
+const linkEvento = id => location.href.split('#')[0] + '#santa/' + id;
+const waLink = t => 'https://wa.me/?text=' + encodeURIComponent(t);
+function annuncia(testo) { rpc('post_add', { p_author: S.me, p_body: testo, p_photos: [] }).catch(() => {}); }
 function viewSanta(arg) {
   if (arg) return viewEvento(arg);
   $('#view').innerHTML = `<h1 class="neon">Secret Santa</h1>
-    <p class="intro">Ognuno pesca a chi fare il regalo. Nessuno vede gli abbinamenti degli altri, nemmeno chi organizza.</p>
+    <p class="intro">Come pescare dal cappello: ognuno fa un regalo e ne riceve uno, tutto a caso. Nessuno vede gli abbinamenti degli altri, nemmeno chi organizza.</p>
     <button class="btn wide" id="ss-new">🎅 Nuovo Secret Santa</button>
     <div id="ss-list" style="margin-top:16px"><div class="loading">Carico</div></div>`;
-  $('#ss-new').onclick = newSS;
+  $('#ss-new').onclick = () => newSS();
   if (S.ss) drawSSList();
   S.refresh = loadSS; loadSS();
 }
 async function loadSS() {
   try {
-    S.ss = await rpc('ss_list'); const c = cur();
-    if (c.sec === 'santa') c.arg ? drawEvento() : drawSSList();
+    const [l, c] = await Promise.all([rpc('ss_list'), rpc('couples_list').catch(() => null)]);
+    S.ss = l; if (c) S.couples = c;
+    const k = cur(); if (k.sec === 'santa') k.arg ? drawEvento() : drawSSList();
   } catch (e) { const el = $('#ss-list') || $('#ev'); if (el && !S.ss) el.innerHTML = errBox(e); }
 }
 function drawSSList() {
@@ -1405,72 +1446,120 @@ function drawSSList() {
       <div class="meta"><span>👥 ${e.people.length} ${e.people.length === 1 ? 'iscritto' : 'iscritti'}</span>${e.budget ? `<span>💶 ${esc(e.budget)}</span>` : ''}${e.gift_date ? `<span>📅 ${esc(e.gift_date)}</span>` : ''}</div>
       <span class="pill ${e.status === 'drawn' ? 'menta' : 'rosa'}">${e.status === 'drawn' ? 'Sorteggio fatto' : 'Iscrizioni aperte'}</span></button>`).join('');
 }
-function newSS() {
-  formSheet({ title: 'Nuovo Secret Santa', ok: 'Crea 🎅',
-    intro: `<p class="muto">Lo organizzi tu (${esc(S.me)}). Il PIN organizzatore ti serve per gestire iscritti, esclusioni e sorteggio: <b>non</b> ti fa vedere gli abbinamenti.</p>`,
+// nuovo Secret Santa (con "prev" = quello dell'anno prima: nessuno ripesca la stessa persona)
+function newSS(prev) {
+  const anno = new Date().getFullYear() + (prev ? 1 : 0);
+  formSheet({ title: prev ? 'Secret Santa del prossimo anno' : 'Nuovo Secret Santa', ok: 'Crea 🎅',
+    intro: prev ? `<p class="muto">Collegato a «${esc(prev.name)}»: <b>nessuno ripescherà la stessa persona</b>. Le esclusioni speciali vengono copiate, le coppie del gruppo valgono sempre. Ognuno dovrà iscriversi di nuovo.</p>`
+      : `<p class="muto">Lo organizzi tu (${esc(S.me)}). Il PIN organizzatore ti serve per gestire iscritti, esclusioni e sorteggio: <b>non</b> ti fa vedere gli abbinamenti.</p>`,
     fields: [
-      { k: 'n', label: 'Nome', value: 'Natale ' + new Date().getFullYear(), max: 80 },
-      { k: 'b', label: 'Budget (facoltativo)', ph: 'es. 30 €', max: 40 },
+      { k: 'n', label: 'Nome', value: prev ? (/\d{4}/.test(prev.name) ? prev.name.replace(/\d{4}/, anno) : prev.name + ' ' + anno) : 'Natale ' + anno, max: 80 },
+      { k: 'b', label: 'Budget (facoltativo)', ph: 'es. 30 €', value: prev ? prev.budget : '', max: 40 },
       { k: 'd', label: 'Quando vi scambiate i regali? (facoltativo)', ph: 'es. cena del 20 dicembre', max: 40 },
       { k: 'p1', label: 'PIN organizzatore (4–8 cifre)', type: 'pin' },
-      { k: 'p2', label: 'Ripeti il PIN', type: 'pin' }
+      { k: 'p2', label: 'Ripeti il PIN', type: 'pin' },
+      { k: 'a', label: 'Annuncialo nelle Novità', type: 'check', value: true }
     ],
     submit: async v => {
       if (!v.n) throw err('NOME_VUOTO');
       if (!/^\d{4,8}$/.test(v.p1)) throw err('PIN_NON_VALIDO');
       if (v.p1 !== v.p2) throw err('PIN_DIVERSI');
-      const id = await rpc('ss_create', { p_name: v.n, p_budget: v.b, p_date: v.d, p_organizer: S.me, p_admin_pin: v.p1 });
+      const id = await rpc('ss_create', { p_name: v.n, p_budget: v.b, p_date: v.d, p_organizer: S.me, p_admin_pin: v.p1, p_prev: prev ? prev.id : null });
       store.set('ssadm_' + id, v.p1); S.ui.adm[id] = true;
+      if (v.a) annuncia(`🎅 Nuovo Secret Santa «${v.n}»${v.b ? ' (budget ' + v.b + ')' : ''}: iscrivetevi! 👉 ${linkEvento(id)} #SecretSanta`);
       toast('Creato! Ora iscriviti anche tu 🎁');
       await loadSS(); location.hash = '#santa/' + id;
     } });
 }
 // chi sono io in questo evento (nome + PIN salvati su questo telefono)
 function getMine(ev) {
-  const m = S.mine[ev.id] || store.get('ssme_' + ev.id);
-  return m && ev.people.some(n => same(n, m.name)) ? Object.assign({}, m, { name: ev.people.find(n => same(n, m.name)) }) : null;
+  const m = S.mine[ev.id] || store.get('ssme_' + ev.id); if (!m) return null;
+  const att = ev.pending || [], n = ev.people.find(x => same(x, m.name)) || att.find(x => same(x, m.name));
+  return n ? Object.assign({}, m, { name: n, pending: !ev.people.some(x => same(x, m.name)) }) : null;
 }
 function setMine(id, m, ricorda) { S.mine[id] = m; if (ricorda) store.set('ssme_' + id, m); else store.del('ssme_' + id); }
-function forgetMine(id) { delete S.mine[id]; store.del('ssme_' + id); delete S.ui.rev[id]; }
+function forgetMine(id) { delete S.mine[id]; store.del('ssme_' + id); delete S.ui.rev[id]; delete S.ui.me[id]; delete S.ui.qa[id]; }
+async function caricaMe(id, mine) {
+  if (S.ui.meLoad[id]) return; S.ui.meLoad[id] = true;
+  try { S.ui.me[id] = await rpc('ss_me', { p_event: id, p_name: mine.name, p_pin: mine.pin }); }
+  catch (e) {
+    S.ui.me[id] = {};
+    if (e.message === 'PIN_ERRATO') { forgetMine(id); toast('Il tuo PIN è cambiato: rientra col PIN nuovo.', 'err'); }
+  } finally { delete S.ui.meLoad[id]; drawEvento(true); }
+}
 
 function viewEvento(id) {
   $('#view').innerHTML = `<button class="back" data-go="#santa">‹ Secret Santa</button><div id="ev" style="margin-top:8px"><div class="loading">Carico</div></div>`;
   if (S.ss) drawEvento();
-  S.refresh = loadSS; loadSS();
+  S.refresh = async () => { delete S.ui.qa[id]; delete S.ui.stat[id]; delete S.ui.me[id]; await loadSS(); drawEvento(true); };
+  loadSS();
+}
+// ridisegna una parte della pagina senza perdere quello che uno sta scrivendo (PIN, domande, scelte)
+function conserva(box, disegna) {
+  const chiave = x => {
+    const f = x.closest('form[id],form[data-q]');
+    return (f ? (f.id ? '#' + f.id : `form[data-q="${f.dataset.q}"]`) + ' ' : '') + (x.id ? '#' + x.id : `[name="${x.name}"]`);
+  };
+  const campi = [...box.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select')]
+    .filter(x => (x.id || x.name) && x.value).map(x => [chiave(x), x.value, x === document.activeElement]);
+  disegna();
+  for (const [k, v, foc] of campi) {
+    const x = box.querySelector(k); if (!x) continue;
+    if (x.tagName === 'SELECT' ? [...x.options].some(o => o.value === v) : !x.value) x.value = v;
+    if (foc) { x.focus(); try { x.setSelectionRange(v.length, v.length); } catch (e) {} }
+  }
 }
 function drawEvento(force) {
   const id = cur().arg, box = $('#ev'); if (!box || !S.ss) return;
   const ev = S.ss.find(e => e.id === id);
   if (!ev) { box.innerHTML = `<div class="empty">Questo Secret Santa non esiste più.</div>`; return; }
-  const mine = getMine(ev), drawn = ev.status === 'drawn';
-  const sig = JSON.stringify([ev, mine, S.ui.rev[id], !!store.get('ssadm_' + id)]);
+  const mine = getMine(ev);
+  if (mine && !S.ui.me[id]) caricaMe(id, mine);
+  const sig = JSON.stringify([ev, mine, S.ui.rev[id], S.ui.me[id], S.ui.tab[id], S.ui.stat[id], S.ui.logAll[id], !!store.get('ssadm_' + id), S.couples]);
   if (!force && box.dataset.sig === sig) return; box.dataset.sig = sig;
-  const admOpen = S.ui.adm[id];
+  conserva(box, () => disegnaEvento(box, ev, mine));
+}
+function disegnaEvento(box, ev, mine) {
+  const id = ev.id, drawn = ev.status === 'drawn', n = ev.people.length, att = ev.pending || [];
+  const invito = waLink(`🎅 Secret Santa «${ev.name}» su ${NOME}! ${drawn ? 'Il sorteggio è fatto: entra e scopri a chi fai il regalo' : 'Iscriviti qui'} 👉 ${linkEvento(id)}`);
   box.innerHTML = `
     <section class="card"><div class="ss-title">🎅 ${esc(ev.name)}</div>
       <div class="meta">${ev.budget ? `<span>💶 ${esc(ev.budget)}</span>` : ''}${ev.gift_date ? `<span>📅 ${esc(ev.gift_date)}</span>` : ''}<span>👑 organizza ${esc(ev.organizer)}</span></div>
-      <span class="pill ${drawn ? 'menta' : 'rosa'}">${drawn ? 'Sorteggio fatto' : 'Iscrizioni aperte'}</span></section>
+      <span class="pill ${drawn ? 'menta' : 'rosa'}">${drawn ? 'Sorteggio fatto' + (ev.draw_no > 1 ? ' · n° ' + ev.draw_no : '') : 'Iscrizioni aperte'}</span>
+      ${ev.prev_name ? `<p class="hint">Seguito di «${esc(ev.prev_name)}»: nessuno ripesca la stessa persona dell'anno prima.</p>` : ''}
+      ${n === 3 ? `<p class="hint avviso-t">⚠️ Con solo 3 persone ognuno può indovinare chi gli fa il regalo: meglio essere almeno in 4.</p>` : ''}
+      <div><a class="btn ghost sm" id="ss-invita" style="margin-top:12px" href="${esc(invito)}" target="_blank" rel="noopener">Invita su WhatsApp</a></div></section>
     <section class="card" id="ss-me">${meHTML(ev, mine)}</section>
-    <section class="card"><h3>Partecipanti <span class="count">${ev.people.length}</span></h3>
-      <div class="chips">${ev.people.map(n => `<span class="chip ${mine && same(n, mine.name) ? 'on' : ''}">${esc(n)}</span>`).join('') || '<span class="muto">Ancora nessuno: iscriviti per primo!</span>'}</div>
-      ${drawn ? `<div style="margin-top:14px"><button class="btn ghost sm" id="ss-check">🔍 Verifica il sorteggio</button><div id="ss-check-out"></div></div>` : ''}</section>
-    <details class="card adm" id="ss-adm" ${admOpen ? 'open' : ''}><summary>🔒 Area organizzatore</summary><div id="adm-body"></div></details>`;
+    <section class="card"><h3>Partecipanti <span class="count">${n}</span></h3>
+      <div class="chips">${ev.people.map(p => `<span class="chip ${mine && same(p, mine.name) ? 'on' : ''}">${esc(p)}</span>`).join('')}${att.map(p => `<span class="chip attesa">${esc(p)} · in attesa</span>`).join('')}${n || att.length ? '' : '<span class="muto">Ancora nessuno: iscriviti per primo!</span>'}</div></section>
+    <section class="card" id="ss-ver">${verificaHTML(ev)}</section>
+    ${(ev.log || []).length ? `<section class="card"><h3>📖 Diario</h3>${diarioHTML(ev)}</section>` : ''}
+    <details class="card adm" id="ss-adm" ${S.ui.adm[id] ? 'open' : ''}><summary>🔒 Area organizzatore</summary><div id="adm-body"></div></details>`;
   wireMe(ev, mine);
-  const chk = $('#ss-check'); if (chk) chk.onclick = () => verifica(ev);
-  const det = $('#ss-adm');
-  det.addEventListener('toggle', () => { S.ui.adm[id] = det.open; });
+  const vo = $('#ver-open'); if (vo) vo.onclick = () => apriVerifica(ev);
+  const la = $('#log-all'); if (la) la.onclick = () => { S.ui.logAll[id] = !S.ui.logAll[id]; drawEvento(true); };
+  const det = $('#ss-adm'); det.addEventListener('toggle', () => { S.ui.adm[id] = det.open; });
   drawAdm(ev);
+  if (mine && !mine.pending && drawn) caricaDomande(ev, mine);
 }
 function meHTML(ev, mine) {
-  const drawn = ev.status === 'drawn', rv = S.ui.rev[ev.id] && S.ui.rev[ev.id].at === ev.drawn_at ? S.ui.rev[ev.id] : null;
+  const drawn = ev.status === 'drawn', me = S.ui.me[ev.id] || {};
+  const rv = S.ui.rev[ev.id] && S.ui.rev[ev.id].at === ev.draw_no ? S.ui.rev[ev.id] : null;
+  const non = mine ? `<button class="link" data-a="forget">Non sei ${esc(mine.name)}?</button>` : '';
+  if (mine && mine.pending) return `<h3>⏳ In attesa</h3>
+    <p class="muto">Hai chiesto di entrare come <b>${esc(mine.name)}</b> dopo il sorteggio. Quando ${esc(ev.organizer)} ti fa entrare, qui scopri a chi fai il regalo.</p>
+    <div class="row wrap"><button class="btn ghost rosso sm" data-a="leave">Ritira la richiesta</button>${non}</div>`;
   if (mine && drawn) return `<div id="reveal">${rv ? revealHTML(rv) : `<h3>Sei dentro come <b>${esc(mine.name)}</b> ✅</h3><p class="muto">Il sorteggio è fatto! Guardalo quando nessuno sbircia 👀</p><button class="btn big wide" data-a="reveal">🎁 Scopri a chi fai il regalo</button>`}</div>
-    <div class="row wrap" style="margin-top:10px"><button class="btn ghost sm" data-a="wish">✏️ La mia letterina</button><button class="link" data-a="forget">Non sei ${esc(mine.name)}?</button></div>`;
+    <label class="check" style="margin-top:16px"><input type="checkbox" id="ss-bought" ${me.bought || (rv && rv.bought) ? 'checked' : ''}> Ho preso il regalo 🎁</label>
+    <div id="ss-qa"></div>
+    <div class="row wrap" style="margin-top:10px"><button class="btn ghost sm" data-a="wish">✏️ La mia letterina</button>${non}</div>`;
   if (mine) return `<h3>Sei dentro come <b>${esc(mine.name)}</b> ✅</h3>
     <p class="muto">Quando ${esc(ev.organizer)} farà il sorteggio, torna qui per scoprire a chi fai il regalo.</p>
-    <div class="row wrap"><button class="btn ghost sm" data-a="wish">✏️ La mia letterina</button><button class="btn ghost rosso sm" data-a="leave">Esci</button><button class="link" data-a="forget">Non sei ${esc(mine.name)}?</button></div>`;
-  const iscritto = ev.people.find(n => same(n, S.me));
+    <div class="row wrap"><button class="btn ghost sm" data-a="wish">✏️ La mia letterina</button><button class="btn ghost rosso sm" data-a="leave">Esci</button>${non}</div>`;
   if (drawn) return `<h3>Il sorteggio è fatto! 🎉</h3><p class="muto">Sei tra i partecipanti? Entra col tuo nome e il tuo PIN per scoprire a chi fai il regalo.</p>
-    <button class="btn big wide" data-a="login">🎁 Scopri a chi fai il regalo</button>`;
+    <button class="btn big wide" data-a="login">🎁 Scopri a chi fai il regalo</button>
+    <button class="link" data-a="late">Non ti eri iscritto? Chiedi di entrare</button>`;
+  const iscritto = ev.people.find(n => same(n, S.me));
   return `${iscritto ? `<p class="muto" style="margin:0 0 4px">Risulti già iscritto come <b>${esc(iscritto)}</b>:</p><button class="btn wide" data-a="login">Entra col tuo PIN</button><div class="or" style="margin-bottom:6px">— oppure iscrivi un'altra persona —</div>` : ''}
     <h3>${iscritto ? 'Nuova iscrizione' : 'Partecipa 🎁'}</h3>
     <form id="ss-join" novalidate>
@@ -1485,7 +1574,9 @@ function meHTML(ev, mine) {
     ${iscritto ? '' : `<button class="link" data-a="login">Sei già iscritto (magari da un altro telefono)? Entra col tuo PIN</button>`}`;
 }
 function revealHTML(r) {
-  return `<div class="reveal"><div class="rv-k">Fai il regalo a…</div><div class="rv-name">${esc(r.to)}</div>
+  const avviso = r.rifatto ? '⚠️ Il sorteggio è stato rifatto: questo è il tuo <b>nuovo</b> abbinamento.'
+    : r.cambiato ? '⚠️ Il tuo abbinamento è cambiato perché qualcuno è entrato o uscito dopo il sorteggio.' : '';
+  return `<div class="reveal">${avviso ? `<p class="avviso">${avviso}</p>` : ''}<div class="rv-k">Fai il regalo a…</div><div class="rv-name">${esc(r.to)}</div>
     <div class="letter"><div class="h">📜 La sua letterina</div>${r.wish ? `<p>${esc(r.wish)}</p>` : `<p class="muto">Non l'ha ancora scritta. Ricontrolla più avanti!</p>`}</div>
     <button class="btn ghost sm" data-a="hide">🙈 Nascondi</button></div>`;
 }
@@ -1500,38 +1591,63 @@ function wireMe(ev, mine) {
     try {
       const [r] = await Promise.all([rpc('ss_reveal', { p_event: id, p_name: mine.name, p_pin: mine.pin }), new Promise(z => setTimeout(z, 1400))]);
       if (!r.drawn) { toast('Il sorteggio è stato annullato: aspetta che venga rifatto.'); return loadSS(); }
-      S.ui.rev[id] = Object.assign({ at: ev.drawn_at }, r); drawEvento(true);
+      S.ui.rev[id] = Object.assign({ at: r.draw_no }, r); drawEvento(true);
     } catch (ex) { if (!pinCambiato(ex)) toast(msg(ex), 'err'); b.disabled = false; b.classList.remove('drum'); b.textContent = '🎁 Scopri a chi fai il regalo'; }
   });
   on('login', () => {
-    if (!ev.people.length) return toast('Non c\'è ancora nessun iscritto.');
+    const tutti = ev.people.concat(ev.pending || []);
+    if (!tutti.length) return toast('Non c\'è ancora nessun iscritto.');
     formSheet({ title: 'Entra col tuo PIN', ok: ev.status === 'drawn' ? 'Scopri 🎁' : 'Entra',
       fields: [
-        { k: 'n', label: 'Chi sei?', type: 'select', opts: ev.people, value: ev.people.find(n => same(n, S.me)) || ev.people[0] },
+        { k: 'n', label: 'Chi sei?', type: 'select', opts: tutti, value: tutti.find(n => same(n, S.me)) || tutti[0] },
         { k: 'p', label: 'Il tuo PIN', type: 'pin' },
         { k: 'r', label: 'Ricorda il PIN su questo telefono', type: 'check', value: true }
       ],
       submit: async v => {
         if (!/^\d{4,8}$/.test(v.p)) throw err('PIN_ERRATO');
-        const r = await rpc('ss_reveal', { p_event: id, p_name: v.n, p_pin: v.p });
+        const r = await rpc(ev.status === 'drawn' ? 'ss_reveal' : 'ss_me', { p_event: id, p_name: v.n, p_pin: v.p });
         setMine(id, { name: r.me || v.n, pin: v.p }, v.r);
-        if (r.drawn) S.ui.rev[id] = Object.assign({ at: ev.drawn_at }, r);
+        S.ui.me[id] = { me: r.me, my_wish: r.my_wish, pending: r.pending, bought: r.bought };
+        if (r.drawn && r.to) S.ui.rev[id] = Object.assign({ at: r.draw_no }, r);
         drawEvento(true);
       } });
   });
+  // dopo il sorteggio: chiedi di entrare (l'organizzatore ti fa entrare)
+  on('late', () => formSheet({ title: 'Chiedi di entrare', ok: 'Invia la richiesta',
+    intro: `<p class="muto">Il sorteggio è già fatto: quando ${esc(ev.organizer)} ti fa entrare, cambierà l'abbinamento di una sola persona.</p>`,
+    fields: [
+      { k: 'n', label: 'Il tuo nome', value: S.me, max: 30 },
+      { k: 'p', label: 'Scegli un PIN segreto (4–8 cifre)', type: 'pin' },
+      { k: 'w', label: 'La tua letterina (facoltativa)', type: 'area', ph: 'Cosa ti piacerebbe?' },
+      { k: 'r', label: 'Ricorda il PIN su questo telefono', type: 'check', value: true }
+    ],
+    submit: async v => {
+      if (!v.n) throw err('NOME_VUOTO');
+      if (!/^\d{4,8}$/.test(v.p)) throw err('PIN_NON_VALIDO');
+      const r = await rpc('ss_join', { p_event: id, p_name: v.n, p_pin: v.p, p_wish: v.w });
+      setMine(id, { name: r.me || v.n, pin: v.p }, v.r); delete S.ui.me[id];
+      toast(r.pending ? 'Richiesta inviata: aspetta che l\'organizzatore ti faccia entrare' : 'Sei dentro! 🎉');
+      await loadSS(); drawEvento(true);
+    } }));
   on('wish', async () => {
     let r;
-    try { r = await rpc('ss_reveal', { p_event: id, p_name: mine.name, p_pin: mine.pin }); } catch (ex) { if (!pinCambiato(ex)) toast(msg(ex), 'err'); return; }
+    try { r = await rpc('ss_me', { p_event: id, p_name: mine.name, p_pin: mine.pin }); } catch (ex) { if (!pinCambiato(ex)) toast(msg(ex), 'err'); return; }
     formSheet({ title: 'La mia letterina', ok: 'Salva',
       intro: `<p class="muto">La legge solo chi ti fa il regalo. Puoi cambiarla quando vuoi, anche dopo il sorteggio.</p>`,
       fields: [{ k: 'w', label: 'Cosa ti piacerebbe?', type: 'area', value: r.my_wish, ph: 'Gusti, taglie, cose da evitare…' }],
       submit: async v => { await rpc('ss_join', { p_event: id, p_name: mine.name, p_pin: mine.pin, p_wish: v.w }); toast('Letterina salvata 📜'); } });
   });
   on('leave', async () => {
-    if (!await ask('Uscire dal Secret Santa?', `Togli <b>${esc(mine.name)}</b> dai partecipanti.`, 'Esci', true)) return;
-    try { await rpc('ss_leave', { p_event: id, p_name: mine.name, p_pin: mine.pin }); forgetMine(id); toast('Sei uscito'); await loadSS(); }
+    if (!await ask(mine.pending ? 'Ritirare la richiesta?' : 'Uscire dal Secret Santa?', `Togli <b>${esc(mine.name)}</b> dai partecipanti.`, mine.pending ? 'Ritira' : 'Esci', true)) return;
+    try { await rpc('ss_leave', { p_event: id, p_name: mine.name, p_pin: mine.pin }); forgetMine(id); toast(mine.pending ? 'Richiesta ritirata' : 'Sei uscito'); await loadSS(); }
     catch (ex) { if (!pinCambiato(ex)) toast(msg(ex), 'err'); }
   });
+  const bo = $('#ss-bought');
+  if (bo) bo.onchange = async () => {
+    const val = bo.checked;
+    try { await rpc('ss_bought', { p_event: id, p_name: mine.name, p_pin: mine.pin, p_val: val }); S.ui.me[id] = Object.assign({}, S.ui.me[id], { bought: val }); if (S.ui.rev[id]) S.ui.rev[id].bought = val; toast(val ? 'Regalo preso ✓' : 'Ok, segnato come non ancora preso'); }
+    catch (ex) { bo.checked = !val; if (!pinCambiato(ex)) toast(msg(ex), 'err'); }
+  };
   const f = $('#ss-join');
   if (f) f.onsubmit = async e => {
     e.preventDefault();
@@ -1542,66 +1658,146 @@ function wireMe(ev, mine) {
       if (!name) throw err('NOME_VUOTO');
       if (!/^\d{4,8}$/.test(pin)) throw err('PIN_NON_VALIDO');
       b.disabled = true;
-      await rpc('ss_join', { p_event: id, p_name: name, p_pin: pin, p_wish: wish });
-      setMine(id, { name, pin }, rem);
-      toast('Sei dentro! 🎉');
+      const r = await rpc('ss_join', { p_event: id, p_name: name, p_pin: pin, p_wish: wish });
+      setMine(id, { name: r.me || name, pin }, rem); delete S.ui.me[id];
+      toast(r.pending ? 'Richiesta inviata: aspetta che l\'organizzatore ti faccia entrare' : 'Sei dentro! 🎉');
       await loadSS(); drawEvento(true);
     } catch (ex) { er.textContent = msg(ex); er.hidden = false; b.disabled = false; }
   };
 }
-async function verifica(ev) {
-  const out = $('#ss-check-out'); out.innerHTML = '<div class="loading">Controllo</div>';
-  try {
-    const r = await rpc('ss_check', { p_event: ev.id });
-    const v = c => c ? '✅' : '❌';
-    out.innerHTML = `<div class="letter" style="margin:12px 0 0;border-style:solid;border-color:${r.ok ? 'rgba(70,245,192,.5)' : 'rgba(255,93,108,.6)'}">
-      <div class="h" style="color:${r.ok ? 'var(--menta)' : 'var(--rosso)'}">${r.ok ? '✅ Sorteggio regolare' : '⚠️ Qualcosa non torna: rifate il sorteggio'}</div>
-      <ul class="checks"><li>${v(r.pairs === r.people)} Tutti i ${r.people} partecipanti hanno qualcuno a cui fare il regalo</li>
-      <li>${v(r.self === 0)} Nessuno ha pescato se stesso</li><li>${v(r.dup_receivers === 0)} Ognuno riceve un solo regalo</li>
-      <li>${v(r.excluded_pairs === 0)} Le esclusioni sono rispettate</li><li>${v(r.single_chain)} Un unico giro di regali che passa da tutti</li></ul>
-      <p class="hint">Il controllo lo fa il database, senza mostrare a nessuno chi ha pescato chi.</p></div>`;
-  } catch (e) { out.innerHTML = `<p class="err">${esc(msg(e))}</p>`; }
+// ----- domande anonime -----
+async function caricaDomande(ev, mine, forza) {
+  const id = ev.id;
+  if (S.ui.qa[id] && !forza) return disegnaDomande(ev, mine);
+  disegnaDomande(ev, mine);
+  if (S.ui.qaLoad[id]) return; S.ui.qaLoad[id] = true;
+  try { S.ui.qa[id] = await rpc('ss_inbox', { p_event: id, p_name: mine.name, p_pin: mine.pin }); }
+  catch (e) { S.ui.qa[id] = { per_me: [], mie: [], errore: msg(e) }; }
+  finally { delete S.ui.qaLoad[id]; disegnaDomande(ev, mine); }
+}
+function disegnaDomande(ev, mine) {
+  const el = $('#ss-qa'); if (!el) return;
+  const qa = S.ui.qa[ev.id];
+  if (!qa) { el.innerHTML = '<div class="loading">Carico le domande</div>'; return; }
+  conserva(el, () => disegnaDomandeOra(el, ev, mine, qa));
+}
+function disegnaDomandeOra(el, ev, mine, qa) {
+  const daRispondere = qa.per_me.filter(q => !q.answer).length;
+  el.innerHTML = `<div class="qa"><h4>💬 Domande anonime ${daRispondere ? `<span class="count">${daRispondere}</span>` : ''}</h4>
+    <p class="hint" style="margin:0 0 10px">Chiedi qualcosa alla persona a cui fai il regalo senza farti scoprire (es. "che taglia porti?"), e rispondi a chi fa il regalo a te.</p>
+    ${qa.errore ? `<p class="err">${esc(qa.errore)}</p>` : ''}
+    ${qa.per_me.length ? `<div class="qa-k">Dal tuo Babbo Natale segreto</div>${qa.per_me.map(q => `<div class="qa-q"><p>❓ ${esc(q.question)}</p>${q.answer ? `<p class="qa-a">✅ ${esc(q.answer)}</p>`
+      : `<form class="row qa-f" data-q="${esc(q.id)}" novalidate><input name="a" maxlength="500" placeholder="Rispondi…" autocomplete="off"><button class="btn sm" type="submit">Rispondi</button></form>`}</div>`).join('')}` : ''}
+    ${qa.mie.length ? `<div class="qa-k">Le tue domande</div>${qa.mie.map(q => `<div class="qa-q"><p>❓ ${esc(q.question)}</p><p class="${q.answer ? 'qa-a' : 'hint'}">${q.answer ? '💬 ' + esc(q.answer) : 'Ancora nessuna risposta'}</p></div>`).join('')}` : ''}
+    <form class="row" id="qa-new" novalidate><input name="q" maxlength="500" placeholder="Fai una domanda anonima…" autocomplete="off"><button class="btn sm" type="submit">Chiedi</button></form></div>`;
+  const P = { p_event: ev.id, p_name: mine.name, p_pin: mine.pin };
+  el.querySelector('#qa-new').onsubmit = async e => {
+    e.preventDefault(); const t = e.target.elements.q.value.trim(); if (!t) return;
+    try { await rpc('ss_ask', Object.assign({ p_question: t }, P)); const q = $('#qa-new'); if (q) q.elements.q.value = ''; toast('Domanda inviata in segreto 🤫'); caricaDomande(ev, mine, true); } catch (ex) { toast(msg(ex), 'err'); }
+  };
+  el.querySelectorAll('.qa-f').forEach(f => f.onsubmit = async e => {
+    e.preventDefault(); const t = f.elements.a.value.trim(); if (!t) return;
+    try { await rpc('ss_answer', Object.assign({ p_question: f.dataset.q, p_answer: t }, P)); const g = document.querySelector(`#ss-qa form[data-q="${f.dataset.q}"]`); if (g) g.elements.a.value = ''; toast('Risposta inviata'); caricaDomande(ev, mine, true); } catch (ex) { toast(msg(ex), 'err'); }
+  });
+}
+// ----- verifica con le lettere finte -----
+function verificaHTML(ev) {
+  const t = S.ui.tab[ev.id];
+  if (ev.status !== 'drawn') return `<h3>🔍 Verifica sorteggio</h3><p class="muto">🔒 Si apre dopo il sorteggio: mostrerà tutti gli abbinamenti con <b>lettere finte</b> (A, B, C…), così potrete controllare che ognuno faccia e riceva un solo regalo senza scoprire chi è chi.</p>`;
+  if (!t || t.at !== ev.draw_no + ':' + ev.people.length) return `<h3>🔍 Verifica sorteggio</h3><p class="muto">Tutti gli abbinamenti con lettere finte: ognuno ha una lettera data a caso e <b>nessuno sa quale lettera è chi</b>, nemmeno la propria.</p><button class="btn ghost sm" id="ver-open">Apri la verifica</button>`;
+  const r = t.data, ck = r.check, sx = r.righe.map(x => x.da), dx = r.righe.map(x => x.a);
+  const unici = a => new Set(a).size === a.length, v = c => c ? '✅' : '❌';
+  const okSx = unici(sx) && sx.length === ck.people, okDx = unici(dx) && dx.length === sx.length && sx.every(l => dx.includes(l)), okSe = r.righe.every(x => x.da !== x.a);
+  const tutto = ck.ok && okSx && okDx && okSe;
+  return `<h3>🔍 Verifica sorteggio</h3>
+    <div class="ver-ok ${tutto ? '' : 'ko'}">${tutto ? '✅ Sorteggio regolare' : '⚠️ Qualcosa non torna: l\'organizzatore deve rifare il sorteggio'}</div>
+    <ul class="checks"><li>${v(okSx)} Ognuno fa un solo regalo: ${sx.length} lettere a sinistra, tutte diverse</li>
+      <li>${v(okDx)} Ognuno riceve un solo regalo: ogni lettera compare una volta sola a destra</li>
+      <li>${v(okSe)} Nessuno fa il regalo a se stesso</li>
+      <li>${v(ck.excluded_pairs === 0)} Coppie ed esclusioni rispettate (lo controlla il database)</li></ul>
+    <div class="ver-grid">${r.righe.map(x => `<div class="ver-r"><b>${esc(x.da)}</b><span>→</span><b>${esc(x.a)}</b></div>`).join('')}</div>
+    <p class="hint">Le lettere sono date a caso a ogni sorteggio e non seguono l'ordine di iscrizione.</p>`;
+}
+async function apriVerifica(ev) {
+  try { const d = await rpc('ss_tabella', { p_event: ev.id }); S.ui.tab[ev.id] = { at: ev.draw_no + ':' + ev.people.length, data: d }; drawEvento(true); }
+  catch (e) { toast(msg(e), 'err'); }
+}
+function diarioHTML(ev) {
+  const tutto = S.ui.logAll[ev.id], L = ev.log || [], vis = tutto ? L : L.slice(0, 4);
+  return `<div class="diario">${vis.map(l => `<div class="log-r"><span>${esc(quando(l.at))}</span>${esc(l.msg)}</div>`).join('')}</div>
+    ${L.length > 4 ? `<button class="link" id="log-all">${tutto ? 'Mostra meno' : 'Mostra tutto (' + L.length + ')'}</button>` : ''}`;
 }
 // ----- area organizzatore -----
+async function caricaStato(ev, apin, chiave) {
+  S.ui.stat[ev.id] = { at: chiave, loading: true };
+  try { const r = await rpc('ss_status', { p_event: ev.id, p_admin_pin: apin }); S.ui.stat[ev.id] = { at: chiave, people: r.people }; }
+  catch (e) { S.ui.stat[ev.id] = { at: chiave, people: [] }; if (/PIN_/.test(e.message)) store.del('ssadm_' + ev.id); }
+  drawEvento(true);
+}
+function statoHTML(st) {
+  if (!st || st.loading) return '<div class="loading">Carico</div>';
+  const P = st.people.filter(p => !p.pending), visti = P.filter(p => p.seen).length, presi = P.filter(p => p.bought).length;
+  return `<p class="muto" style="margin:0 0 6px">👀 ${visti} su ${P.length} hanno guardato · 🎁 ${presi} su ${P.length} hanno preso il regalo</p>
+    ${P.map(p => `<div class="prow"><b>${esc(p.name)}</b><span class="st">${p.seen ? '<span class="si">✓ ha guardato</span>' : '<span class="no">non ancora</span>'}${p.bought ? '<span class="si">🎁 preso</span>' : ''}</span></div>`).join('')}`;
+}
 function drawAdm(ev) {
   const el = $('#adm-body'); if (!el) return;
-  const id = ev.id, apin = store.get('ssadm_' + id), drawn = ev.status === 'drawn', n = ev.people.length;
+  const id = ev.id, apin = store.get('ssadm_' + id), drawn = ev.status === 'drawn', n = ev.people.length, att = ev.pending || [];
   if (!apin) {
+    const ae = S.ui.admErr && S.ui.admErr.id === id ? S.ui.admErr.t : '';
     el.innerHTML = `<p class="muto" style="margin-top:12px">Solo per chi ha creato questo Secret Santa (${esc(ev.organizer)}).${DEMO ? ' <b>Nel Secret Santa di prova il PIN è 0000.</b>' : ''}</p>
-      <form id="adm-in" class="row" novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN organizzatore"><button class="btn sm" type="submit">Sblocca</button></form><p class="err" hidden></p>`;
+      <form id="adm-in" class="row" novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN organizzatore"><button class="btn sm" type="submit">Sblocca</button></form><p class="err" ${ae ? '' : 'hidden'}>${esc(ae)}</p>`;
     const f = $('#adm-in'), e = el.querySelector('.err');
     f.onsubmit = async x => {
-      x.preventDefault(); e.hidden = true;
-      try { if (!await rpc('ss_admin_check', { p_event: id, p_admin_pin: f.p.value.trim() })) throw err('PIN_ORGANIZZATORE_ERRATO'); store.set('ssadm_' + id, f.p.value.trim()); drawEvento(true); }
-      catch (ex) { e.textContent = msg(ex); e.hidden = false; }
+      x.preventDefault(); e.hidden = true; delete S.ui.admErr;
+      const pin = f.p.value.trim();
+      try { await rpc('ss_admin_check', { p_event: id, p_admin_pin: pin }); store.set('ssadm_' + id, pin); drawEvento(true); }
+      catch (ex) { S.ui.admErr = { id, t: msg(ex) }; const e2 = $('#adm-body .err'); if (e2) { e2.textContent = S.ui.admErr.t; e2.hidden = false; } }
     };
     return;
   }
+  const tutti = ev.people.concat(att);
+  const coppieG = (S.couples || []).filter(([a, b]) => tutti.some(x => same(x, a)) && tutti.some(x => same(x, b)));
+  const chiave = ev.draw_no + ':' + n + ':' + att.length + ':' + (ev.log || []).length;
+  if (drawn && (!S.ui.stat[id] || S.ui.stat[id].at !== chiave)) { caricaStato(ev, apin, chiave); }
   const opts = sel => ev.people.map(p => `<option ${p === sel ? 'selected' : ''}>${esc(p)}</option>`).join('');
   el.innerHTML = `
-    <div class="adm-sec"><h4>💑 Esclusioni</h4><p class="muto">Chi non deve pescarsi a vicenda (es. fidanzati).</p>
-      ${ev.excl.map((x, i) => `<div class="excl"><span>${esc(x[0])} ↔ ${esc(x[1])}</span>${drawn ? '' : `<button class="icon" data-x="unex" data-i="${i}" aria-label="Togli">✕</button>`}</div>`).join('') || '<p class="hint" style="margin:0">Nessuna esclusione.</p>'}
+    <div class="adm-sec"><h4>💑 Coppie ed esclusioni</h4><p class="muto">Chi non deve pescarsi a vicenda.</p>
+      ${coppieG.length ? `<div class="qa-k">Coppie del gruppo (automatiche)</div>${coppieG.map(x => `<div class="excl"><span>${esc(x[0])} ↔ ${esc(x[1])}</span><small class="muto">auto</small></div>`).join('')}`
+        : `<p class="hint" style="margin:0 0 8px">Le coppie del gruppo si impostano in ☰ → Chi c'è nel gruppo → Area amministratore.</p>`}
+      <div class="qa-k">Solo per questo Secret Santa</div>
+      ${ev.excl.map((x, i) => `<div class="excl"><span>${esc(x[0])} ↔ ${esc(x[1])}</span>${drawn ? '' : `<button class="icon" data-x="unex" data-i="${i}" aria-label="Togli">✕</button>`}</div>`).join('') || '<p class="hint" style="margin:0">Nessuna.</p>'}
       ${!drawn && n >= 2 ? `<div class="exadd"><select id="ex-a">${opts(ev.people[0])}</select><span>↔</span><select id="ex-b">${opts(ev.people[1])}</select><button class="btn ghost sm" data-x="addex">Aggiungi esclusione</button></div>` : ''}</div>
     <div class="adm-sec"><h4>🎲 Sorteggio</h4>${drawn
-      ? `<p>Fatto ${esc(quando(ev.drawn_at))}. Ora ognuno può scoprire il suo abbinamento.</p><button class="btn ghost rosso sm" data-x="undo">↩️ Annulla sorteggio</button>`
-      : `<p class="muto">${n} ${n === 1 ? 'partecipante' : 'partecipanti'}. Dopo il sorteggio nessuno potrà più iscriversi o uscire.</p><button class="btn wide" data-x="draw" ${n < 3 ? 'disabled' : ''}>Fai il sorteggio 🎲</button>${n < 3 ? '<p class="hint">Servono almeno 3 persone.</p>' : ''}`}</div>
-    <div class="adm-sec"><h4>👥 Partecipanti</h4>${n ? ev.people.map(p => `<div class="prow"><b>${esc(p)}</b><span><button class="btn ghost xs" data-x="reset" data-n="${esc(p)}">Nuovo PIN</button>${drawn ? '' : `<button class="btn ghost rosso xs" data-x="kick" data-n="${esc(p)}">Togli</button>`}</span></div>`).join('') : '<p class="hint" style="margin:0">Nessuno ancora.</p>'}
-      <p class="hint">“Nuovo PIN” serve a chi ha dimenticato il suo: non ti fa vedere a chi fa il regalo.</p></div>
+      ? `<p>Sorteggio n° ${ev.draw_no} fatto ${esc(quando(ev.drawn_at))}. Ora ognuno può scoprire il suo abbinamento.</p><button class="btn ghost rosso sm" data-x="undo">↩️ Annulla sorteggio</button>`
+      : `<p class="muto">${n} ${n === 1 ? 'partecipante' : 'partecipanti'}. Dopo il sorteggio chi arriva dovrà chiedere di entrare.</p>${n === 3 ? '<p class="hint avviso-t">⚠️ Con solo 3 persone ognuno può indovinare chi gli fa il regalo.</p>' : ''}<button class="btn wide" data-x="draw" ${n < 3 ? 'disabled' : ''}>Fai il sorteggio 🎲</button>${n < 3 ? '<p class="hint">Servono almeno 3 persone.</p>' : ''}`}</div>
+    ${drawn ? `<div class="adm-sec"><h4>👀 Chi ha guardato · 🎁 Regali</h4><div id="adm-stato">${statoHTML(S.ui.stat[id])}</div><p class="hint">Vedi solo chi ha già scoperto il suo abbinamento e chi ha preso il regalo, mai chi fa il regalo a chi.</p></div>` : ''}
+    ${att.length ? `<div class="adm-sec"><h4>⏳ Chiedono di entrare</h4>${att.map(p => `<div class="prow"><b>${esc(p)}</b><span><button class="btn xs" data-x="admit" data-n="${esc(p)}">Fai entrare</button><button class="btn ghost rosso xs" data-x="kick" data-n="${esc(p)}">Rifiuta</button></span></div>`).join('')}
+      <p class="hint">Facendolo entrare cambia l'abbinamento di una sola persona (scelta a caso, meglio se non aveva ancora guardato), che verrà avvisata.</p></div>` : ''}
+    <div class="adm-sec"><h4>👥 Partecipanti</h4>${n ? ev.people.map(p => `<div class="prow"><b>${esc(p)}</b><span><button class="btn ghost xs" data-x="reset" data-n="${esc(p)}">Nuovo PIN</button><button class="btn ghost rosso xs" data-x="kick" data-n="${esc(p)}">Togli</button></span></div>`).join('') : '<p class="hint" style="margin:0">Nessuno ancora.</p>'}
+      <p class="hint">“Nuovo PIN” serve a chi ha dimenticato il suo: non ti fa vedere a chi fa il regalo e finisce nel diario.${drawn ? ' “Togli” dopo il sorteggio cambia l\'abbinamento di 1 o 2 persone.' : ''}</p></div>
+    ${drawn ? `<div class="adm-sec"><h4>📅 L'anno prossimo</h4><p class="muto">Crea il prossimo Secret Santa: nessuno ripescherà la stessa persona di quest'anno.</p><button class="btn ghost sm" data-x="next">Rifai per il prossimo anno</button></div>` : ''}
     <div class="adm-sec row wrap"><button class="btn ghost sm" data-x="lock">🔒 Blocca</button><button class="btn ghost rosso sm" data-x="del">🗑️ Elimina Secret Santa</button></div>`;
   const run = async (f, ok) => {
-    try { await f(); if (ok) toast(ok); await loadSS(); drawEvento(true); }
-    catch (ex) { if (ex.message === 'PIN_ORGANIZZATORE_ERRATO') { store.del('ssadm_' + id); drawEvento(true); } toast(msg(ex), 'err'); }
+    try { const r = await f(); if (ok) toast(typeof ok === 'function' ? ok(r) : ok); await loadSS(); drawEvento(true); }
+    catch (ex) { if (/PIN_ORGANIZZATORE_ERRATO|PIN_BLOCCATO/.test(ex.message)) { store.del('ssadm_' + id); drawEvento(true); } toast(msg(ex), 'err'); }
   };
   const P = { p_event: id, p_admin_pin: apin };
   el.querySelectorAll('[data-x]').forEach(b => b.onclick = async () => {
     const x = b.dataset.x;
-    if (x === 'draw') {
-      if (!await ask('Fare il sorteggio?', `Partecipano in ${n}. Dopo nessuno potrà più iscriversi o uscire.`, 'Sorteggia 🎲')) return;
-      run(() => rpc('ss_draw', P), `Sorteggio fatto! 🎉 Ora ognuno può scoprire il suo.`);
-    }
+    if (x === 'draw') formSheet({ title: 'Fare il sorteggio?', ok: 'Sorteggia 🎲',
+      intro: `<p class="muto">Partecipano in ${n}. Il computer pesca dal cappello: ognuno fa un regalo e ne riceve uno, nessuno a se stesso, coppie escluse. Dopo, chi arriva dovrà chiedere di entrare.</p>`,
+      fields: [{ k: 'a', label: 'Annuncialo nelle Novità', type: 'check', value: true }],
+      submit: async v => {
+        const r = await rpc('ss_draw', P);
+        toast(r.rilassato ? 'Sorteggio fatto! Non è stato possibile evitare tutti gli abbinamenti dell\'anno prima.' : 'Sorteggio fatto! 🎉 Ora ognuno può scoprire il suo.');
+        if (v.a) annuncia(`🎁 Sorteggio fatto per il Secret Santa «${ev.name}»! Entrate e scoprite a chi fate il regalo 👉 ${linkEvento(id)} #SecretSanta`);
+        delete S.ui.tab[id]; delete S.ui.qa[id];
+        await loadSS(); drawEvento(true);
+      } });
     if (x === 'undo') {
-      if (!await ask('Annullare il sorteggio?', 'Gli abbinamenti vengono cancellati. Se lo rifai, saranno diversi: chi aveva già guardato dovrà guardare di nuovo.', 'Annulla sorteggio', true)) return;
-      run(async () => { await rpc('ss_undo', P); delete S.ui.rev[id]; }, 'Sorteggio annullato');
+      if (!await ask('Annullare il sorteggio?', 'Gli abbinamenti vengono cancellati e finisce nel diario. Se lo rifai, chi aveva già guardato verrà avvisato di riguardare.', 'Annulla sorteggio', true)) return;
+      run(async () => { await rpc('ss_undo', P); delete S.ui.rev[id]; delete S.ui.tab[id]; delete S.ui.qa[id]; }, 'Sorteggio annullato');
     }
     if (x === 'addex') {
       const a = $('#ex-a').value, c = $('#ex-b').value;
@@ -1609,20 +1805,24 @@ function drawAdm(ev) {
       run(() => rpc('ss_set_excl', Object.assign({ p_pairs: ev.excl.concat([[a, c]]) }, P)), 'Esclusione aggiunta');
     }
     if (x === 'unex') run(() => rpc('ss_set_excl', Object.assign({ p_pairs: ev.excl.filter((_, i) => i !== +b.dataset.i) }, P)));
+    if (x === 'admit') run(() => rpc('ss_admit', Object.assign({ p_name: b.dataset.n }, P)), `${b.dataset.n} è entrato: è cambiato l'abbinamento di 1 persona`);
     if (x === 'kick') {
-      if (!await ask(`Togliere ${b.dataset.n}?`, 'Viene tolto dai partecipanti (e dalle esclusioni).', 'Togli', true)) return;
-      run(() => rpc('ss_kick', Object.assign({ p_name: b.dataset.n }, P)), 'Tolto');
+      const inAttesa = att.includes(b.dataset.n);
+      if (!await ask(inAttesa ? `Rifiutare ${b.dataset.n}?` : `Togliere ${b.dataset.n}?`, inAttesa ? 'La sua richiesta di entrare viene cancellata.'
+        : drawn ? 'Il sorteggio è già fatto: cambierà l\'abbinamento di 1 o 2 persone, che verranno avvisate. Finisce nel diario.' : 'Viene tolto dai partecipanti (e dalle esclusioni).', inAttesa ? 'Rifiuta' : 'Togli', true)) return;
+      run(() => rpc('ss_kick', Object.assign({ p_name: b.dataset.n }, P)), r => r && r.cambiati ? `Tolto: è cambiato l'abbinamento di ${r.cambiati} ${r.cambiati === 1 ? 'persona' : 'persone'}` : 'Tolto');
     }
     if (x === 'reset') formSheet({ title: `Nuovo PIN per ${b.dataset.n}`, ok: 'Imposta',
-      intro: `<p class="muto">Scegli un PIN nuovo e diglielo. Non vedrai a chi fa il regalo.</p>`,
+      intro: `<p class="muto">Scegli un PIN nuovo e diglielo. Non vedrai a chi fa il regalo, e nel diario resterà scritto.</p>`,
       fields: [{ k: 'p', label: 'Nuovo PIN (4–8 cifre)', type: 'pin' }],
       submit: async v => {
         if (!/^\d{4,8}$/.test(v.p)) throw err('PIN_NON_VALIDO');
         await rpc('ss_reset_pin', Object.assign({ p_name: b.dataset.n, p_new_pin: v.p }, P));
         const m = S.mine[id] || store.get('ssme_' + id); if (m && same(m.name, b.dataset.n)) forgetMine(id);
         info('PIN cambiato ✅', `<p>Di' a <b>${esc(b.dataset.n)}</b> che il suo nuovo PIN è <b style="font-size:22px;color:var(--menta)">${esc(v.p)}</b></p>`);
-        drawEvento(true);
+        await loadSS(); drawEvento(true);
       } });
+    if (x === 'next') newSS(ev);
     if (x === 'lock') { store.del('ssadm_' + id); drawEvento(true); }
     if (x === 'del') {
       if (!await ask(`Eliminare “${ev.name}”?`, 'Si cancella tutto: iscritti, letterine e sorteggio. Non si torna indietro.', 'Elimina', true)) return;
@@ -1660,8 +1860,20 @@ function gruppoHTML() {
     <div class="grp-k">Tutti gli iscritti · ${ppl.length}</div>${tutti.map(p => personaHTML(p, true, kick(p))).join('')}
     ${adm && rimossi.length ? `<div class="grp-k">Rimossi · ${rimossi.length}</div>${rimossi.map(p => personaHTML(p, false, `<button class="btn ghost xs" data-unkick="${esc(p.name)}">Riammetti</button>`)).join('')}` : ''}
     <div class="adm-box">${adm
-      ? `<p class="hint" style="margin:0">🔓 Sei amministratore: puoi rimuovere qualcuno dal gruppo.</p><button class="link" data-adm-lock>Blocca</button>`
+      ? `<p class="hint" style="margin:0">🔓 Sei amministratore: puoi rimuovere qualcuno dal gruppo e impostare le coppie.</p>${coppieHTML(tutti)}<button class="link" data-adm-lock>Blocca</button>`
       : `<button class="link" data-adm-open>🔒 Area amministratore</button><form class="row" id="adm-form" hidden novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN amministratore"><button class="btn sm" type="submit">Sblocca</button></form><p class="err" id="adm-err" hidden></p>`}</div>`;
+}
+// coppie del gruppo: non si pescano mai a vicenda nel Secret Santa (le gestisce l'amministratore)
+function coppieHTML(persone) {
+  const C = S.couples || [], nomi = persone.map(p => p.name), opts = sel => nomi.map(n => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  return `<div class="grp-k">💑 Coppie del gruppo</div><p class="hint" style="margin:0 0 8px">Nel Secret Santa non si pescano mai a vicenda, in automatico.</p>
+    ${C.map((c, i) => `<div class="excl"><span>${esc(c[0])} ↔ ${esc(c[1])}</span><button class="icon" data-uncouple="${i}" aria-label="Togli la coppia">✕</button></div>`).join('') || '<p class="hint" style="margin:0 0 6px">Nessuna coppia ancora.</p>'}
+    ${nomi.length >= 2 ? `<div class="exadd"><select id="cp-a">${opts(nomi[0])}</select><span>↔</span><select id="cp-b">${opts(nomi[1])}</select><button class="btn ghost sm" data-couple>Aggiungi coppia</button></div>` : ''}`;
+}
+async function salvaCoppie(lista) {
+  try { await rpc('couples_set', { p_admin: adminPin(), p_pairs: lista }); S.couples = await rpc('couples_list'); toast('Coppie salvate 💑'); }
+  catch (e) { if (/PIN_ADMIN_ERRATO|PIN_BLOCCATO/.test(e.message)) store.del('admin'); toast(msg(e), 'err'); }
+  drawOnline();
 }
 function drawOnline() {
   const ppl = (S.people || []).filter(p => !p.banned), on = ppl.filter(p => p.online);
@@ -1672,13 +1884,19 @@ function drawOnline() {
 async function kick(nome, rimuovi) {
   if (rimuovi && !await ask(`Rimuovere ${nome} dal gruppo?`, `Esce subito dal sito e non può più rientrare con questo nome. I suoi post restano.<br><br>Per tenerlo fuori del tutto cambia anche la password del gruppo e dilla solo agli altri.`, 'Rimuovi', true)) return;
   try { await rpc('member_kick', { p_admin: adminPin(), p_name: nome, p_ban: rimuovi }); toast(rimuovi ? `${nome} è stato rimosso dal gruppo` : `${nome} può rientrare`); }
-  catch (e) { if (e.message === 'PIN_ADMIN_ERRATO') store.del('admin'); toast(msg(e), 'err'); }
+  catch (e) { if (/PIN_ADMIN_ERRATO|PIN_BLOCCATO/.test(e.message)) store.del('admin'); toast(msg(e), 'err'); }
   await ping();
 }
 function apriGruppo() {
   sheet(`<h3>Il gruppo</h3><div id="gruppo">${S.people || S.noPresenza ? gruppoHTML() : '<div class="loading">Carico</div>'}</div><div class="row end"><button class="btn" data-close>Chiudi</button></div>`, s => {
     s.addEventListener('click', e => {
-      const t = e.target.closest('[data-kick],[data-unkick],[data-adm-open],[data-adm-lock]'); if (!t) return;
+      const t = e.target.closest('[data-kick],[data-unkick],[data-adm-open],[data-adm-lock],[data-couple],[data-uncouple]'); if (!t) return;
+      if (t.hasAttribute('data-couple')) {
+        const a = s.querySelector('#cp-a').value, b = s.querySelector('#cp-b').value;
+        if (same(a, b)) return toast(MSG.STESSA_PERSONA, 'err');
+        return salvaCoppie((S.couples || []).concat([[a, b]]));
+      }
+      if (t.dataset.uncouple) return salvaCoppie((S.couples || []).filter((_, i) => i !== +t.dataset.uncouple));
       if (t.dataset.kick) kick(t.dataset.kick, true);
       else if (t.dataset.unkick) kick(t.dataset.unkick, false);
       else if (t.hasAttribute('data-adm-open')) { const f = s.querySelector('#adm-form'); f.hidden = false; t.hidden = true; f.elements.p.focus(); }
@@ -1691,11 +1909,14 @@ function apriGruppo() {
         const r = await rpc('admin_check', { p_admin: pin });
         if (!r.set) throw err('ADMIN_NON_IMPOSTATO');
         if (!r.ok) throw err('PIN_ADMIN_ERRATO');
-        store.set('admin', pin); e.target.hidden = true; drawOnline();
+        store.set('admin', pin); e.target.hidden = true;
+        S.couples = await rpc('couples_list').catch(() => S.couples || []);
+        drawOnline();
       } catch (ex) { er.textContent = msg(ex); er.hidden = false; }
     });
   });
   ping();
+  if (adminPin()) rpc('couples_list').then(c => { S.couples = c; drawOnline(); }).catch(() => {});
 }
 
 // ===================== STORIE (24 ore) =====================
@@ -1886,8 +2107,7 @@ function creaDemo() {
   const sond = (author, question, multi, min, opts) => D.polls.push({ id: uid(), author, question, multi, closed: false, created_at: t(min), options: opts.map(([label, voters]) => ({ id: uid(), label, voters })) });
   sond('Giulia', 'Che giorni siete liberi per la cena di Natale?', true, 60 * 26, [['Venerdì 19', ['Giulia', 'Sara']], ['Sabato 20', ['Giulia', 'Marco', 'Luca', 'Anna']], ['Domenica 21', ['Marco']]]);
   sond('Anna', 'Dove facciamo Capodanno?', false, 120, [['Casa di Anna', ['Anna', 'Luca', 'Marco']], ['Montagna', ['Giulia']], ["Mare d'inverno", ['Sara']]]);
-  D.ss.push({ id: uid(), name: 'Natale 2026 (prova)', budget: '30 €', gift_date: 'cena del 20 dicembre', organizer: 'Marco', admin_pin: '0000', status: 'open', drawn_at: null, created_at: t(60 * 5), pairs: null, excl: [['Marco', 'Sara']],
-    people: [['Marco', '1111', 'Un libro giallo 📚'], ['Giulia', '2222', 'Una tazza gigante per il tè'], ['Sara', '3333', ''], ['Luca', '4444', 'Calzini assurdi 🧦']].map(([name, pin, wish]) => ({ id: uid(), name, pin, wish })) });
+  D.couples = []; D.adminFail = 0; D.adminLock = 0;
   // --- le stesse funzioni del database vero ---
   const pwOk = x => String(x || '').trim().toLowerCase() === D.pw;
   const need = a => { if (!pwOk(a.p_pw)) throw err('PASSWORD_ERRATA'); };
@@ -1898,16 +2118,66 @@ function creaDemo() {
     const i = L.findIndex(x => x[k] === id && same(x.name, n)), prima = i >= 0 ? L[i].val : 0; if (i >= 0) L.splice(i, 1);
     if (prima === val) return 0; L.push({ [k]: id, name: n, val }); return val;
   };
-  const ev = i => { const e = D.ss.find(x => x.id === i); if (!e) throw err('EVENTO_NON_TROVATO'); return e; };
-  const adm = a => { const e = ev(a.p_event); if (e.admin_pin !== a.p_admin_pin) throw err('PIN_ORGANIZZATORE_ERRATO'); return e; };
-  const aperto = e => { if (e.status !== 'open') throw err('SORTEGGIO_GIA_FATTO'); };
-  const chi = (e, n) => e.people.find(p => same(p.name, clean(n, 30)));
-  const togli = (e, p) => { e.people = e.people.filter(x => x !== p); e.excl = e.excl.filter(x => !x.includes(p.name)); };
+  // --- aiuti per il Secret Santa di prova ---
+  const casuale = k => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % k; };
+  const rnd = k => casuale(k);
+  const mesc = A => { for (let i = A.length - 1; i > 0; i--) { const j = casuale(i + 1); [A[i], A[j]] = [A[j], A[i]]; } return A; };
+  const evt = i => { const e = D.ss.find(x => x.id === i); if (!e) throw err('EVENTO_NON_TROVATO'); return e; };
+  const logga = (e, m) => e.log.push({ at: t(0), msg: m });
+  const persona = (name, pin, wish, pending) => ({ id: uid(), name, pin, wish: wish || '', pending: !!pending, code: null, seen_draw: 0, seen_at: 0, changed_at: 0, bought: false, pin_fail: 0, pin_lock: 0 });
+  const nuovoEvento = (name, budget, gift_date, organizer, admin_pin) => { const e = { id: uid(), name, budget, gift_date, organizer, admin_pin, status: 'open', drawn_at: null, created_at: t(0), draw_no: 0, prev_event: null, admin_fail: 0, admin_lock: 0, people: [], excl: [], pairs: null, log: [], questions: [] }; D.ss.push(e); return e; };
+  const attivi = e => e.people.filter(p => !p.pending);
+  const togli = (e, p) => { e.people = e.people.filter(x => x !== p); e.excl = e.excl.filter(x => !x.some(n => same(n, p.name))); };
+  const pinP = (e, nome, pin) => {
+    const p = e.people.find(x => same(x.name, clean(nome, 30))); if (!p) return { err: 'PIN_ERRATO' };
+    if (p.pin_lock > Date.now()) return { err: 'PIN_BLOCCATO' };
+    if (p.pin !== pin) { if (++p.pin_fail >= 5) { p.pin_fail = 0; p.pin_lock = Date.now() + 15 * 60000; return { err: 'PIN_BLOCCATO' }; } return { err: 'PIN_ERRATO' }; }
+    p.pin_fail = 0; return p;
+  };
+  const admE = (e, pin) => {
+    if (e.admin_lock > Date.now()) return 'PIN_BLOCCATO';
+    if (e.admin_pin !== pin) { if (++e.admin_fail >= 5) { e.admin_fail = 0; e.admin_lock = Date.now() + 15 * 60000; return 'PIN_BLOCCATO'; } return 'PIN_ORGANIZZATORE_ERRATO'; }
+    e.admin_fail = 0; return null;
+  };
+  const admG = pin => {
+    if (D.adminLock > Date.now()) return 'PIN_BLOCCATO';
+    if (pin !== ADMIN) { if (++D.adminFail >= 5) { D.adminFail = 0; D.adminLock = Date.now() + 15 * 60000; return 'PIN_BLOCCATO'; } return 'PIN_ADMIN_ERRATO'; }
+    D.adminFail = 0; return null;
+  };
+  // chi non può regalare a chi: se stesso, coppie del gruppo, esclusioni dell'evento, (anno prima)
+  const vietato = (e, conPrev) => {
+    const pe = conPrev && e.prev_event ? D.ss.find(x => x.id === e.prev_event) : null;
+    const prima = pe && pe.pairs ? [...pe.pairs].map(([g, r]) => [pe.people.find(p => p.id === g), pe.people.find(p => p.id === r)]).filter(([g, r]) => g && r).map(([g, r]) => [g.name, r.name]) : [];
+    return (g, r) => g === r || D.couples.concat(e.excl).some(([a, b]) => (same(a, g.name) && same(b, r.name)) || (same(a, r.name) && same(b, g.name)))
+      || prima.some(([x, y]) => same(x, g.name) && same(y, r.name));
+  };
+  // esiste un sorteggio valido? (abbinamento completo, ordine casuale)
+  const abbina = (P, v) => {
+    const n = P.length, mr = Array(n).fill(-1), ord = mesc([...Array(n).keys()]);
+    const prova = (u, vis) => { for (const r of ord) if (!vis[r] && !v(P[u], P[r])) { vis[r] = true; if (mr[r] < 0 || prova(mr[r], vis)) { mr[r] = u; return true; } } return false; };
+    for (const u of mesc([...Array(n).keys()])) if (!prova(u, Array(n).fill(false))) return { ok: false, chi: [P[u].name] };
+    const p = Array(n); mr.forEach((u, r) => { p[u] = r; }); return { ok: true, p };
+  };
+  // il cappello: ripesca tutto finché va bene per tutti (ogni sorteggio valido ha la stessa probabilità)
+  const cappello = (P, v, riserva) => {
+    for (let k = 0; k < 3000; k++) { const q = mesc([...P.keys()]); if (q.every((r, i) => !v(P[i], P[r]))) return q; }
+    return riserva;
+  };
+  const lettere = e => {
+    e.people.forEach(p => { p.code = null; });
+    const chi = attivi(e).filter(p => e.pairs && e.pairs.has(p.id)), c = mesc([...chi.keys()]);
+    chi.forEach((p, i) => { p.code = c[i] < 26 ? String.fromCharCode(65 + c[i]) : String.fromCharCode(64 + Math.floor(c[i] / 26)) + String.fromCharCode(65 + c[i] % 26); });
+  };
+  { // Secret Santa di prova: organizza Marco (PIN organizzatore 0000)
+    const e = nuovoEvento('Natale 2026 (prova)', '30 €', 'cena del 20 dicembre', 'Marco', '0000'); e.created_at = t(60 * 5); e.excl = [['Marco', 'Sara']];
+    [['Marco', '1111', 'Un libro giallo 📚'], ['Giulia', '2222', 'Una tazza gigante per il tè'], ['Sara', '3333', ''], ['Luca', '4444', 'Calzini assurdi 🧦']].forEach(([n, pin, w]) => e.people.push(persona(n, pin, w)));
+    e.log.push({ at: t(60 * 5), msg: 'Creato da Marco' });
+  }
   const F = {
     check_pw: a => pwOk(a.p_pw),
     members_list: a => { need(a); return D.members.filter(m => !m.banned).map(m => m.name).sort(alfa); },
-    admin_check: a => { need(a); return { set: true, ok: a.p_admin === ADMIN }; },
-    member_kick: a => { need(a); if (a.p_admin !== ADMIN) throw err('PIN_ADMIN_ERRATO'); const m = D.members.find(x => same(x.name, clean(a.p_name, 30))); if (!m) throw err('NOME_NON_TROVATO'); m.banned = a.p_ban !== false; },
+    admin_check: a => { need(a); const x = admG(a.p_admin); return { set: true, ok: !x, err: x }; },
+    member_kick: a => { need(a); const x = admG(a.p_admin); if (x) return { err: x }; const m = D.members.find(y => same(y.name, clean(a.p_name, 30))); if (!m) throw err('NOME_NON_TROVATO'); m.banned = a.p_ban !== false; return { ok: true }; },
     member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (D.members.some(m => same(m.name, n) && m.banned)) throw err('NOME_BLOCCATO'); if (!D.members.some(m => m.name === n)) D.members.push({ name: n, created_at: t(0), last_seen: null }); },
     presenza: a => {
       need(a); const n = clean(a.p_name, 30), ora = t(0);
@@ -1972,52 +2242,159 @@ function creaDemo() {
     },
     poll_close: a => { need(a); const p = D.polls.find(x => x.id === a.p_poll && x.author === a.p_author); if (p) p.closed = a.p_closed !== false; },
     poll_del: a => { need(a); D.polls = D.polls.filter(x => !(x.id === a.p_poll && x.author === a.p_author)); },
-    ss_list: a => { need(a); return D.ss.slice().sort(desc).map(e => ({ id: e.id, name: e.name, budget: e.budget, gift_date: e.gift_date, organizer: e.organizer, status: e.status, drawn_at: e.drawn_at, created_at: e.created_at, people: e.people.map(p => p.name).sort(alfa), excl: e.excl.map(x => x.slice()) })); },
+    // --- Secret Santa (stesse regole del database: cappello, blocchi PIN, diario, lettere, ritardatari) ---
+    ss_list: a => { need(a); return D.ss.slice().sort(desc).map(e => ({ id: e.id, name: e.name, budget: e.budget, gift_date: e.gift_date, organizer: e.organizer, status: e.status, drawn_at: e.drawn_at, created_at: e.created_at,
+      draw_no: e.draw_no, prev_event: e.prev_event, prev_name: e.prev_event ? (D.ss.find(x => x.id === e.prev_event) || {}).name || null : null,
+      people: attivi(e).map(p => p.name).sort(alfa), pending: e.people.filter(p => p.pending).map(p => p.name), excl: e.excl.map(x => x.slice()),
+      log: e.log.slice().reverse().slice(0, 30) })); },
     ss_create: a => {
       need(a); if (!clean(a.p_name, 80)) throw err('NOME_VUOTO'); if (!pinOk(a.p_admin_pin)) throw err('PIN_NON_VALIDO');
-      const id = uid(); D.ss.push({ id, name: clean(a.p_name, 80), budget: clean(a.p_budget, 40), gift_date: clean(a.p_date, 40), organizer: clean(a.p_organizer, 30), admin_pin: a.p_admin_pin, status: 'open', drawn_at: null, created_at: t(0), people: [], excl: [], pairs: null }); return id;
+      const pv = a.p_prev ? D.ss.find(x => x.id === a.p_prev && x.status === 'drawn') : null; if (a.p_prev && !pv) throw err('EVENTO_NON_TROVATO');
+      const e = nuovoEvento(clean(a.p_name, 80), clean(a.p_budget, 40), clean(a.p_date, 40), clean(a.p_organizer, 30), a.p_admin_pin);
+      if (pv) { e.prev_event = pv.id; e.excl = pv.excl.map(x => x.slice()); logga(e, `Creato da ${e.organizer} come seguito di «${pv.name}»: nessuno ripescherà la stessa persona dell'anno prima`); }
+      else logga(e, 'Creato da ' + e.organizer);
+      return e.id;
     },
-    ss_admin_check: a => { need(a); return ev(a.p_event).admin_pin === a.p_admin_pin; },
     ss_join: a => {
-      need(a); const e = ev(a.p_event), n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!pinOk(a.p_pin)) throw err('PIN_NON_VALIDO');
-      const p = chi(e, n);
-      if (p) { if (p.pin !== a.p_pin) throw err('NOME_GIA_PRESO'); p.wish = clean(a.p_wish, 1000); }
-      else { aperto(e); e.people.push({ id: uid(), name: n, pin: a.p_pin, wish: clean(a.p_wish, 1000) }); }
+      need(a); const e = evt(a.p_event), n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (!pinOk(a.p_pin)) throw err('PIN_NON_VALIDO');
+      if (e.people.some(x => same(x.name, n))) {
+        const p = pinP(e, n, a.p_pin); if (p.err) return { err: p.err === 'PIN_ERRATO' ? 'NOME_GIA_PRESO' : p.err };
+        p.wish = clean(a.p_wish, 1000); return { ok: true, me: p.name, pending: p.pending };
+      }
+      const pending = e.status !== 'open'; e.people.push(persona(n, a.p_pin, clean(a.p_wish, 1000), pending));
+      if (pending) logga(e, n + ' chiede di entrare dopo il sorteggio');
+      return { ok: true, me: n, pending };
     },
-    ss_leave: a => { need(a); const e = ev(a.p_event); aperto(e); const p = chi(e, a.p_name); if (!p || p.pin !== a.p_pin) throw err('PIN_ERRATO'); togli(e, p); },
-    ss_kick: a => { need(a); const e = adm(a); aperto(e); const p = chi(e, a.p_name); if (p) togli(e, p); },
+    ss_leave: a => {
+      need(a); const e = evt(a.p_event), p = pinP(e, a.p_name, a.p_pin); if (p.err) return p;
+      if (e.status !== 'open' && !p.pending) return { err: 'CHIEDI_ORGANIZZATORE' };
+      togli(e, p); if (p.pending) logga(e, p.name + ' ha ritirato la richiesta di entrare'); return { ok: true };
+    },
+    ss_me: a => { need(a); const e = evt(a.p_event), p = pinP(e, a.p_name, a.p_pin); if (p.err) return p;
+      return { me: p.name, my_wish: p.wish, pending: p.pending, bought: p.bought, drawn: e.status === 'drawn' && !!(e.pairs && e.pairs.has(p.id)) }; },
+    ss_reveal: a => {
+      need(a); const e = evt(a.p_event), p = pinP(e, a.p_name, a.p_pin); if (p.err) return p;
+      const r = e.pairs && e.people.find(x => x.id === e.pairs.get(p.id));
+      if (!r) return { drawn: false, me: p.name, my_wish: p.wish, pending: p.pending, bought: p.bought };
+      const rifatto = p.seen_draw > 0 && p.seen_draw < e.draw_no, cambiato = !!p.changed_at && !!p.seen_at && p.changed_at > p.seen_at && !rifatto;
+      p.seen_draw = e.draw_no; p.seen_at = Date.now() + 1;
+      return { drawn: true, me: p.name, to: r.name, wish: r.wish, my_wish: p.wish, bought: p.bought, draw_no: e.draw_no, rifatto, cambiato };
+    },
     ss_set_excl: a => {
-      need(a); const e = adm(a); aperto(e); const L = [];
-      for (const [x, y] of (a.p_pairs || [])) if (x && y && x !== y) { const k = [x, y].sort(); if (!L.some(z => z[0] === k[0] && z[1] === k[1])) L.push(k); }
-      e.excl = L;
+      need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x }; if (e.status !== 'open') throw err('SORTEGGIO_GIA_FATTO');
+      const L = []; for (const [p, q] of (a.p_pairs || [])) if (p && q && !same(p, q)) { const k = [p, q].sort(); if (!L.some(z => z[0] === k[0] && z[1] === k[1])) L.push(k); }
+      e.excl = L; return { ok: true };
     },
     ss_draw: a => {
-      need(a); const e = adm(a); aperto(e); const P = e.people, n = P.length; if (n < 3) throw err('SERVONO_ALMENO_3');
-      const vietato = (x, y) => e.excl.some(([p, q]) => (p === x.name && q === y.name) || (p === y.name && q === x.name));
-      for (let k = 0; k < 20000; k++) {
-        const o = P.slice(); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
-        if (o.every((g, i) => !vietato(g, o[(i + 1) % n]))) { e.pairs = new Map(o.map((g, i) => [g.id, o[(i + 1) % n].id])); e.status = 'drawn'; e.drawn_at = t(0); return n; }
+      need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x }; if (e.status !== 'open') throw err('SORTEGGIO_GIA_FATTO');
+      e.people.forEach(p => { p.pending = false; });
+      const P = e.people; if (P.length < 3) throw err('SERVONO_ALMENO_3');
+      let v = vietato(e, true), m = abbina(P, v), rilassato = false;
+      if (!m.ok && e.prev_event) { v = vietato(e, false); m = abbina(P, v); rilassato = true; }
+      if (!m.ok) return { err: 'ESCLUSIONI_IMPOSSIBILI', chi: m.chi.join(', ') };
+      const p = cappello(P, v, m.p);
+      e.pairs = new Map(P.map((g, i) => [g.id, P[p[i]].id])); e.questions = [];
+      P.forEach(q => { q.changed_at = null; q.bought = false; });
+      e.status = 'drawn'; e.drawn_at = t(0); e.draw_no++; lettere(e);
+      logga(e, `Sorteggio n° ${e.draw_no} fatto (${P.length} persone)` + (rilassato ? ": non è stato possibile evitare tutti gli abbinamenti dell'anno prima" : ''));
+      return { ok: true, n: P.length, rilassato };
+    },
+    ss_undo: a => {
+      need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x };
+      if (e.status === 'drawn') logga(e, `${e.organizer} ha annullato il sorteggio n° ${e.draw_no}`);
+      e.pairs = null; e.questions = []; e.status = 'open'; e.drawn_at = null; e.people.forEach(p => { p.code = null; p.pending = false; p.changed_at = null; });
+      return { ok: true };
+    },
+    ss_admit: a => {
+      need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x };
+      const nu = e.people.find(p => p.pending && same(p.name, clean(a.p_name, 30))); if (!nu) throw err('NOME_NON_TROVATO');
+      if (e.status !== 'drawn') { nu.pending = false; return { ok: true }; }
+      let cand = [];
+      for (const conPrev of [true, false]) {
+        const v = vietato(e, conPrev), ok = (g, r) => !v(g, nu) && !v(nu, e.people.find(q => q.id === r));
+        const tutti = [...e.pairs].filter(([g, r]) => ok(e.people.find(q => q.id === g), r));
+        cand = tutti.filter(([g]) => e.people.find(q => q.id === g).seen_draw < e.draw_no); if (!cand.length) cand = tutti;
+        if (cand.length) break;
       }
-      throw err('ESCLUSIONI_IMPOSSIBILI');
+      if (!cand.length) return { err: 'RITARDATARIO_IMPOSSIBILE' };
+      const [g, r] = cand[rnd(cand.length)]; e.pairs.set(g, nu.id); e.pairs.set(nu.id, r);
+      nu.pending = false; const sc = e.people.find(q => q.id === g); sc.changed_at = Date.now(); sc.bought = false;
+      e.questions = e.questions.filter(q => q.giver !== g); lettere(e);
+      logga(e, nu.name + " è entrato dopo il sorteggio: è cambiato l'abbinamento di 1 persona");
+      return { ok: true, cambiati: 1 };
     },
-    ss_undo: a => { need(a); const e = adm(a); e.pairs = null; e.status = 'open'; e.drawn_at = null; },
-    ss_event_del: a => { need(a); adm(a); D.ss = D.ss.filter(x => x.id !== a.p_event); },
-    ss_reveal: a => {
-      need(a); const e = ev(a.p_event), me = chi(e, a.p_name); if (!me || me.pin !== a.p_pin) throw err('PIN_ERRATO');
-      const r = e.pairs && e.people.find(p => p.id === e.pairs.get(me.id));
-      return r ? { drawn: true, me: me.name, to: r.name, wish: r.wish, my_wish: me.wish } : { drawn: false, me: me.name, my_wish: me.wish };
+    ss_kick: a => {
+      need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x };
+      const X = e.people.find(p => same(p.name, clean(a.p_name, 30))); if (!X) throw err('NOME_NON_TROVATO');
+      let cambiati = 0;
+      if (e.status === 'drawn' && !X.pending) {
+        if (attivi(e).length <= 3) throw err('SERVONO_ALMENO_3');
+        const pg = [...e.pairs].find(([, r]) => r === X.id)[0], qr = e.pairs.get(X.id), pp = new Map(e.pairs);
+        pp.delete(X.id); pp.delete(pg);
+        const resto = attivi(e).filter(p => p !== X), per = id => resto.find(p => p.id === id);
+        for (const conPrev of [true, false]) {
+          const v = vietato(e, conPrev);
+          if (pg !== qr && !v(per(pg), per(qr))) { pp.set(pg, qr); cambiati = 1; break; }
+          const altri = mesc([...pp].filter(([c, d]) => c !== pg && d !== pg && c !== qr && d !== qr));
+          const s = altri.find(([c, d]) => !v(per(pg), per(d)) && !v(per(c), per(qr)));
+          if (s) { pp.set(pg, s[1]); pp.set(s[0], qr); cambiati = 2; break; }
+        }
+        if (!cambiati) throw err('RITIRO_IMPOSSIBILE');
+        const camb = [...pp].filter(([g, r]) => e.pairs.get(g) !== r).map(([g]) => g);
+        camb.forEach(g => { const q = per(g); q.changed_at = Date.now(); q.bought = false; });
+        e.questions = e.questions.filter(q => !camb.includes(q.giver) && q.giver !== X.id && q.receiver !== X.id);
+        e.pairs = pp;
+      }
+      togli(e, X); if (e.status === 'drawn') lettere(e);
+      logga(e, `${e.organizer} ha tolto ${X.name}` + (cambiati === 1 ? ": è cambiato l'abbinamento di 1 persona" : cambiati === 2 ? ": è cambiato l'abbinamento di 2 persone" : ''));
+      return { ok: true, cambiati };
     },
+    ss_admin_check: a => { need(a); const x = admE(evt(a.p_event), a.p_admin_pin); return x ? { err: x } : { ok: true }; },
+    ss_reset_pin: a => {
+      need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x }; if (!pinOk(a.p_new_pin)) throw err('PIN_NON_VALIDO');
+      const p = e.people.find(q => same(q.name, clean(a.p_name, 30))); if (!p) throw err('NOME_NON_TROVATO');
+      p.pin = a.p_new_pin; p.pin_fail = 0; p.pin_lock = 0; logga(e, `${e.organizer} ha dato un nuovo PIN a ${p.name}`); return { ok: true };
+    },
+    ss_event_del: a => { need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x }; D.ss = D.ss.filter(y => y !== e); return { ok: true }; },
+    ss_status: a => { need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x };
+      return { people: e.people.map(p => ({ name: p.name, pending: p.pending, seen: !p.pending && p.seen_draw === e.draw_no && e.draw_no > 0, bought: p.bought })).sort((p, q) => alfa(p.name, q.name)) }; },
     ss_check: a => {
-      need(a); const e = ev(a.p_event), n = e.people.length, pr = e.pairs || new Map(), rec = [...pr.values()];
-      const nome = i => (e.people.find(p => p.id === i) || {}).name;
-      let passi = 0; const inizio = [...pr.keys()][0]; let c = inizio;
-      if (inizio) do { c = pr.get(c); passi++; } while (c && c !== inizio && passi <= n);
-      const self = [...pr].filter(([g, r]) => g === r).length, dup = rec.length - new Set(rec).size;
-      const ex = [...pr].filter(([g, r]) => e.excl.some(([p, q]) => (p === nome(g) && q === nome(r)) || (p === nome(r) && q === nome(g)))).length;
-      const giro = passi === n && c === inizio;
-      return { people: n, pairs: pr.size, self, dup_receivers: dup, excluded_pairs: ex, single_chain: giro, ok: pr.size === n && !self && !dup && !ex && giro };
+      need(a); const e = evt(a.p_event), P = attivi(e), n = P.length, pr = e.pairs ? [...e.pairs] : [], ids = P.map(p => p.id), v = vietato(e, false);
+      const self = pr.filter(([g, r]) => g === r).length, givers = new Set(pr.map(x => x[0])).size, receivers = new Set(pr.map(x => x[1])).size;
+      const fuori = pr.filter(([g, r]) => !ids.includes(g) || !ids.includes(r)).length;
+      const viet = pr.filter(([g, r]) => g !== r && ids.includes(g) && ids.includes(r) && v(e.people.find(p => p.id === g), e.people.find(p => p.id === r))).length;
+      return { people: n, pairs: pr.length, self, givers, receivers, excluded_pairs: viet, ok: n > 0 && pr.length === n && !self && givers === n && receivers === n && !fuori && !viet };
     },
-    ss_reset_pin: a => { need(a); const e = adm(a); if (!pinOk(a.p_new_pin)) throw err('PIN_NON_VALIDO'); const p = chi(e, a.p_name); if (!p) throw err('NOME_NON_TROVATO'); p.pin = a.p_new_pin; }
+    ss_tabella: a => {
+      need(a); const e = evt(a.p_event); if (e.status !== 'drawn') return { aperta: false };
+      const code = id => e.people.find(p => p.id === id).code;
+      return { aperta: true, check: F.ss_check(a), righe: [...e.pairs].map(([g, r]) => ({ da: code(g), a: code(r) })).sort((x, y) => x.da.length - y.da.length || (x.da < y.da ? -1 : 1)) };
+    },
+    ss_bought: a => { need(a); const e = evt(a.p_event), p = pinP(e, a.p_name, a.p_pin); if (p.err) return p; p.bought = a.p_val !== false; return { ok: true }; },
+    ss_ask: a => {
+      need(a); const e = evt(a.p_event), p = pinP(e, a.p_name, a.p_pin); if (p.err) return p;
+      const rc = e.pairs && e.pairs.get(p.id); if (!rc) return { err: 'SORTEGGIO_NON_FATTO' };
+      const q = clean(a.p_question, 500); if (!q) return { err: 'POST_VUOTO' };
+      e.questions.push({ id: uid(), giver: p.id, receiver: rc, question: q, answer: null, created_at: t(0), answered_at: null }); return { ok: true };
+    },
+    ss_inbox: a => {
+      need(a); const e = evt(a.p_event), p = pinP(e, a.p_name, a.p_pin); if (p.err) return p;
+      const rc = e.pairs && e.pairs.get(p.id), out = q => ({ id: q.id, question: q.question, answer: q.answer, created_at: q.created_at, answered_at: q.answered_at });
+      return { per_me: e.questions.filter(q => q.receiver === p.id && e.pairs && e.pairs.get(q.giver) === p.id).map(out), mie: e.questions.filter(q => q.giver === p.id && q.receiver === rc).map(out) };
+    },
+    ss_answer: a => {
+      need(a); const e = evt(a.p_event), p = pinP(e, a.p_name, a.p_pin); if (p.err) return p;
+      const ans = clean(a.p_answer, 500); if (!ans) return { err: 'POST_VUOTO' };
+      const q = e.questions.find(x => x.id === a.p_question && x.receiver === p.id); if (!q) return { err: 'DOMANDA_NON_TROVATA' };
+      q.answer = ans; q.answered_at = t(0); return { ok: true };
+    },
+    couples_list: a => { need(a); return D.couples.map(c => c.slice()).sort((x, y) => alfa(x[0] + ' ' + x[1], y[0] + ' ' + y[1])); },
+    couples_set: a => {
+      need(a); const x = admG(a.p_admin); if (x) return { err: x };
+      const L = []; for (const [p, q] of (a.p_pairs || [])) { const s = clean(p, 30), u = clean(q, 30);
+        if (s && u && !same(s, u) && !L.some(([c, d]) => (same(c, s) && same(d, u)) || (same(c, u) && same(d, s)))) L.push(s.toLowerCase() <= u.toLowerCase() ? [s, u] : [u, s]); }
+      D.couples = L; return { ok: true };
+    },
   };
   return {
     files: D.files,

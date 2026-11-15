@@ -21,7 +21,7 @@ Richiesta di Ricky:
 1. **Prima pagina / Novità**: chi entra può scrivere novità e allegare foto.
 2. **Foto**: cartelle (album) di foto.
 3. **Gioco**: sezione con Senza Filtro (link al gioco qui sopra).
-4. **Secret Santa**: da testare molto bene.
+4. **Secret Santa**: rifatto "per bene" (vedi sotto). Regola di Ricky: tutto a caso come il cappello, ognuno fa **un** regalo e ne riceve **uno**, nessuno a se stesso, le coppie non si pescano.
 5. **FantaSanremo**: per ora "in arrivo".
 
 Decisioni già prese con Ricky:
@@ -38,7 +38,13 @@ Decisioni già prese con Ricky:
 
 Stato:
 - ✅ `sito/schema.sql` – tabelle + funzioni RPC. Tutte le tabelle hanno RLS senza policy: si passa solo dalle funzioni `security definer` che controllano la password (`app_config.k='pw'`, hash bcrypt). Si può rieseguire più volte senza problemi.
-  Secret Santa: iscrizione con nome + PIN personale, letterina, esclusioni (coppie), sorteggio a **catena unica**, ognuno vede solo il proprio abbinamento (`ss_reveal` con PIN), `ss_check` verifica il sorteggio senza rivelare le coppie, `ss_admin_check` (sblocca area organizzatore), `ss_reset_pin` (l'organizzatore dà un PIN nuovo a chi l'ha dimenticato, senza vedere gli abbinamenti). Nomi non sensibili a maiuscole/minuscole.
+  Secret Santa (rifatto a novembre 2026, spiegazione completa nella sottopagina Notion https://app.notion.com/p/4197b901003f81efb13aff53aecc07e0):
+  - Sorteggio **"cappello"** (`_ss_cappello`): permutazione a caso uniforme (Fisher-Yates con `gen_random_bytes`), si ripesca TUTTO finché non c'è nessuna coppia vietata (se stesso, **coppie del gruppo** `group_couples`, esclusioni dell'evento, abbinamenti dell'anno prima se `prev_event`). **Niente "giro unico"**: Ricky non lo vuole. Prima controlla se è possibile con un abbinamento bipartito (`_ss_match`): se impossibile → `ESCLUSIONI_IMPOSSIBILI` + `chi` (le persone che causano il problema). Dopo 3000 tentativi usa il risultato di `_ss_match`.
+  - **Lettere finte** (A, B… AA) date a caso con un rimescolamento separato (`_ss_lettere`); `ss_tabella` mostra "A → F" ecc. solo dopo il sorteggio (verifica pubblica, nessuno sa quale lettera è chi). Richiesta di Ricky.
+  - PIN: 5 errori → blocco 15 minuti (personale e organizzatore); le funzioni RESTITUISCONO `{"err": ...}` invece di lanciare l'errore (altrimenti il contatore si annulla). Nel sito `errInRisposta()` lo trasforma in errore.
+  - Diario `ss_log` (visibile a tutti: sorteggio, rifatto, nuovo PIN, entrate/uscite), "chi ha guardato" + "regalo preso ✓" solo per l'organizzatore (`ss_status`), avviso "sorteggio rifatto/abbinamento cambiato", ritardatari in attesa → `ss_admit` (cambia 1 persona), `ss_kick` dopo il sorteggio cambia 1–2 persone, **domande anonime** (`ss_ask`/`ss_inbox`/`ss_answer`), "Rifai per il prossimo anno", invito WhatsApp + post nelle Novità (#SecretSanta) con link interno.
+  - Coppie del gruppo: ☰ → Chi c'è nel gruppo → Area amministratore (PIN amministratore) → Coppie del gruppo (`couples_list`/`couples_set`). I nomi delle coppie stanno solo nel database, mai nel repo.
+  - Nomi non sensibili a maiuscole/minuscole. Righe bloccate con `for update` (niente scontri tra telefoni).
 - ✅ `sito/storage.sql` – bucket `foto` pubblico (percorsi casuali), upload consentito alla chiave pubblica.
 - ✅ `sito/index.html` – il sito (pagina unica, niente librerie). In cima: `SUPA_URL`, `SUPA_KEY`, `NOME`, `GIOCO_URL`.
   **Modalità prova**: con `SUPA_URL`/`SUPA_KEY` vuoti il sito funziona con dati finti in memoria (password `prova`, PIN organizzatore del Secret Santa di prova `0000`, striscia gialla "MODALITÀ PROVA"); stesse regole del database vero (funzione `creaDemo()`). Serve a far vedere il sito a Ricky prima di collegare Supabase.
@@ -46,12 +52,14 @@ Stato:
   Rotte: `#novita`, `#tag/<hashtag>`, `#post/<id>` (risposte), `#foto`, `#foto/<album>`, `#gioco`, `#gioco/gioca`, `#santa`, `#santa/<evento>`, `#fanta`. Navigazione con `data-go` (niente `href="#..."`, htmlpreview li riscrive).
   Foto: ridimensionate a 1600px JPEG + miniatura 640px (`<uuid>_t.jpg`), cartelle `novita/` e `album/<id>/`. Dati salvati nel telefono con prefisso `pip_` in localStorage (`pipdemo_` in modalità prova).
 - ✅ Test (tutti verdi):
-  - `cd sito && npm i @electric-sql/pglite && node test-database.mjs` – database.
-  - `node prova-locale.mjs` (finto Supabase su http://localhost:8787 col vero schema.sql in PGlite, password `prova`; `LAG=300` = rete lenta) e poi `node test-sito.mjs` – 6 telefoni finti con Playwright (159 controlli, compresa la modalità prova aperta come file): novità con foto, mi piace, risposte, hashtag e tendenze, cartelle, Secret Santa completo (iscrizioni, nome rubato, esclusioni, sorteggio, altro telefono, PIN dimenticato, letterina aggiornata, annulla e rifai). Riavvia `prova-locale.mjs` prima di ogni giro (i dati sono in memoria).
+  - `cd sito && npm i @electric-sql/pglite && node test-database.mjs` – database (112 controlli).
+  - `node test-sorteggio.mjs` – matematica del sorteggio: regola d'oro su 3000 gruppi, equità (chi-quadro), "impossibile" confrontato con la forza bruta, velocità con 40 persone, lettere a caso.
+  - `node prova-locale.mjs` (finto Supabase su http://localhost:8787 col vero schema.sql in PGlite, password `prova`; `LAG=300` = rete lenta) e poi `node test-sito.mjs` – 8 telefoni finti con Playwright (178 controlli, compresa la modalità prova su `/prova`; verde anche con `LAG=250`): novità con foto, mi piace, risposte, hashtag e tendenze, cartelle, Secret Santa completo (coppie del gruppo, esclusioni, sorteggio con annuncio, verifica con lettere, chi ha guardato, regalo preso, domande anonime, ritardatario fatto entrare, altro telefono, PIN dimenticato, letterina aggiornata, annulla e rifai, PIN bloccato dopo 5 errori). Riavvia `prova-locale.mjs` prima di ogni giro (i dati sono in memoria).
 - ✅ Supabase collegato: Ricky ha eseguito `installa.sql` (verificato dal vivo: `check_pw` risponde, `feed` senza password → PASSWORD_ERRATA, tabelle negate all'anon, bucket `foto` esiste). In `index.html` ci sono `SUPA_URL` e la chiave **anon** (JWT `eyJ…`, pubblica). La password del gruppo la conosce solo Ricky: io non la so e non devo chiederla.
   Per i test la modalità prova è su `http://localhost:8787/prova` (`prova-locale.mjs` svuota URL e chiave).
 - ⏳ Da fare:
-  0. ✅ Ricky ha ricopiato `installa.sql` con sondaggi, commenti alle storie e kick (verificato dal vivo: le funzioni nuove rispondono PASSWORD_ERRATA senza password) e ha scelto il PIN amministratore (non scriverlo mai nel repo; si verifica solo dal sito, Area amministratore). Se in futuro cambia `schema.sql`: rigenerare `installa.sql` e chiedergli di ricopiarlo.
+  0. ⏳ **Secret Santa nuovo**: Ricky deve ricopiare `installa.sql` (nuove funzioni `ss_*`, `couples_*`, `admin_check` che restituisce json) e poi inserire le coppie del gruppo dal sito. Verifica dal vivo: `couples_list`/`ss_tabella` con password sbagliata → PASSWORD_ERRATA (prima: funzione inesistente). Finché non lo fa, il sito mostra "Il database va aggiornato".
+  0b. ✅ Ricky ha ricopiato `installa.sql` con sondaggi, commenti alle storie e kick (verificato dal vivo: le funzioni nuove rispondono PASSWORD_ERRATA senza password) e ha scelto il PIN amministratore (non scriverlo mai nel repo; si verifica solo dal sito, Area amministratore). Se in futuro cambia `schema.sql`: rigenerare `installa.sql` e chiedergli di ricopiarlo.
   - Pagina Notion privata "PIPPEGHI 24/7" con link, istruzioni e righe SQL: https://app.notion.com/p/4197b901003f81d0b40fd06aa054a048 (aggiornarla se cambiano cose importanti).
   - Dopo un aggiornamento il telefono può mostrare la versione vecchia per qualche minuto (cache di GitHub: max-age 300): basta ricaricare.
   1. Ricky prova il sito vero con la sua password (novità, foto, Secret Santa con più persone).
