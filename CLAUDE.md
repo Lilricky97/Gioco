@@ -51,9 +51,9 @@ Stato:
 - ✅ Supabase collegato: Ricky ha eseguito `installa.sql` (verificato dal vivo: `check_pw` risponde, `feed` senza password → PASSWORD_ERRATA, tabelle negate all'anon, bucket `foto` esiste). In `index.html` ci sono `SUPA_URL` e la chiave **anon** (JWT `eyJ…`, pubblica). La password del gruppo la conosce solo Ricky: io non la so e non devo chiederla.
   Per i test la modalità prova è su `http://localhost:8787/prova` (`prova-locale.mjs` svuota URL e chiave).
 - ⏳ Da fare:
-  0. ⏳ Ricky deve **ricopiare `installa.sql`** (sondaggi, commenti alle storie, kick) e impostare il **PIN amministratore**:
-     `insert into app_config(k,v) values ('admin', extensions.crypt('PIN', extensions.gen_salt('bf'))) on conflict (k) do update set v = excluded.v;`
-     Poi verificare dal vivo (funzioni nuove → PASSWORD_ERRATA senza password). Se in futuro cambia `schema.sql`: rigenerare `installa.sql` e chiedergli di ricopiarlo.
+  0. ✅ Ricky ha ricopiato `installa.sql` con sondaggi, commenti alle storie e kick (verificato dal vivo: le funzioni nuove rispondono PASSWORD_ERRATA senza password) e ha scelto il PIN amministratore (non scriverlo mai nel repo; si verifica solo dal sito, Area amministratore). Se in futuro cambia `schema.sql`: rigenerare `installa.sql` e chiedergli di ricopiarlo.
+  - Pagina Notion privata "PIPPEGHI 24/7" con link, istruzioni e righe SQL: https://app.notion.com/p/4197b901003f81d0b40fd06aa054a048 (aggiornarla se cambiano cose importanti).
+  - Dopo un aggiornamento il telefono può mostrare la versione vecchia per qualche minuto (cache di GitHub: max-age 300): basta ricaricare.
   1. Ricky prova il sito vero con la sua password (novità, foto, Secret Santa con più persone).
   2. Link definitivo: chiedere a Ricky il permesso di mettere il sito su `main` (link `https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/main/sito/index.html`) oppure GitHub Pages se lo attiva.
   3. Sezioni/colori: aspettare le richieste di Ricky. FantaSanremo ancora "in arrivo".
