@@ -239,6 +239,28 @@ create table if not exists event_date_votes (
   primary key (date_id, name)
 );
 
+create table if not exists push_subs (          -- telefoni che vogliono le notifiche
+  endpoint text primary key,                     -- indirizzo di notifica dato dal telefono (Apple/Google/Mozilla)
+  name text not null,
+  p256dh text not null,
+  auth text not null,
+  kinds text[] not null default '{storie,post,eventi}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists notif_queue (        -- "cassetta delle lettere" delle notifiche da mandare
+  id bigint generated always as identity primary key,
+  kind text not null,                            -- storie / post / eventi
+  author text not null default '',               -- chi l'ha fatto (non riceve la sua notifica)
+  title text not null,
+  body text not null default '',
+  url text not null default '',                  -- dove porta il tocco, es. #post/<id>
+  event_id uuid,                                 -- promemoria: chi ha detto "Non ci sono" non lo riceve
+  created_at timestamptz not null default now(),
+  sent_at timestamptz
+);
+
 alter table app_config enable row level security;
 alter table members   enable row level security;
 alter table stories     enable row level security;
@@ -266,6 +288,8 @@ alter table event_rsvp       enable row level security;
 alter table event_comments   enable row level security;
 alter table event_dates      enable row level security;
 alter table event_date_votes enable row level security;
+alter table push_subs        enable row level security;
+alter table notif_queue      enable row level security;
 -- nessuna policy: dall'esterno si passa solo dalle funzioni qui sotto
 
 -- ---------- utilità ----------
@@ -1558,6 +1582,162 @@ begin
   return _event_json(p_id, true);
 end $$;
 
+-- ---------- NOTIFICHE SUL TELEFONO ----------
+-- Storie, post ed eventi mettono una notifica in notif_queue; il database sveglia la funzione "notifica"
+-- di Supabase (se è installata) passando SOLO il numero: la funzione legge da qui il testo e i destinatari.
+create or replace function _data_it(d date, o time) returns text
+language sql immutable as $$
+  select (array['domenica','lunedì','martedì','mercoledì','giovedì','venerdì','sabato'])[extract(dow from d)::int + 1] || ' ' ||
+    extract(day from d)::int || ' ' || (array['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'])[extract(month from d)::int] ||
+    coalesce(' ore ' || to_char(o, 'HH24:MI'), '')
+$$;
+
+create or replace function _notifica(p_kind text, p_author text, p_title text, p_body text, p_url text, p_event uuid) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  delete from notif_queue where created_at < now() - interval '30 days';
+  insert into notif_queue(kind, author, title, body, url, event_id)
+  values (p_kind, coalesce(p_author, ''), left(p_title, 80), left(coalesce(p_body, ''), 160), coalesce(p_url, ''), p_event);
+end $$;
+
+-- appena entra una notifica: sveglia la funzione di Supabase (pg_net). Se non c'è, non succede niente
+create or replace function _notif_sveglia() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare v_url text; v_key text;
+begin
+  select v into v_url from app_config where k = 'notif_url';
+  select v into v_key from app_config where k = 'notif_key';
+  if v_url is null or to_regproc('net.http_post') is null then return new; end if;
+  execute 'select net.http_post(url := $1, body := $2, headers := $3, timeout_milliseconds := 8000)'
+    using v_url, jsonb_build_object('id', new.id), jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || coalesce(v_key, ''));
+  return new;
+exception when others then return new;          -- una notifica non deve mai bloccare un post
+end $$;
+drop trigger if exists notif_sveglia on notif_queue;
+create trigger notif_sveglia after insert on notif_queue for each row execute function _notif_sveglia();
+
+create or replace function _notif_storia() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _notifica('storie', new.author, '📸 ' || new.author, coalesce(nullif(new.caption, ''), 'ha pubblicato una storia'), '#storie', null);
+  return new;
+exception when others then return new;
+end $$;
+drop trigger if exists notif_storia on stories;
+create trigger notif_storia after insert on stories for each row execute function _notif_storia();
+
+create or replace function _notif_post() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if left(new.body, 2) like '📅%' then return new; end if;   -- gli annunci degli eventi hanno già la loro notifica
+  perform _notifica('post', new.author, '💬 ' || new.author,
+    coalesce(nullif(regexp_replace(left(new.body, 150), '\s+', ' ', 'g'), ''), case when cardinality(new.photos) > 1 then 'ha pubblicato delle foto' else 'ha pubblicato una foto' end),
+    '#post/' || new.id, null);
+  return new;
+exception when others then return new;
+end $$;
+drop trigger if exists notif_post on posts;
+create trigger notif_post after insert on posts for each row execute function _notif_post();
+
+create or replace function _notif_evento() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op = 'INSERT' then
+    if new.day is null then
+      perform _notifica('eventi', new.author, '📅 ' || new.title, new.author || ' propone un evento: vota la data!', '#calendario/' || new.id, new.id);
+    else
+      perform _notifica('eventi', new.author, '📅 ' || new.title, 'Nuovo evento di ' || new.author || ': ' || _data_it(new.day, new.ora) || coalesce(' · ' || nullif(new.place, ''), ''), '#calendario/' || new.id, new.id);
+    end if;
+  elsif old.day is null and new.day is not null then
+    perform _notifica('eventi', new.author, '📅 Data fissata: ' || new.title, _data_it(new.day, new.ora) || coalesce(' · ' || nullif(new.place, ''), ''), '#calendario/' || new.id, new.id);
+  end if;
+  return new;
+exception when others then return new;
+end $$;
+drop trigger if exists notif_evento on events;
+create trigger notif_evento after insert or update of day on events for each row execute function _notif_evento();
+
+-- promemoria il giorno prima (lo lancia pg_cron ogni sera, se attivo). Si può chiamare più volte: non manda doppioni
+create or replace function _notif_promemoria() returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare e record; n int := 0; dom date := (now() at time zone 'Europe/Rome')::date + 1;
+begin
+  for e in select * from events where day = dom loop
+    if not exists (select 1 from notif_queue q where q.event_id = e.id and q.title like '⏰%' and q.created_at > now() - interval '20 hours') then
+      perform _notifica('eventi', '', '⏰ Domani: ' || e.title, coalesce('ore ' || to_char(e.ora, 'HH24:MI'), 'Domani') || coalesce(' · ' || nullif(e.place, ''), ''), '#calendario/' || e.id, e.id);
+      n := n + 1;
+    end if;
+  end loop;
+  return n;
+end $$;
+
+-- chiave pubblica per iscriversi (la crea la funzione "notifica" la prima volta)
+create or replace function push_key(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return json_build_object('pub', (select v from app_config where k = 'vapid_pub'));
+end $$;
+
+create or replace function push_subscribe(p_pw text, p_name text, p_endpoint text, p_p256dh text, p_auth text, p_kinds text[]) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); ks text[];
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'SEI_STATO_RIMOSSO'; end if;
+  if coalesce(p_endpoint, '') !~ '^https://\S+$' or length(p_endpoint) not between 20 and 1000
+     or coalesce(p_p256dh, '') !~ '^[A-Za-z0-9_=-]{40,200}$' or coalesce(p_auth, '') !~ '^[A-Za-z0-9_=-]{8,100}$' then
+    raise exception 'NOTIFICHE_NON_VALIDE';
+  end if;
+  select coalesce(array_agg(distinct x), '{}') into ks from unnest(coalesce(p_kinds, '{}')) x where x in ('storie', 'post', 'eventi');
+  insert into push_subs(endpoint, name, p256dh, auth, kinds) values (p_endpoint, n, p_p256dh, p_auth, ks)
+  on conflict (endpoint) do update set name = excluded.name, p256dh = excluded.p256dh, auth = excluded.auth, kinds = excluded.kinds, updated_at = now();
+  return json_build_object('ok', true, 'kinds', ks);
+end $$;
+
+create or replace function push_unsubscribe(p_pw text, p_endpoint text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from push_subs where endpoint = p_endpoint;
+  return json_build_object('ok', true);
+end $$;
+
+-- ===== solo per la funzione "notifica" di Supabase (chiave service_role), mai per il sito =====
+-- prende la notifica UNA volta sola e dice a chi mandarla: tutti quelli che l'hanno chiesta, tranne chi l'ha fatta,
+-- chi è stato rimosso e (per i promemoria) chi ha detto "Non ci sono"
+create or replace function notif_claim(p_id bigint) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare q notif_queue%rowtype;
+begin
+  update notif_queue set sent_at = now() where id = p_id and sent_at is null returning * into q;
+  if not found then return null; end if;
+  return json_build_object('title', q.title, 'body', q.body, 'url', q.url, 'tag', q.kind || '-' || coalesce(q.event_id::text, q.id::text),
+    'subs', coalesce((select json_agg(json_build_object('endpoint', s.endpoint, 'p256dh', s.p256dh, 'auth', s.auth)) from push_subs s
+      where q.kind = any(s.kinds) and lower(s.name) <> lower(q.author)
+        and not exists (select 1 from members m where lower(m.name) = lower(s.name) and m.banned)
+        and not (q.title like '⏰%' and exists (select 1 from event_rsvp r where r.event_id = q.event_id and lower(r.name) = lower(s.name) and r.ans = 'no'))), '[]'::json));
+end $$;
+
+create or replace function push_gone(p_endpoint text) returns void
+language sql security definer set search_path = public, extensions as $$ delete from push_subs where endpoint = p_endpoint $$;
+
+create or replace function vapid_get() returns json
+language sql stable security definer set search_path = public, extensions as $$
+  select json_build_object('pub', (select v from app_config where k = 'vapid_pub'), 'priv', (select v from app_config where k = 'vapid_priv'))
+$$;
+
+-- la prima chiave salvata vince (se due telefoni la chiedono insieme, restano quelle del primo)
+create or replace function vapid_set(p_pub text, p_priv text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not exists (select 1 from app_config where k = 'vapid_pub') then
+    insert into app_config(k, v) values ('vapid_pub', p_pub), ('vapid_priv', p_priv) on conflict (k) do nothing;
+  end if;
+  return vapid_get();
+end $$;
+
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
 grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread,
@@ -1567,9 +1747,18 @@ grant execute on function check_pw, members_list, member_add, presenza, avatars_
   ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin,
   ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer,
   events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
-  event_date_vote, event_fix_date to anon, authenticated;
+  event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
-  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok from anon, authenticated;
+  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
-  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok from public;
+  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria from public;
+-- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
+revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant execute on function notif_claim, push_gone, vapid_get, vapid_set to service_role;
+  end if;
+end $$;

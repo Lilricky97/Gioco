@@ -67,6 +67,25 @@ http.createServer(async (req, res) => {
       return send(res, 200, html, 'text/html; charset=utf-8')
     }
 
+    // file accanto al sito (come su GitHub Pages): service worker, manifest, icone
+    const statico = { '/sw.js': 'text/javascript', '/manifest.json': 'application/manifest+json' }
+    if (req.method === 'GET' && (statico[p] || /^\/icone\/[\w-]+\.png$/.test(p))) {
+      const f = new URL('.' + p, DIR)
+      if (!fs.existsSync(f)) return send(res, 404, 'non trovato', 'text/plain')
+      return send(res, 200, fs.readFileSync(f), statico[p] || 'image/png')
+    }
+
+    // finta funzione "notifica" di Supabase: la prima volta crea la chiave pubblica (come quella vera)
+    if (p === '/functions/v1/notifica') {
+      if (req.method === 'OPTIONS') { res.writeHead(200, { 'Access-Control-Allow-Origin': '*' }); return res.end('ok') }
+      let pub = (await db.query(`select v from app_config where k='vapid_pub'`)).rows[0]?.v
+      if (!pub) {
+        const k = crypto.createECDH('prime256v1'); k.generateKeys(); pub = k.getPublicKey('base64url')
+        await db.query(`insert into app_config(k,v) values ('vapid_pub',$1),('vapid_priv',$2) on conflict (k) do nothing`, [pub, k.getPrivateKey('base64url')])
+      }
+      return send(res, 200, JSON.stringify({ ok: true, pub }))
+    }
+
     // funzioni del database
     const rpc = p.match(/^\/rest\/v1\/rpc\/(\w+)$/)
     if (rpc && req.method === 'POST') {
@@ -111,7 +130,9 @@ http.createServer(async (req, res) => {
     }
 
     // statistiche per i test automatici
-    if (p === '/__prova/stato') return send(res, 200, JSON.stringify({ files: [...files.keys()] }))
+    if (p === '/__prova/stato') return send(res, 200, JSON.stringify({ files: [...files.keys()],
+      push: (await db.query('select name, endpoint, kinds from push_subs order by name')).rows,
+      coda: (await db.query('select kind, author, title, url from notif_queue order by id')).rows }))
     send(res, 404, 'non trovato', 'text/plain')
   } catch (e) {
     console.error(e); send(res, 500, JSON.stringify({ message: String(e) }))

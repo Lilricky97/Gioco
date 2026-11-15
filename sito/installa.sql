@@ -1,6 +1,6 @@
 -- ============================================================
 --  PIPPEGHI 24/7 – INSTALLAZIONE COMPLETA (copia tutto, incolla nel SQL Editor di Supabase, Run)
---  = schema.sql + storage.sql. Si può rieseguire senza problemi (non cancella niente).
+--  = schema.sql + storage.sql + progetto.sql. Si può rieseguire senza problemi (non cancella niente).
 -- ============================================================
 
 -- ============================================================
@@ -199,6 +199,73 @@ create table if not exists ss_questions (        -- domande anonime di chi regal
   answered_at timestamptz
 );
 
+create table if not exists events (             -- calendario: cene, feste, serate
+  id uuid primary key default gen_random_uuid(),
+  author text not null,
+  title text not null,
+  place text not null default '',
+  body text not null default '',
+  day date,                                      -- null = data ancora da votare ("scegliamo la data insieme")
+  ora time,                                      -- facoltativa
+  cover text,                                    -- foto di copertina: eventi/<uuid>.jpg
+  created_at timestamptz not null default now()
+);
+
+create table if not exists event_rsvp (         -- Ci sono / Forse / Non ci sono
+  event_id uuid not null references events(id) on delete cascade,
+  name text not null,
+  ans text not null check (ans in ('si', 'forse', 'no')),
+  created_at timestamptz not null default now(),
+  primary key (event_id, name)
+);
+create unique index if not exists event_rsvp_nome on event_rsvp(event_id, lower(name));
+
+create table if not exists event_comments (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events(id) on delete cascade,
+  author text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists event_dates (        -- date proposte (votazione)
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events(id) on delete cascade,
+  pos int not null,
+  day date not null,
+  ora time
+);
+
+create table if not exists event_date_votes (
+  date_id uuid not null references event_dates(id) on delete cascade,
+  event_id uuid not null references events(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  primary key (date_id, name)
+);
+
+create table if not exists push_subs (          -- telefoni che vogliono le notifiche
+  endpoint text primary key,                     -- indirizzo di notifica dato dal telefono (Apple/Google/Mozilla)
+  name text not null,
+  p256dh text not null,
+  auth text not null,
+  kinds text[] not null default '{storie,post,eventi}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists notif_queue (        -- "cassetta delle lettere" delle notifiche da mandare
+  id bigint generated always as identity primary key,
+  kind text not null,                            -- storie / post / eventi
+  author text not null default '',               -- chi l'ha fatto (non riceve la sua notifica)
+  title text not null,
+  body text not null default '',
+  url text not null default '',                  -- dove porta il tocco, es. #post/<id>
+  event_id uuid,                                 -- promemoria: chi ha detto "Non ci sono" non lo riceve
+  created_at timestamptz not null default now(),
+  sent_at timestamptz
+);
+
 alter table app_config enable row level security;
 alter table members   enable row level security;
 alter table stories     enable row level security;
@@ -221,6 +288,13 @@ alter table ss_pairs  enable row level security;
 alter table group_couples enable row level security;
 alter table ss_log       enable row level security;
 alter table ss_questions enable row level security;
+alter table events           enable row level security;
+alter table event_rsvp       enable row level security;
+alter table event_comments   enable row level security;
+alter table event_dates      enable row level security;
+alter table event_date_votes enable row level security;
+alter table push_subs        enable row level security;
+alter table notif_queue      enable row level security;
 -- nessuna policy: dall'esterno si passa solo dalle funzioni qui sotto
 
 -- ---------- utilità ----------
@@ -1333,6 +1407,342 @@ begin
   return json_build_object('ok', true);
 end $$;
 
+-- ---------- CALENDARIO EVENTI ----------
+-- giorno + ora "locali" (senza fuso orario): il gruppo è in Italia
+create or replace function _event_json(p_id uuid, p_full boolean) returns json
+language sql stable security definer set search_path = public, extensions as $$
+  select json_build_object('id', e.id, 'author', e.author, 'title', e.title, 'place', e.place,
+    'day', e.day, 'ora', to_char(e.ora, 'HH24:MI'), 'cover', e.cover, 'created_at', e.created_at, 'voting', e.day is null,
+    'rsvp', json_build_object(
+      'si',    coalesce((select json_agg(r.name order by r.created_at) from event_rsvp r where r.event_id = e.id and r.ans = 'si'), '[]'::json),
+      'forse', coalesce((select json_agg(r.name order by r.created_at) from event_rsvp r where r.event_id = e.id and r.ans = 'forse'), '[]'::json),
+      'no',    coalesce((select json_agg(r.name order by r.created_at) from event_rsvp r where r.event_id = e.id and r.ans = 'no'), '[]'::json)),
+    'n_comments', (select count(*) from event_comments c where c.event_id = e.id),
+    'dates', case when e.day is null then coalesce((select json_agg(json_build_object('id', d.id, 'day', d.day, 'ora', to_char(d.ora, 'HH24:MI'),
+        'voters', coalesce((select json_agg(v.name order by v.created_at) from event_date_votes v where v.date_id = d.id), '[]'::json)) order by d.pos)
+      from event_dates d where d.event_id = e.id), '[]'::json) else '[]'::json end,
+    'body', case when p_full then e.body else left(e.body, 140) end,
+    'comments', case when p_full then coalesce((select json_agg(json_build_object('id', c.id, 'author', c.author, 'body', c.body, 'created_at', c.created_at) order by c.created_at)
+      from event_comments c where c.event_id = e.id), '[]'::json) else null end)
+  from events e where e.id = p_id;
+$$;
+
+create or replace function _event_cover_ok(p text) returns boolean
+language sql immutable as $$ select p is null or p ~ '^eventi/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$' $$;
+
+create or replace function _event_day_ok(d date) returns boolean
+language sql stable as $$ select d between current_date - 366 and current_date + 3653 $$;
+
+create or replace function events_list(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(_event_json(x.id, false) order by x.day nulls first, x.ora nulls first, x.created_at)
+    from (select id, day, ora, created_at from events where day is null or day >= current_date - 366 order by day desc nulls first limit 500) x), '[]'::json);
+end $$;
+
+create or replace function event_get(p_pw text, p_id uuid) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare r json;
+begin
+  perform _need(p_pw);
+  r := _event_json(p_id, true);
+  if r is null then raise exception 'EVENTO_SPARITO'; end if;
+  return r;
+end $$;
+
+-- p_dates = null → data decisa (p_day obbligatorio); altrimenti 2–5 date proposte [{"day":"2026-12-20","ora":"20:30"}, ...]
+create or replace function event_add(p_pw text, p_author text, p_title text, p_place text, p_body text,
+  p_day date, p_ora time, p_cover text, p_dates json) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; t text := _clean(p_title, 80); a text := _clean(p_author, 30); n int; giorni date[]; ore time[];
+begin
+  perform _need(p_pw);
+  if a = '' then raise exception 'NOME_VUOTO'; end if;
+  if t = '' then raise exception 'TITOLO_VUOTO'; end if;
+  if not _event_cover_ok(p_cover) then raise exception 'FOTO_NON_VALIDA'; end if;
+  if p_dates is not null and json_typeof(p_dates) = 'array' and json_array_length(p_dates) > 0 then
+    begin
+      select array_agg(z.day order by z.day, z.ora nulls first), array_agg(z.ora order by z.day, z.ora nulls first) into giorni, ore
+      from (select distinct (d->>'day')::date as day, nullif(d->>'ora', '')::time as ora
+            from json_array_elements(p_dates) d where coalesce(d->>'day', '') <> '') z;
+    exception when others then raise exception 'DATA_NON_VALIDA';
+    end;
+    n := coalesce(array_length(giorni, 1), 0);
+    if n < 2 then raise exception 'SERVONO_2_DATE'; end if;
+    if n > 5 then raise exception 'TROPPE_DATE'; end if;
+    for i in 1..n loop if not _event_day_ok(giorni[i]) then raise exception 'DATA_NON_VALIDA'; end if; end loop;
+    insert into events(author, title, place, body, cover) values (a, t, _clean(p_place, 120), _clean(p_body, 2000), p_cover) returning id into new_id;
+    for i in 1..n loop insert into event_dates(event_id, pos, day, ora) values (new_id, i, giorni[i], ore[i]); end loop;
+  else
+    if p_day is null then raise exception 'DATA_VUOTA'; end if;
+    if not _event_day_ok(p_day) then raise exception 'DATA_NON_VALIDA'; end if;
+    insert into events(author, title, place, body, day, ora, cover) values (a, t, _clean(p_place, 120), _clean(p_body, 2000), p_day, p_ora, p_cover) returning id into new_id;
+  end if;
+  return new_id;
+end $$;
+
+-- solo chi l'ha creato. Giorno e ora si cambiano solo se la data è già decisa (altrimenti si usa "Fissa questa data")
+create or replace function event_edit(p_pw text, p_id uuid, p_author text, p_title text, p_place text, p_body text,
+  p_day date, p_ora time, p_cover text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare e events%rowtype; t text := _clean(p_title, 80);
+begin
+  perform _need(p_pw);
+  select * into e from events where id = p_id for update;
+  if not found then raise exception 'EVENTO_SPARITO'; end if;
+  if lower(e.author) <> lower(_clean(p_author, 30)) then raise exception 'NON_AUTORIZZATO'; end if;
+  if t = '' then raise exception 'TITOLO_VUOTO'; end if;
+  if not _event_cover_ok(p_cover) then raise exception 'FOTO_NON_VALIDA'; end if;
+  if e.day is not null then
+    if p_day is null then raise exception 'DATA_VUOTA'; end if;
+    if not _event_day_ok(p_day) then raise exception 'DATA_NON_VALIDA'; end if;
+    update events set day = p_day, ora = p_ora where id = p_id;
+  end if;
+  update events set title = t, place = _clean(p_place, 120), body = _clean(p_body, 2000), cover = p_cover where id = p_id;
+  return _event_json(p_id, true);
+end $$;
+
+-- chi l'ha creato, oppure l'amministratore col PIN (errori del PIN restituiti, non lanciati: il blocco dopo 5 errori resta)
+create or replace function event_del(p_pw text, p_id uuid, p_author text, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare e events%rowtype; x text;
+begin
+  perform _need(p_pw);
+  select * into e from events where id = p_id;
+  if not found then return json_build_object('ok', true); end if;
+  if lower(e.author) <> lower(_clean(p_author, 30)) then
+    if coalesce(p_admin, '') = '' then raise exception 'NON_AUTORIZZATO'; end if;
+    x := _admin_try(p_admin);
+    if x is not null then return json_build_object('err', x); end if;
+  end if;
+  delete from events where id = p_id;
+  return json_build_object('ok', true);
+end $$;
+
+-- risposta: 'si' / 'forse' / 'no', oppure null per toglierla
+create or replace function event_rsvp(p_pw text, p_id uuid, p_name text, p_ans text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); a text := nullif(_clean(p_ans, 10), '');
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if not exists (select 1 from events where id = p_id) then raise exception 'EVENTO_SPARITO'; end if;
+  if a is not null and a not in ('si', 'forse', 'no') then raise exception 'RISPOSTA_NON_VALIDA'; end if;
+  delete from event_rsvp where event_id = p_id and lower(name) = lower(n);
+  if a is not null then insert into event_rsvp(event_id, name, ans) values (p_id, n, a); end if;
+  return _event_json(p_id, false)->'rsvp';
+end $$;
+
+create or replace function event_comment_add(p_pw text, p_id uuid, p_author text, p_body text) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; b text := _clean(p_body, 1000); a text := _clean(p_author, 30);
+begin
+  perform _need(p_pw);
+  if b = '' then raise exception 'POST_VUOTO'; end if;
+  if a = '' then raise exception 'NOME_VUOTO'; end if;
+  if not exists (select 1 from events where id = p_id) then raise exception 'EVENTO_SPARITO'; end if;
+  insert into event_comments(event_id, author, body) values (p_id, a, b) returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function event_comment_del(p_pw text, p_id uuid, p_author text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from event_comments where id = p_id and lower(author) = lower(_clean(p_author, 30));
+end $$;
+
+-- tocco su una data proposta: metti o togli il voto (si possono scegliere più date). Restituisce le date aggiornate
+create or replace function event_date_vote(p_pw text, p_date uuid, p_name text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); ev uuid;
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  select d.event_id into ev from event_dates d where d.id = p_date;
+  if not found then raise exception 'EVENTO_SPARITO'; end if;
+  if exists (select 1 from events where id = ev and day is not null) then raise exception 'VOTAZIONE_CHIUSA'; end if;
+  if exists (select 1 from event_date_votes where date_id = p_date and lower(name) = lower(n)) then
+    delete from event_date_votes where date_id = p_date and lower(name) = lower(n);
+  else
+    insert into event_date_votes(date_id, event_id, name) values (p_date, ev, n) on conflict do nothing;
+  end if;
+  return _event_json(ev, false)->'dates';
+end $$;
+
+-- chi l'ha creato sceglie la data vincente: l'evento diventa "con data" e la votazione si chiude
+create or replace function event_fix_date(p_pw text, p_id uuid, p_author text, p_date uuid) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare e events%rowtype; d event_dates%rowtype;
+begin
+  perform _need(p_pw);
+  select * into e from events where id = p_id for update;
+  if not found then raise exception 'EVENTO_SPARITO'; end if;
+  if lower(e.author) <> lower(_clean(p_author, 30)) then raise exception 'NON_AUTORIZZATO'; end if;
+  if e.day is not null then raise exception 'VOTAZIONE_CHIUSA'; end if;
+  select * into d from event_dates where id = p_date and event_id = p_id;
+  if not found then raise exception 'EVENTO_SPARITO'; end if;
+  update events set day = d.day, ora = d.ora where id = p_id;
+  return _event_json(p_id, true);
+end $$;
+
+-- ---------- NOTIFICHE SUL TELEFONO ----------
+-- Storie, post ed eventi mettono una notifica in notif_queue; il database sveglia la funzione "notifica"
+-- di Supabase (se è installata) passando SOLO il numero: la funzione legge da qui il testo e i destinatari.
+create or replace function _data_it(d date, o time) returns text
+language sql immutable as $$
+  select (array['domenica','lunedì','martedì','mercoledì','giovedì','venerdì','sabato'])[extract(dow from d)::int + 1] || ' ' ||
+    extract(day from d)::int || ' ' || (array['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'])[extract(month from d)::int] ||
+    coalesce(' ore ' || to_char(o, 'HH24:MI'), '')
+$$;
+
+create or replace function _notifica(p_kind text, p_author text, p_title text, p_body text, p_url text, p_event uuid) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  delete from notif_queue where created_at < now() - interval '30 days';
+  insert into notif_queue(kind, author, title, body, url, event_id)
+  values (p_kind, coalesce(p_author, ''), left(p_title, 80), left(coalesce(p_body, ''), 160), coalesce(p_url, ''), p_event);
+end $$;
+
+-- appena entra una notifica: sveglia la funzione di Supabase (pg_net). Se non c'è, non succede niente
+create or replace function _notif_sveglia() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare v_url text; v_key text;
+begin
+  select v into v_url from app_config where k = 'notif_url';
+  select v into v_key from app_config where k = 'notif_key';
+  if v_url is null or to_regproc('net.http_post') is null then return new; end if;
+  execute 'select net.http_post(url := $1, body := $2, headers := $3, timeout_milliseconds := 8000)'
+    using v_url, jsonb_build_object('id', new.id), jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || coalesce(v_key, ''));
+  return new;
+exception when others then return new;          -- una notifica non deve mai bloccare un post
+end $$;
+drop trigger if exists notif_sveglia on notif_queue;
+create trigger notif_sveglia after insert on notif_queue for each row execute function _notif_sveglia();
+
+create or replace function _notif_storia() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _notifica('storie', new.author, '📸 ' || new.author, coalesce(nullif(new.caption, ''), 'ha pubblicato una storia'), '#storie', null);
+  return new;
+exception when others then return new;
+end $$;
+drop trigger if exists notif_storia on stories;
+create trigger notif_storia after insert on stories for each row execute function _notif_storia();
+
+create or replace function _notif_post() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if left(new.body, 2) like '📅%' then return new; end if;   -- gli annunci degli eventi hanno già la loro notifica
+  perform _notifica('post', new.author, '💬 ' || new.author,
+    coalesce(nullif(regexp_replace(left(new.body, 150), '\s+', ' ', 'g'), ''), case when cardinality(new.photos) > 1 then 'ha pubblicato delle foto' else 'ha pubblicato una foto' end),
+    '#post/' || new.id, null);
+  return new;
+exception when others then return new;
+end $$;
+drop trigger if exists notif_post on posts;
+create trigger notif_post after insert on posts for each row execute function _notif_post();
+
+create or replace function _notif_evento() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op = 'INSERT' then
+    if new.day is null then
+      perform _notifica('eventi', new.author, '📅 ' || new.title, new.author || ' propone un evento: vota la data!', '#calendario/' || new.id, new.id);
+    else
+      perform _notifica('eventi', new.author, '📅 ' || new.title, 'Nuovo evento di ' || new.author || ': ' || _data_it(new.day, new.ora) || coalesce(' · ' || nullif(new.place, ''), ''), '#calendario/' || new.id, new.id);
+    end if;
+  elsif old.day is null and new.day is not null then
+    perform _notifica('eventi', new.author, '📅 Data fissata: ' || new.title, _data_it(new.day, new.ora) || coalesce(' · ' || nullif(new.place, ''), ''), '#calendario/' || new.id, new.id);
+  end if;
+  return new;
+exception when others then return new;
+end $$;
+drop trigger if exists notif_evento on events;
+create trigger notif_evento after insert or update of day on events for each row execute function _notif_evento();
+
+-- promemoria il giorno prima (lo lancia pg_cron ogni sera, se attivo). Si può chiamare più volte: non manda doppioni
+create or replace function _notif_promemoria() returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare e record; n int := 0; dom date := (now() at time zone 'Europe/Rome')::date + 1;
+begin
+  for e in select * from events where day = dom loop
+    if not exists (select 1 from notif_queue q where q.event_id = e.id and q.title like '⏰%' and q.created_at > now() - interval '20 hours') then
+      perform _notifica('eventi', '', '⏰ Domani: ' || e.title, coalesce('ore ' || to_char(e.ora, 'HH24:MI'), 'Domani') || coalesce(' · ' || nullif(e.place, ''), ''), '#calendario/' || e.id, e.id);
+      n := n + 1;
+    end if;
+  end loop;
+  return n;
+end $$;
+
+-- chiave pubblica per iscriversi (la crea la funzione "notifica" la prima volta)
+create or replace function push_key(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return json_build_object('pub', (select v from app_config where k = 'vapid_pub'));
+end $$;
+
+create or replace function push_subscribe(p_pw text, p_name text, p_endpoint text, p_p256dh text, p_auth text, p_kinds text[]) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); ks text[];
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'SEI_STATO_RIMOSSO'; end if;
+  if coalesce(p_endpoint, '') !~ '^https://\S+$' or length(p_endpoint) not between 20 and 1000
+     or coalesce(p_p256dh, '') !~ '^[A-Za-z0-9_=-]{40,200}$' or coalesce(p_auth, '') !~ '^[A-Za-z0-9_=-]{8,100}$' then
+    raise exception 'NOTIFICHE_NON_VALIDE';
+  end if;
+  select coalesce(array_agg(distinct x), '{}') into ks from unnest(coalesce(p_kinds, '{}')) x where x in ('storie', 'post', 'eventi');
+  insert into push_subs(endpoint, name, p256dh, auth, kinds) values (p_endpoint, n, p_p256dh, p_auth, ks)
+  on conflict (endpoint) do update set name = excluded.name, p256dh = excluded.p256dh, auth = excluded.auth, kinds = excluded.kinds, updated_at = now();
+  return json_build_object('ok', true, 'kinds', ks);
+end $$;
+
+create or replace function push_unsubscribe(p_pw text, p_endpoint text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  delete from push_subs where endpoint = p_endpoint;
+  return json_build_object('ok', true);
+end $$;
+
+-- ===== solo per la funzione "notifica" di Supabase (chiave service_role), mai per il sito =====
+-- prende la notifica UNA volta sola e dice a chi mandarla: tutti quelli che l'hanno chiesta, tranne chi l'ha fatta,
+-- chi è stato rimosso e (per i promemoria) chi ha detto "Non ci sono"
+create or replace function notif_claim(p_id bigint) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare q notif_queue%rowtype;
+begin
+  update notif_queue set sent_at = now() where id = p_id and sent_at is null returning * into q;
+  if not found then return null; end if;
+  return json_build_object('title', q.title, 'body', q.body, 'url', q.url, 'tag', q.kind || '-' || coalesce(q.event_id::text, q.id::text),
+    'subs', coalesce((select json_agg(json_build_object('endpoint', s.endpoint, 'p256dh', s.p256dh, 'auth', s.auth)) from push_subs s
+      where q.kind = any(s.kinds) and lower(s.name) <> lower(q.author)
+        and not exists (select 1 from members m where lower(m.name) = lower(s.name) and m.banned)
+        and not (q.title like '⏰%' and exists (select 1 from event_rsvp r where r.event_id = q.event_id and lower(r.name) = lower(s.name) and r.ans = 'no'))), '[]'::json));
+end $$;
+
+create or replace function push_gone(p_endpoint text) returns void
+language sql security definer set search_path = public, extensions as $$ delete from push_subs where endpoint = p_endpoint $$;
+
+create or replace function vapid_get() returns json
+language sql stable security definer set search_path = public, extensions as $$
+  select json_build_object('pub', (select v from app_config where k = 'vapid_pub'), 'priv', (select v from app_config where k = 'vapid_priv'))
+$$;
+
+-- la prima chiave salvata vince (se due telefoni la chiedono insieme, restano quelle del primo)
+create or replace function vapid_set(p_pub text, p_priv text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not exists (select 1 from app_config where k = 'vapid_pub') then
+    insert into app_config(k, v) values ('vapid_pub', p_pub), ('vapid_priv', p_priv) on conflict (k) do nothing;
+  end if;
+  return vapid_get();
+end $$;
+
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
 grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread,
@@ -1340,12 +1750,23 @@ grant execute on function check_pw, members_list, member_add, presenza, avatars_
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
   ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin,
-  ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer to anon, authenticated;
+  ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer,
+  events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
+  event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
-  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm from anon, authenticated;
+  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
-  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm from public;
+  _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria from public;
+-- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
+revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant execute on function notif_claim, push_gone, vapid_get, vapid_set to service_role;
+  end if;
+end $$;
 
 -- ---------- spazio per le foto ----------
 -- spazio per le foto (pubbliche solo con l'indirizzo esatto, impossibile da indovinare)
@@ -1354,3 +1775,26 @@ values ('foto', 'foto', true, 8388608, array['image/jpeg','image/png','image/web
 on conflict (id) do update set public = true, file_size_limit = 8388608, allowed_mime_types = array['image/jpeg','image/png','image/webp'];
 drop policy if exists "covo upload foto" on storage.objects;
 create policy "covo upload foto" on storage.objects for insert to anon, authenticated with check (bucket_id = 'foto');
+
+-- ============================================================
+--  PIPPEGHI 24/7 – impostazioni di QUESTO progetto Supabase (notifiche sul telefono)
+--  Indirizzo della funzione "notifica" e chiave PUBBLICA (anon, la stessa che c'è nel sito).
+--  Nessun segreto qui: le chiavi delle notifiche le crea la funzione da sola e restano nel database.
+-- ============================================================
+insert into app_config(k, v) values
+  ('notif_url', 'https://hiypieuddqkwefifiqqc.supabase.co/functions/v1/notifica'),
+  ('notif_key', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpeXBpZXVkZHFrd2VmaWZpcXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ3MDAyODgsImV4cCI6MjExMDI3NjI4OH0.AErX76Ioe3c4ja6owNQwdAWjwl49gdA4giHI0AdMmIs')
+on conflict (k) do update set v = excluded.v;
+
+-- pg_net: serve al database per "svegliare" la funzione delle notifiche
+do $$ begin
+  create extension if not exists pg_net;
+exception when others then raise notice 'pg_net non disponibile: %', sqlerrm;
+end $$;
+
+-- pg_cron: promemoria "Domani: ..." ogni sera alle 18 (19 con l'ora legale). Se non c'è, il resto funziona lo stesso
+do $$ begin
+  create extension if not exists pg_cron;
+  perform cron.schedule('pippeghi-promemoria', '0 17 * * *', 'select public._notif_promemoria()');
+exception when others then raise notice 'pg_cron non disponibile: %', sqlerrm;
+end $$;

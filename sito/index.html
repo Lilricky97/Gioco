@@ -404,6 +404,11 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .mz-grp{display:flex;align-items:center;gap:10px;width:100%;margin-top:14px;background:rgba(61,220,132,.06);border:1px solid rgba(61,220,132,.3);border-radius:8px;padding:13px 14px;color:var(--testo);font-weight:600;cursor:pointer;text-align:left}
 .mz-grp span{flex:1}
 .mz-grp b{color:#3ddc84;font-size:14px}
+.mz-not{margin-top:8px;background:rgba(255,216,107,.05);border-color:rgba(255,216,107,.3)}
+.mz-not svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--giallo);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mz-not b{color:var(--giallo)}
+.notif-k{display:flex;flex-direction:column;gap:2px;margin:6px 0 4px}
+.notif-k .check{margin-top:10px}
 .mz-rel{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;background:none;border:0;padding:12px;color:var(--muto);font:600 14px Archivo,sans-serif;cursor:pointer}
 .mz-rel svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 /* ---------- barra in basso: solo Novità e Storie ---------- */
@@ -554,9 +559,20 @@ const SUPA_URL = 'https://hiypieuddqkwefifiqqc.supabase.co';   // "Project URL" 
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpeXBpZXVkZHFrd2VmaWZpcXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ3MDAyODgsImV4cCI6MjExMDI3NjI4OH0.AErX76Ioe3c4ja6owNQwdAWjwl49gdA4giHI0AdMmIs';   // chiave PUBBLICA anon. Mai la secret/service key!
 const NOME = 'Pippeghi 24/7';
 const GIOCO_URL = 'https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/68a1fb1/index.html';
+// indirizzo "vero" del sito (GitHub Pages): serve per le notifiche sul telefono.
+// PAGES_ATTIVO = true solo dopo aver controllato che risponde: allora il vecchio link htmlpreview porta lì da solo
+const SITO_URL = 'https://lilricky97.github.io/Gioco/sito/';
+const PAGES_ATTIVO = false;
+const VECCHIO_LINK = 'https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/claude/admiring-brown-om0cj1/sito/index.html';
 // =========================================================
 const DEMO = !SUPA_URL || !SUPA_KEY;   // senza database: modalità prova con dati finti
 const PFX = DEMO ? 'pipdemo_' : 'pip_';
+const SU_HTMLPREVIEW = location.hostname === 'htmlpreview.github.io';
+const TRASLOCO = PAGES_ATTIVO && SU_HTMLPREVIEW && !DEMO;   // vecchio link → nuovo indirizzo
+if (TRASLOCO) location.replace(SITO_URL + location.hash);
+if (!SU_HTMLPREVIEW) {   // nell'app sulla schermata Home: nome, icone e apertura a tutto schermo (serve per le notifiche)
+  const l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.json'; document.head.appendChild(l);
+}
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -608,6 +624,9 @@ const MSG = {
   VOTAZIONE_CHIUSA: 'La data è già stata fissata.',
   RISPOSTA_NON_VALIDA: 'Risposta non valida.',
   NON_AUTORIZZATO: 'Può farlo solo chi l\'ha creato.',
+  NOTIFICHE_NEGATE: 'Non hai dato il permesso. Se hai toccato "Non consentire", riattivale dalle impostazioni del telefono.',
+  NOTIFICHE_NON_PRONTE: 'Le notifiche non sono ancora pronte (manca un passaggio su Supabase che deve fare Ricky). Riprova più tardi.',
+  NOTIFICHE_NON_VALIDE: 'Il telefono ha dato dati strani: riprova.',
   NOME_NON_TROVATO: 'Nome non trovato.',
   POST_NON_TROVATO: 'Questo post non esiste più.',
   FOTO_NON_TROVATA: 'Questa foto non esiste più.',
@@ -949,6 +968,7 @@ const ZONE = [
 const BARRA = ['novita', 'storie'];
 const ICO_MENU = svg('<path d="M4 7h16M4 12h16M4 17h10"/>');
 const ICO_RICARICA = svg('<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/>');
+const ICO_CAMPANA = svg('<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>');
 function start() {
   $('#app').innerHTML = `<header class="top"><div class="top-l"><button class="menu-btn" id="menu-btn" aria-label="Zone del sito">${ICO_MENU}</button><button class="logo" data-go="#novita">${insegna()}</button></div>
     <div class="top-r"><button class="on-btn" id="on-btn" hidden aria-label="Chi è online"><i class="dot"></i><b>0</b><span>online</span></button></div></header>
@@ -958,7 +978,7 @@ function start() {
   $('#on-btn').onclick = apriGruppo;
   $('#menu-btn').onclick = apriMenu;
   clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); loadStorie(); } }, 45000);
-  route(); ping(); loadStorie();
+  route(); ping(); loadStorie(); rinnovaNotifiche();
 }
 const zona = id => ZONE.find(z => z.id === id);
 // menu delle zone: pannello da sinistra con riquadri al neon + il proprio profilo
@@ -971,6 +991,7 @@ function apriMenu() {
     <div class="mz-k">Zone del sito</div>
     <div class="mz-grid">${ZONE.filter(z => z.menu !== false).map(z => `<button class="mz-z ${z.id === attiva ? 'on' : ''}" data-zona="${z.id}"><span class="ico">${z.ico}</span><b>${esc(z.t)}</b><small>${esc(z.d)}</small></button>`).join('')}</div>
     <button class="mz-grp" data-a="gruppo"><i class="dot"></i><span>Chi c'è nel gruppo</span>${S.people ? `<b>${on} online</b>` : ''}</button>
+    <button class="mz-grp mz-not" data-a="notifiche">${ICO_CAMPANA}<span>Notifiche</span><b>${notifAttive() ? 'attive' : 'spente'}</b></button>
     <button class="mz-rel" data-a="ricarica">${ICO_RICARICA}<span>Ricarica il sito</span></button>
   </nav>`;
   document.body.appendChild(ov); document.body.classList.add('noscroll');
@@ -983,6 +1004,7 @@ function apriMenu() {
   ov.querySelector('[data-a=nome]').onclick = () => { chiudi(); renderChiSei(); };
   ov.querySelector('[data-a=foto]').onclick = () => { chiudi(); setTimeout(apriFoto, 220); };
   ov.querySelector('[data-a=ricarica]').onclick = () => location.reload();
+  ov.querySelector('[data-a=notifiche]').onclick = () => { chiudi(); setTimeout(apriNotifiche, 220); };
   ov.querySelector('[data-a=esci]').onclick = () => { chiudi(); logout(); };
 }
 function route() {
@@ -1033,7 +1055,8 @@ function richText(t) {
   let out = '', last = 0, m;
   while ((m = re.exec(t))) {
     if (m[1]) {
-      const base = location.href.split('#')[0] + '#', interno = m[1].startsWith(base) && m[1].length > base.length;
+      // link a questo sito (anche col vecchio indirizzo htmlpreview o col nuovo): si apre dentro il sito
+      const base = [location.href.split('#')[0], SITO_URL, SITO_URL + 'index.html', VECCHIO_LINK].map(b => b + '#').find(b => m[1].startsWith(b) && m[1].length > b.length), interno = !!base;
       out += esc(t.slice(last, m.index)) + (interno ? `<a class="htag" data-go="#${esc(m[1].slice(base.length))}">apri nel sito →</a>` : `<a href="${esc(m[1])}" target="_blank" rel="noopener">${esc(m[1])}</a>`);
       last = m.index + m[1].length;
     }
@@ -2293,6 +2316,110 @@ async function ping() {
   if (S.conFoto) nuoveFoto(Object.fromEntries(S.people.filter(p => p.avatar && !p.banned).map(p => [p.name, p.avatar])));
   drawOnline();
   invitoFoto();
+  invitoNotifiche();
+}
+
+// ---------- notifiche sul telefono ----------
+// funzionano solo sul nuovo indirizzo (GitHub Pages): serve il file sw.js accanto al sito.
+// Su iPhone solo aprendo il sito dall'icona sulla schermata Home (regola di Apple, da iOS 16.4)
+const FN_NOTIFICHE = SUPA_URL + '/functions/v1/notifica';
+const TIPI_NOTIF = [['storie', 'pubblica una storia'], ['post', 'scrive nelle Novità'], ['eventi', 'crea un evento (e il promemoria il giorno prima)']];
+const suIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const daApp = () => navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+const notifAttive = () => !!(store.get('notif') || {}).on;
+function statoNotifiche() {
+  if (DEMO) return 'demo';
+  if (SU_HTMLPREVIEW || !window.isSecureContext) return 'indirizzo';
+  if (suIOS() && !daApp()) return 'home';
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return 'no';
+  if (Notification.permission === 'denied') return 'negate';
+  return 'ok';
+}
+const b64uBytes = s => { const b = atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - s.length % 4) % 4)); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+const registraSW = () => navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready);
+// p = la richiesta del permesso, già partita dal tocco (Apple la vuole subito, senza attese prima)
+async function attivaNotifiche(kinds, p) {
+  const perm = await (p || Notification.requestPermission());
+  if (perm !== 'granted') throw err('NOTIFICHE_NEGATE');
+  const reg = await registraSW();
+  let pub = (await rpc('push_key')).pub;
+  if (!pub) {   // la prima volta in assoluto: la funzione "notifica" crea le chiavi
+    try { pub = (await (await fetch(FN_NOTIFICHE, { method: 'POST', headers: headers({ 'Content-Type': 'application/json' }), body: '{}' })).json()).pub; } catch (e) {}
+  }
+  if (!pub) throw err('NOTIFICHE_NON_PRONTE');
+  let sub = await reg.pushManager.getSubscription();
+  const prima = store.get('notif') || {};
+  if (sub && prima.pub && prima.pub !== pub) { await sub.unsubscribe().catch(() => {}); sub = null; }   // chiave cambiata: nuova iscrizione
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(pub) });
+  const j = sub.toJSON();
+  const r = await rpc('push_subscribe', { p_name: S.me, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_kinds: kinds });
+  store.set('notif', { on: true, kinds: r.kinds || kinds, endpoint: j.endpoint, pub });
+}
+async function spegniNotifiche() {
+  const n = store.get('notif') || {};
+  try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+  if (n.endpoint) await rpc('push_unsubscribe', { p_endpoint: n.endpoint });
+  store.set('notif', { on: false, kinds: n.kinds });
+}
+// a ogni apertura: tiene aggiornato nome e iscrizione (se il telefono l'ha cambiata o il nome è cambiato)
+async function rinnovaNotifiche() {
+  if (!notifAttive() || statoNotifiche() !== 'ok' || Notification.permission !== 'granted') return;
+  try {
+    const reg = await registraSW(), sub = await reg.pushManager.getSubscription(), n = store.get('notif');
+    if (!sub) return attivaNotifiche(n.kinds || TIPI_NOTIF.map(t => t[0]), Promise.resolve('granted'));
+    const j = sub.toJSON();
+    await rpc('push_subscribe', { p_name: S.me, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_kinds: n.kinds || TIPI_NOTIF.map(t => t[0]) });
+    if (j.endpoint !== n.endpoint) store.set('notif', Object.assign(n, { endpoint: j.endpoint }));
+  } catch (e) {}
+}
+function apriNotifiche() {
+  const st = statoNotifiche(), n = store.get('notif') || {}, on = !!n.on, kinds = n.kinds || TIPI_NOTIF.map(t => t[0]);
+  const spiega = {
+    demo: 'In modalità prova le notifiche non partono: funzionano sul sito vero.',
+    indirizzo: 'Le notifiche arrivano con il nuovo indirizzo del sito: tra poco questo link ti porterà lì da solo 🙂',
+    home: `Su iPhone le notifiche funzionano solo dall'app:<br>1. tocca <b>Condividi</b> (il quadrato con la freccia in basso)<br>2. <b>Aggiungi alla schermata Home</b><br>3. apri <b>${esc(NOME)}</b> dall'icona e torna qui (☰ → Notifiche).`,
+    no: 'Questo browser non riceve le notifiche. Prova con Safari su iPhone (dall\'icona sulla Home) o Chrome su Android.',
+    negate: 'Le notifiche sono bloccate per questo sito. Riattivale dalle impostazioni del telefono (Impostazioni → Notifiche → ' + esc(NOME) + '), poi torna qui.'
+  }[st];
+  sheet(`<div class="notif-s"><h3>🔔 Notifiche</h3>${spiega ? `<p class="muto">${spiega}</p><div class="row end"><button class="btn" data-close>Ok</button></div>` : `
+    <p class="muto">${on ? 'Le notifiche sono <b>attive</b> su questo telefono.' : 'Ti avvisiamo sul telefono, anche a schermo spento, quando qualcuno:'}</p>
+    <div class="notif-k">${TIPI_NOTIF.map(([k, t]) => `<label class="check"><input type="checkbox" name="${k}" ${kinds.includes(k) ? 'checked' : ''}> ${esc(cap(t))}</label>`).join('')}</div>
+    <p class="hint">Le tue cose non ti arrivano, e chi ha detto "Non ci sono" non riceve il promemoria.</p><p class="err" hidden></p>
+    <div class="row end">${on ? '<button class="btn ghost rosso" data-a="off">Disattiva</button>' : '<button class="btn ghost" data-close>Più tardi</button>'}<button class="btn" data-a="on">${on ? 'Salva' : 'Attiva notifiche'}</button></div>`}</div>`,
+    (s, close) => {
+      const e = s.querySelector('.err'), si = s.querySelector('[data-a=on]'), off = s.querySelector('[data-a=off]');
+      if (si) si.onclick = async () => {
+        const scelti = TIPI_NOTIF.map(t => t[0]).filter(k => s.querySelector(`[name=${k}]`).checked);
+        if (!scelti.length) { e.textContent = 'Scegli almeno una cosa (o tocca Disattiva).'; e.hidden = false; return; }
+        const p = Notification.requestPermission();   // subito, dentro il tocco
+        si.disabled = true; e.hidden = true;
+        try { await attivaNotifiche(scelti, p); close(); toast(on ? 'Notifiche aggiornate' : 'Notifiche attive 🔔'); }
+        catch (ex) { e.textContent = msg(ex); e.hidden = false; si.disabled = false; }
+      };
+      if (off) off.onclick = async () => {
+        off.disabled = true;
+        try { await spegniNotifiche(); close(); toast('Notifiche spente'); } catch (ex) { e.textContent = msg(ex); e.hidden = false; off.disabled = false; }
+      };
+    });
+}
+// invito una volta sola, a chi può riceverle e non ha ancora deciso
+async function invitoNotifiche() {
+  if (S.noPush || store.get('notifpop') || notifAttive() || statoNotifiche() !== 'ok' || Notification.permission !== 'default') return;
+  const c = cur();
+  if (document.querySelector('.ov,.lb,.sv') || (c.sec === 'gioco' && c.arg === 'gioca')) return;
+  try { await rpc('push_key'); } catch (e) { if (e.message === 'NO_DB') S.noPush = true; return; }   // database non ancora aggiornato
+  if (document.querySelector('.ov,.lb,.sv')) return;
+  store.set('notifpop', 1);
+  sheet(`<div class="avs notifpop"><span class="neu">NOVITÀ</span><h3>🔔 Vuoi le notifiche?</h3>
+    <p class="muto">Ti avvisiamo sul telefono quando qualcuno pubblica una storia, scrive nelle Novità o crea un evento. Puoi cambiarle quando vuoi da ☰ → Notifiche.</p>
+    <p class="err" hidden></p><div class="row"><button class="btn ghost" data-close>Più tardi</button><button class="btn" data-a="si">Attiva</button></div></div>`, (s, close) => {
+    const b = s.querySelector('[data-a=si]'), e = s.querySelector('.err');
+    b.onclick = async () => {
+      const p = Notification.requestPermission(); b.disabled = true;
+      try { await attivaNotifiche(TIPI_NOTIF.map(t => t[0]), p); close(); toast('Notifiche attive 🔔'); }
+      catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; }
+    };
+  });
 }
 
 // ---------- foto utente ----------
@@ -3007,7 +3134,8 @@ function creaDemo() {
 }
 
 // ===================== AVVIO =====================
-if (!S.pw) renderLogin();
+if (TRASLOCO) $('#app').innerHTML = '<main class="gate"><div class="loading">Un attimo</div></main>';
+else if (!S.pw) renderLogin();
 else if (!S.me) renderChiSei();
 else start();
 </script>

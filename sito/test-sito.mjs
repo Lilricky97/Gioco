@@ -341,6 +341,55 @@ await ricky.waitForSelector('#ev-list .evc'); await ricky.waitForFunction(() => 
 ok(ricky.url().endsWith('#calendario'), 'evento eliminato')
 await marco.click('[data-tab=novita]'); await marco.waitForSelector('#feed .tw')
 
+// ---------------- NOTIFICHE ----------------
+// Marco usa Safari su iPhone (non dall'app): gli spieghiamo come fare
+await marco.click('#menu-btn'); await marco.waitForSelector('.mz-ov.in [data-a=notifiche]')
+ok((await marco.textContent('.mz [data-a=notifiche]')).includes('spente'), 'menu ☰: voce Notifiche (spente)')
+await marco.click('.mz [data-a=notifiche]'); await marco.waitForSelector('.notif-s')
+ok((await marco.textContent('.notif-s')).includes('Aggiungi alla schermata Home'), 'iPhone in Safari: spiega di aggiungere il sito alla Home')
+await marco.click('.sheet [data-close]'); await marco.waitForFunction(() => !document.querySelector('.ov'))
+// Anna usa l'app sulla Home (telefono finto che sa ricevere notifiche)
+const app = await telefono('Anna-app')
+await app.context().addInitScript(() => {
+  Object.defineProperty(navigator, 'standalone', { get: () => true })
+  // come un telefono vero: permesso e iscrizione restano anche ricaricando la pagina
+  const ss = sessionStorage, conta = () => JSON.parse(ss.getItem('finto') || '{"iscrizioni":0,"disiscrizioni":0,"chiave":0}'), salva = c => ss.setItem('finto', JSON.stringify(c))
+  Object.defineProperty(window, '__push', { get: conta })
+  const sub = { endpoint: 'https://web.push.apple.com/finto-anna-1234567890', unsubscribe: async () => { const c = conta(); c.disiscrizioni++; salva(c); ss.removeItem('sub'); return true },
+    toJSON() { return { endpoint: this.endpoint, keys: { p256dh: 'B' + 'Ab'.repeat(43), auth: 'abcdefghijklmnopqrstuv' } } } }
+  const reg = { pushManager: { getSubscription: async () => ss.getItem('sub') ? sub : null,
+    subscribe: async o => { const c = conta(); c.iscrizioni++; c.chiave = o.applicationServerKey.length; salva(c); ss.setItem('sub', '1'); return sub } } }
+  Object.defineProperty(navigator, 'serviceWorker', { get: () => ({ register: async () => reg, ready: Promise.resolve(reg), getRegistration: async () => reg }) })
+  window.Notification = class { static get permission() { return ss.getItem('perm') || 'default' } static async requestPermission() { ss.setItem('perm', 'granted'); return 'granted' } }
+})
+await entra(app, 'Anna'); await app.waitForSelector('.ov.in .notifpop')
+ok((await app.textContent('.notifpop')).includes('Vuoi le notifiche?'), 'dall\'app sulla Home: invito una volta sola "Vuoi le notifiche?"')
+await shot(app, '34-invito-notifiche')
+await app.click('.notifpop [data-a=si]'); await app.waitForSelector('.toast:has-text("Notifiche attive")')
+let stN = await (await fetch(BASE + '/__prova/stato')).json()
+ok(await app.evaluate(() => window.__push.iscrizioni === 1 && window.__push.chiave === 65) && stN.push.length === 1 && stN.push[0].name === 'Anna' && stN.push[0].kinds.length === 3,
+  'Attiva: il telefono si iscrive con la chiave del sito, il database lo sa (storie, post, eventi)')
+await app.waitForFunction(() => !document.querySelector('.ov'))
+await app.click('#menu-btn'); await app.waitForSelector('.mz-ov.in [data-a=notifiche]')
+ok((await app.textContent('.mz [data-a=notifiche]')).includes('attive'), 'menu ☰: Notifiche attive')
+await app.click('.mz [data-a=notifiche]'); await app.waitForSelector('.notif-s [name=storie]')
+await app.uncheck('.notif-s [name=storie]'); await shot(app, '35-notifiche'); await app.click('.notif-s [data-a=on]'); await app.waitForSelector('.toast:has-text("Notifiche aggiornate")')
+stN = await (await fetch(BASE + '/__prova/stato')).json()
+ok(JSON.stringify(stN.push[0].kinds) === '["eventi","post"]', 'Anna toglie le storie: riceverà solo post ed eventi')
+await app.reload(); await app.waitForSelector('#feed'); await app.waitForTimeout(1500)
+ok(await app.locator('.notifpop').count() === 0, 'riaprendo il sito l\'invito non ricompare')
+await app.click('#menu-btn'); await app.waitForSelector('.mz-ov.in [data-a=notifiche]'); await app.click('.mz [data-a=notifiche]'); await app.waitForSelector('.notif-s [data-a=off]')
+await app.click('.notif-s [data-a=off]'); await app.waitForSelector('.toast:has-text("Notifiche spente")')
+stN = await (await fetch(BASE + '/__prova/stato')).json()
+ok(stN.push.length === 0 && await app.evaluate(() => window.__push.disiscrizioni === 1), 'Disattiva: il telefono esce e il database lo dimentica')
+ok(stN.coda.some(n => n.kind === 'eventi' && n.title === '📅 Cena da Marco') && stN.coda.some(n => n.kind === 'post' && n.title === '💬 Marco'), 'le notifiche di eventi e post finiscono nella coda')
+await app.close()
+// file per l'app e link vecchi/nuovi al sito
+ok((await fetch(BASE + '/sw.js')).ok && (await (await fetch(BASE + '/manifest.json')).json()).display === 'standalone' && await ricky.locator('link[rel=manifest]').count() === 1, 'sw.js e manifest.json accanto al sito')
+await marco.fill('#np-text', 'Link vecchio https://htmlpreview.github.io/?https://github.com/Lilricky97/Gioco/blob/claude/admiring-brown-om0cj1/sito/index.html#calendario e nuovo https://lilricky97.github.io/Gioco/sito/#foto')
+await marco.click('#np-go'); await marco.waitForFunction(() => [...document.querySelectorAll('#feed .tw-t')].some(t => t.textContent.startsWith('Link vecchio')))
+ok(await marco.evaluate(() => { const t = [...document.querySelectorAll('#feed .tw-t')].find(x => x.textContent.startsWith('Link vecchio')); return [...t.querySelectorAll('a.htag[data-go]')].map(a => a.dataset.go).join(',') }) === '#calendario,#foto', 'i link al sito (vecchio e nuovo indirizzo) si aprono dentro il sito')
+
 // ---------------- STORIE (24 ore) ----------------
 ok(!(await ricky.locator('[data-tab=storie].nuove').count()), 'nessuna storia: la voce Storie in basso è spenta')
 await ricky.click('[data-tab=storie]'); await ricky.waitForSelector('#st-add')

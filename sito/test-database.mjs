@@ -2,7 +2,7 @@ import { PGlite } from '@electric-sql/pglite'
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto'
 import fs from 'fs'
 const db = await PGlite.create({ extensions: { pgcrypto } })
-await db.exec(`create role anon; create role authenticated;`)
+await db.exec(`create role anon; create role authenticated; create role service_role;`)
 await db.exec(fs.readFileSync(new URL('./schema.sql', import.meta.url),'utf8'))
 await db.exec(`insert into app_config(k,v) values ('pw', extensions.crypt('cocorico', extensions.gen_salt('bf')))`)
 const q = async (sql, p=[]) => (await db.query(sql, p)).rows
@@ -328,6 +328,67 @@ ok((await one('select events_list($1)',[PW])).length===0 && (await q('select cou
 for (const t of ['events','event_rsvp','event_comments','event_dates','event_date_votes']) {
   let negato = false; try { await db.exec(`set role anon; select * from ${t};`) } catch (e) { negato = /permission/.test(e.message) } finally { await db.exec('reset role') }
   ok(negato, `tabella ${t} chiusa alla chiave pubblica`)
+}
+
+// NOTIFICHE SUL TELEFONO
+{
+const comeRuolo = async (ruolo, sql, p = []) => { await db.exec(`set role ${ruolo}`); try { return await one(sql, p) } finally { await db.exec('reset role') } }
+const claim = id => comeRuolo('service_role', 'select notif_claim($1)', [id])
+const negato = async (ruolo, sql) => { try { await comeRuolo(ruolo, sql); return false } catch (e) { return /permission/.test(e.message) } }
+await q('delete from notif_queue')
+await q('select story_add($1,$2,$3,$4)',[PW,'Giulia','storie/x.jpg','Al mare!'])
+const postN = await one('select post_add($1,$2,$3,$4)',[PW,'Marco','Stasera   calcetto?\nChi c\'è',[]])
+await q('select post_add($1,$2,$3,$4)',[PW,'Ricky','📅 Nuovo evento: «X» #evento',[]])
+const domaniRoma = await one(`select ((now() at time zone 'Europe/Rome')::date + 1)::text`)
+const evN = await one('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Sara','Cena','Da Sara','',domaniRoma,'20:00',null,null])
+const evV = await one('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Luca','Gita','','',null,null,null,JSON.stringify([{day:giorno(5)},{day:giorno(6)}])])
+await q('select event_fix_date($1,$2,$3,$4)',[PW,evV,'Luca',(await one('select event_get($1,$2)',[PW,evV])).dates[1].id])
+let coda = await q('select * from notif_queue order by id')
+ok(coda.length===5,'5 notifiche in coda: storia, post, evento, votazione, data fissata (l\'annuncio "📅" non fa doppione)')
+ok(coda[0].kind==='storie' && coda[0].author==='Giulia' && coda[0].url==='#storie' && coda[0].body==='Al mare!' && coda[0].title==='📸 Giulia','storia: "📸 Giulia – Al mare!" → apre le storie')
+ok(coda[1].kind==='post' && coda[1].url==='#post/'+postN && coda[1].body==='Stasera calcetto? Chi c\'è' && coda[1].title==='💬 Marco','post: testo su una riga → apre il post')
+ok(coda[2].kind==='eventi' && coda[2].title==='📅 Cena' && coda[2].body.startsWith('Nuovo evento di Sara: ') && coda[2].body.endsWith(' ore 20:00 · Da Sara') && coda[2].url==='#calendario/'+evN,'evento: giorno in italiano, ora e luogo → apre l\'evento')
+ok(coda[3].body.includes('vota la data') && coda[4].title==='📅 Data fissata: Gita','votazione della data e "Data fissata"')
+// iscrizioni dei telefoni
+const EP = n => `https://fcm.googleapis.com/fcm/send/telefono-${n}-abcdefgh`, P256 = 'B' + 'Aa'.repeat(43), AUTH = 'abcdefghijklmnopqrstuv'
+ok((await one('select push_subscribe($1,$2,$3,$4,$5,$6)',[PW,'Ricky',EP(1),P256,AUTH,['storie','post','eventi','hack']])).kinds.length===3,'iscrizione: tipi strani scartati')
+await q('select push_subscribe($1,$2,$3,$4,$5,$6)',[PW,'Marco',EP(2),P256,AUTH,['eventi']])
+await q('select push_subscribe($1,$2,$3,$4,$5,$6)',[PW,'Giulia',EP(3),P256,AUTH,['storie','post','eventi']])
+await q('select push_subscribe($1,$2,$3,$4,$5,$6)',[PW,'Luca',EP(4),P256,AUTH,['storie','post','eventi']])
+await q('select push_subscribe($1,$2,$3,$4,$5,$6)',[PW,'Sara',EP(4),P256,AUTH,['storie','post','eventi']])
+ok((await q('select name from push_subs where endpoint=$1',[EP(4)]))[0].name==='Sara' && (await q('select count(*)::int n from push_subs'))[0].n===4,'stesso telefono con un altro nome: aggiornato, niente doppioni')
+for (const [ep, p, a, m] of [['http://x.com/abcdefghijkl',P256,AUTH,'indirizzo non https'],[EP(9),'chiave con spazi '.repeat(4),AUTH,'chiave strana'],[EP(9),P256,'',' senza auth']])
+  ok((await err('select push_subscribe($1,$2,$3,$4,$5,$6)',[PW,'Ricky',ep,p,a,['post']]))==='NOTIFICHE_NON_VALIDE','iscrizione rifiutata: '+m)
+ok((await err('select push_subscribe($1,$2,$3,$4,$5,$6)',['x','Ricky',EP(9),P256,AUTH,['post']]))==='PASSWORD_ERRATA','iscrizione protetta dalla password')
+// a chi arriva
+const dest = r => (r ? r.subs.map(s => s.endpoint).sort() : null)
+ok(JSON.stringify(dest(await claim(coda[0].id)))===JSON.stringify([EP(1),EP(4)]),'storia di Giulia: arriva a Ricky e Sara (non a Giulia, non a Marco che vuole solo gli eventi)')
+ok((await claim(coda[0].id))===null,'la stessa notifica si manda una volta sola')
+ok(JSON.stringify(dest(await claim(coda[1].id)))===JSON.stringify([EP(1),EP(3),EP(4)]),'post di Marco: a Ricky, Giulia e Sara')
+await q('select member_add($1,$2)',[PW,'Giulia']); await q('select member_kick($1,$2,$3,$4)',[PW,'4321','Giulia',true])
+const c2 = await claim(coda[2].id)
+ok(JSON.stringify(dest(c2))===JSON.stringify([EP(1),EP(2)]) && c2.title==='📅 Cena' && c2.url==='#calendario/'+evN,'evento di Sara: a Ricky e Marco (Giulia è stata rimossa)')
+ok((await err('select push_subscribe($1,$2,$3,$4,$5,$6)',[PW,'Giulia',EP(3),P256,AUTH,['post']]))==='SEI_STATO_RIMOSSO','chi è rimosso non può iscriversi')
+await q('select member_kick($1,$2,$3,$4)',[PW,'4321','Giulia',false])
+// promemoria il giorno prima
+await q('select event_rsvp($1,$2,$3,$4)',[PW,evN,'Marco','no'])
+ok((await one('select _notif_promemoria()'))===1 && (await one('select _notif_promemoria()'))===0,'promemoria per la cena di domani, una volta sola')
+const prom = (await q(`select * from notif_queue where title like '⏰%'`))[0], cp = await claim(prom.id)
+ok(prom.title==='⏰ Domani: Cena' && prom.body==='ore 20:00 · Da Sara' && JSON.stringify(dest(cp))===JSON.stringify([EP(1),EP(3),EP(4)]),'promemoria "⏰ Domani: Cena": non a Marco, che ha detto "Non ci sono"')
+// chiavi e permessi
+ok((await comeRuolo('service_role','select vapid_set($1,$2)',['PUB1','PRIV1'])).pub==='PUB1' && (await comeRuolo('service_role','select vapid_set($1,$2)',['PUB2','PRIV2'])).pub==='PUB1','chiavi delle notifiche create una volta sola')
+ok((await comeRuolo('anon','select push_key($1)',[PW])).pub==='PUB1','il sito legge solo la chiave pubblica')
+for (const f of ['select notif_claim(1)','select vapid_get()',"select vapid_set('a','b')","select push_gone('x')","select _notif_promemoria()","select _notifica('post','a','b','c','d',null)"])
+  ok(await negato('anon',f),'vietato alla chiave pubblica: '+f.slice(7,27))
+for (const t of ['push_subs','notif_queue']) ok(await negato('anon',`select * from ${t}`),`tabella ${t} chiusa alla chiave pubblica`)
+// con l'indirizzo della funzione impostato ma senza pg_net (come in questa prova): i post si pubblicano lo stesso
+await q(`insert into app_config(k,v) values ('notif_url','https://esempio.supabase.co/functions/v1/notifica'),('notif_key','x')`)
+const prima = (await q('select count(*)::int n from notif_queue'))[0].n
+await q('select post_add($1,$2,$3,$4)',[PW,'Anna','Ciao!',[]])
+ok((await q('select count(*)::int n from notif_queue'))[0].n===prima+1,'senza pg_net il post si pubblica e la notifica resta in coda')
+await q('select push_unsubscribe($1,$2)',[PW,EP(1)]); await comeRuolo('service_role','select push_gone($1)',[EP(2)])
+ok((await q('select count(*)::int n from push_subs'))[0].n===2,'disiscrizione dal telefono e telefoni spariti tolti')
+await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub','vapid_priv')`)
 }
 
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)
