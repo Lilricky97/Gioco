@@ -21,7 +21,7 @@ async function telefono(nome) {
   const ctx = await browser.newContext({ ...phone })
   const page = await ctx.newPage()
   page.on('pageerror', e => errori.push(`${nome}: ${e.message}`))
-  page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|ERR_|Failed to load resource/.test(m.text())) errori.push(`${nome}: ${m.text()}`) })
+  page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|ERR_|Failed to load resource|autofocusing/.test(m.text())) errori.push(`${nome}: ${m.text()}`) })
   page.nome = nome
   return page
 }
@@ -308,6 +308,26 @@ ok(giro2 === nomi.length && nomi.every(n => abb2[n] !== n) && escl.every(([a, b]
 await ricky.click('[data-tab=gioco]'); await ricky.waitForSelector('.game')
 ok((await ricky.getAttribute('.game a.btn', 'href')).includes('blob/68a1fb1/index.html'), 'Gioco: link a Senza Filtro')
 await shot(ricky, '13-gioco')
+// Senza Filtro dentro il sito
+await ricky.click('#gl-open'); await ricky.waitForSelector('#gl:not([hidden]) iframe')
+ok(ricky.url().endsWith('#gioco/gioca'), 'Gioco: si apre dentro il sito')
+let giocoOk = false
+try { await ricky.frameLocator('#gl-f').locator('body').waitFor({ timeout: 20000 }); await ricky.waitForFunction(() => true); giocoOk = true } catch (e) {}
+const titoloGioco = await ricky.frame({ url: /htmlpreview/ })?.title().catch(() => '')
+ok(giocoOk && /Senza Filtro/.test(titoloGioco || ''), 'Gioco: Senza Filtro caricato (' + titoloGioco + ')')
+await ricky.waitForTimeout(1500); await shot(ricky, '13b-gioco-dentro')
+await ricky.evaluate(() => { document.querySelector('#gl-f').dataset.segno = 'stesso' })
+await ricky.click('#gl-min'); await ricky.waitForSelector('#gl-pill')
+ok(await ricky.locator('#gl').isHidden() && ricky.url().endsWith('#gioco'), '‹ Sito: torno al sito, il gioco resta aperto dietro')
+await ricky.click('[data-tab=novita]'); await ricky.waitForSelector('#feed')
+ok(await ricky.locator('#gl-pill').isVisible(), 'il bottone "Partita in corso" si vede anche nelle Novità')
+await ricky.click('#gl-pill'); await ricky.waitForSelector('#gl:not([hidden])')
+ok(await ricky.evaluate(() => document.querySelector('#gl-f').dataset.segno) === 'stesso', 'rientro nella STESSA partita (non ricaricata)')
+await ricky.goBack(); await ricky.waitForSelector('#gl', { state: 'hidden' })
+ok(ricky.url().endsWith('#novita'), 'tasto indietro del telefono: torna dove ero')
+await ricky.click('#gl-pill'); await ricky.click('#gl-x'); await ricky.click('.sheet [data-ok]')
+await ricky.waitForFunction(() => !document.querySelector('#gl') && !document.querySelector('#gl-pill'))
+ok(true, '✕: gioco chiuso davvero')
 await ricky.click('[data-tab=fanta]'); await ricky.waitForSelector('.soon'); await shot(ricky, '14-fanta')
 await ricky.click('[data-tab=santa]'); await ricky.waitForSelector('#ss-list .ss-item'); await shot(ricky, '15-santa-lista')
 // elimina il post e prova "cambia nome"

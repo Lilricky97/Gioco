@@ -233,6 +233,15 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .sf span{color:#ff2e63}
 .game p{color:#c9c9d3}
 .game .btn{background:#ff2e63;color:#fff;box-shadow:0 8px 26px -8px rgba(255,46,99,.7)}
+.game .btn.ghost{background:transparent;color:#fafafa;border:1.5px solid #3a3a45;box-shadow:none}
+.gl{position:fixed;inset:0;z-index:45;background:#0a0a0c;display:flex;flex-direction:column}
+.gl[hidden]{display:none}
+.gl-bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;background:#0d0d12;border-bottom:1px solid #2a2a33}
+.gl-b{background:rgba(255,255,255,.06);border:1px solid #2a2a33;color:#fafafa;border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px;cursor:pointer}
+.gl-x{width:36px;height:36px;padding:0}
+.gl-t{font-family:"Archivo Black",Outfit,sans-serif;font-size:14px;color:#fafafa}.gl-t i{font-style:normal;color:#ff2e63}
+.gl iframe{flex:1;width:100%;border:0;background:#0a0a0c}
+.gl-pill{position:fixed;right:14px;bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));z-index:35;background:#ff2e63;color:#fff;border:0;border-radius:999px;padding:11px 16px;font-weight:600;font-size:14.5px;box-shadow:0 8px 26px -6px rgba(255,46,99,.7);cursor:pointer;animation:tin .2s ease-out}
 .steps{text-align:left;margin:18px 0 0;padding:0;list-style:none;counter-reset:s}
 .steps li{counter-increment:s;position:relative;padding:0 0 12px 40px;color:#d6d6de}
 .steps li::before{content:counter(s);position:absolute;left:0;top:-2px;width:28px;height:28px;border-radius:50%;background:#ffd60a;color:#111;font-weight:800;display:grid;place-items:center;font-size:14px}
@@ -451,6 +460,7 @@ function cur() {
 // "Pippeghi 24/7": l'ultima parola diventa il neon verde che sfarfalla
 function insegna() { return esc(NOME).replace(/ (\S+)$/, ' <span class="s7 flick">$1</span>'); }
 
+function sblocca() { if (!document.querySelector('.ov,.lb,.gl:not([hidden])')) document.body.classList.remove('noscroll'); }
 // finestra dal basso
 function sheet(html, mount, onClose) {
   const ov = document.createElement('div'); ov.className = 'ov';
@@ -460,7 +470,7 @@ function sheet(html, mount, onClose) {
   let chiuso = false;
   const close = () => {
     if (chiuso) return; chiuso = true; ov.classList.remove('in');
-    setTimeout(() => { ov.remove(); if (!document.querySelector('.ov,.lb')) document.body.classList.remove('noscroll'); }, 180);
+    setTimeout(() => { ov.remove(); sblocca(); }, 180);
     onClose && onClose();
   };
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
@@ -518,7 +528,7 @@ function lightbox(paths, start, opt = {}) {
     [paths[i - 1], paths[i + 1]].forEach(p => { if (p) new Image().src = pub(p); });
   };
   const go = d => { const n = i + d; if (n >= 0 && n < paths.length) { i = n; show(); } };
-  const close = () => { el.remove(); document.removeEventListener('keydown', key); if (!document.querySelector('.ov,.lb')) document.body.classList.remove('noscroll'); };
+  const close = () => { el.remove(); document.removeEventListener('keydown', key); sblocca(); };
   const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(-1); if (e.key === 'ArrowRight') go(1); };
   document.addEventListener('keydown', key);
   el.querySelector('.lb-x').onclick = close;
@@ -583,7 +593,7 @@ async function renderChiSei() {
 function setMe(n) { S.me = n; store.set('me', n); start(); }
 function logout(avviso) {
   S.pw = null; store.del('pw'); S.feed = S.albums = S.ss = null; S.album = {}; S.thread = {};
-  document.querySelectorAll('.ov,.lb').forEach(x => x.remove()); document.body.classList.remove('noscroll');
+  document.querySelectorAll('.ov,.lb,#gl,#gl-pill').forEach(x => x.remove()); document.body.classList.remove('noscroll');
   renderLogin(avviso);
 }
 
@@ -613,7 +623,10 @@ function start() {
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
   document.querySelectorAll('.ov,.lb').forEach(x => x.remove()); document.body.classList.remove('noscroll');
-  const c = cur(), t = (c.sec === 'post' || c.sec === 'tag') ? TABS[0] : (TABS.find(x => x.id === c.sec) || TABS[0]);
+  const c = cur(), inGioco = c.sec === 'gioco' && c.arg === 'gioca';
+  if (inGioco) { giocoLayer().hidden = false; document.body.classList.add('noscroll'); } else if ($('#gl')) $('#gl').hidden = true;
+  drawPill();
+  const t = (c.sec === 'post' || c.sec === 'tag') ? TABS[0] : (TABS.find(x => x.id === c.sec) || TABS[0]);
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t.id));
   const v = $('#view'); S.refresh = null; v.innerHTML = ''; v.className = 'view' + (t.id === 'novita' ? ' wide' : ''); window.scrollTo(0, 0);
   if (c.sec === 'post') return viewPost(c.arg);
@@ -928,18 +941,47 @@ async function addToAlbum(id, files) {
 
 // ===================== GIOCO =====================
 function viewGioco() {
+  const inCorso = !!$('#gl');
   $('#view').innerHTML = `<h1 class="neon">Gioco</h1>
     <section class="card game">
       <div class="sf">SENZA<br><span>FILTRO</span></div>
       <p>Il nostro party game: carte senza pietà, con i nomi di tutti noi dentro.</p>
-      <a class="btn big wide" href="${esc(GIOCO_URL)}" target="_blank" rel="noopener">🃏 Gioca ora</a>
+      <button class="btn big wide" id="gl-open">🃏 ${inCorso ? 'Torna alla partita' : 'Gioca qui nel sito'}</button>
+      <a class="btn ghost wide" style="margin-top:10px" href="${esc(GIOCO_URL)}" target="_blank" rel="noopener">Apri in una pagina a parte ↗</a>
       <ol class="steps">
-        <li>Un telefono fa da <b>tavolo</b>: tocca “Nuova partita” e, se puoi, mettilo in TV.</li>
-        <li>Scegli il mazzo: 🔥 porno, 💀 black humor o tutto insieme.</li>
-        <li>Gli altri aprono il gioco sul proprio telefono e entrano col <b>codice</b> della partita.</li>
-        <li>A turno c'è un giudice: tutti giocano la carta più cattiva, vince la migliore.</li>
+        <li>Un telefono fa da tavolo: tocca <b>“Apri il tavolo”</b>, scrivi i nomi, scegli il mazzo (🔥 porno, 💀 black humor o tutto insieme) e, se puoi, trasmettilo in TV.</li>
+        <li>Tutti gli altri aprono il gioco sul proprio telefono → <b>“La mia mano”</b> → codice della partita + il proprio numero.</li>
+        <li>A ogni round c'è un giudice: tutti giocano la carta più scorretta, la migliore prende +1 punto.</li>
       </ol>
+      <p class="hint" style="text-align:left">Durante la partita puoi tornare al sito con “‹ Sito”: il gioco resta aperto e ci rientri dal bottone “🃏 Partita in corso”.</p>
     </section>`;
+  $('#gl-open').onclick = apriGioco;
+}
+// Senza Filtro dentro il sito: resta aperto anche mentre giri per le altre sezioni
+function giocoLayer() {
+  let L = $('#gl'); if (L) return L;
+  L = document.createElement('div'); L.id = 'gl'; L.className = 'gl'; L.hidden = true;
+  L.innerHTML = `<div class="gl-bar"><button class="gl-b" id="gl-min">‹ Sito</button><span class="gl-t">SENZA <i>FILTRO</i></span><button class="gl-b gl-x" id="gl-x" aria-label="Chiudi la partita">✕</button></div>
+    <iframe id="gl-f" title="Senza Filtro" allow="fullscreen" src="${esc(GIOCO_URL)}"></iframe>`;
+  document.body.appendChild(L);
+  L.querySelector('#gl-min').onclick = () => { location.hash = S.primaGioco || '#gioco'; };
+  L.querySelector('#gl-x').onclick = async () => {
+    if (!await ask('Chiudere il gioco?', 'Se sei dentro una partita ne esci: per rientrare dovrai rimettere il codice.', 'Chiudi il gioco', true)) return;
+    L.remove(); location.hash = '#gioco'; drawPill();
+  };
+  return L;
+}
+function apriGioco() {
+  const c = cur(); if (!(c.sec === 'gioco' && c.arg === 'gioca')) S.primaGioco = location.hash || '#novita';
+  location.hash = '#gioco/gioca';
+}
+function drawPill() {
+  const L = $('#gl'), vedi = !!L && L.hidden; let p = $('#gl-pill');
+  if (vedi && !p) {
+    p = document.createElement('button'); p.id = 'gl-pill'; p.className = 'gl-pill'; p.innerHTML = '🃏 Partita in corso · <b>Torna</b>';
+    p.onclick = apriGioco; document.body.appendChild(p);
+  }
+  if (!vedi && p) p.remove();
 }
 
 // ===================== SECRET SANTA =====================
