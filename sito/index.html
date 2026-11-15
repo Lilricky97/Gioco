@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0f24">
 <title>Pippeghi 24/7</title>
+<!-- icona sulla schermata Home e apertura a tutto schermo come un'app (indirizzi completi: il sito passa da htmlpreview) -->
+<link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/Lilricky97/Gioco/claude/admiring-brown-om0cj1/sito/icone/app-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://raw.githubusercontent.com/Lilricky97/Gioco/claude/admiring-brown-om0cj1/sito/icone/app-192.png">
+<link rel="icon" type="image/png" sizes="64x64" href="https://raw.githubusercontent.com/Lilricky97/Gioco/claude/admiring-brown-om0cj1/sito/icone/favicon-64.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pippeghi 24/7">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=Bebas+Neue&family=Monoton&display=swap" rel="stylesheet">
@@ -396,6 +404,8 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .mz-grp{display:flex;align-items:center;gap:10px;width:100%;margin-top:14px;background:rgba(61,220,132,.06);border:1px solid rgba(61,220,132,.3);border-radius:8px;padding:13px 14px;color:var(--testo);font-weight:600;cursor:pointer;text-align:left}
 .mz-grp span{flex:1}
 .mz-grp b{color:#3ddc84;font-size:14px}
+.mz-rel{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;background:none;border:0;padding:12px;color:var(--muto);font:600 14px Archivo,sans-serif;cursor:pointer}
+.mz-rel svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 /* ---------- barra in basso: solo Novità e Storie ---------- */
 .tabs button{flex-direction:row;justify-content:center;gap:10px;font-size:12px;padding:12px 0}
 .tabs .tab-n{min-width:20px;height:20px;border-radius:10px;background:var(--rosa);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 6px;letter-spacing:0;box-shadow:0 0 10px var(--rosa-g)}
@@ -863,6 +873,7 @@ const ZONE = [
 ];
 const BARRA = ['novita', 'storie'];
 const ICO_MENU = svg('<path d="M4 7h16M4 12h16M4 17h10"/>');
+const ICO_RICARICA = svg('<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/>');
 function start() {
   $('#app').innerHTML = `<header class="top"><div class="top-l"><button class="menu-btn" id="menu-btn" aria-label="Zone del sito">${ICO_MENU}</button><button class="logo" data-go="#novita">${insegna()}</button></div>
     <div class="top-r"><button class="on-btn" id="on-btn" hidden aria-label="Chi è online"><i class="dot"></i><b>0</b><span>online</span></button></div></header>
@@ -885,6 +896,7 @@ function apriMenu() {
     <div class="mz-k">Zone del sito</div>
     <div class="mz-grid">${ZONE.map(z => `<button class="mz-z ${z.id === attiva ? 'on' : ''}" data-zona="${z.id}"><span class="ico">${z.ico}</span><b>${esc(z.t)}</b><small>${esc(z.d)}</small></button>`).join('')}</div>
     <button class="mz-grp" data-a="gruppo"><i class="dot"></i><span>Chi c'è nel gruppo</span>${S.people ? `<b>${on} online</b>` : ''}</button>
+    <button class="mz-rel" data-a="ricarica">${ICO_RICARICA}<span>Ricarica il sito</span></button>
   </nav>`;
   document.body.appendChild(ov); document.body.classList.add('noscroll');
   requestAnimationFrame(() => ov.classList.add('in'));
@@ -895,6 +907,7 @@ function apriMenu() {
   ov.querySelector('[data-a=gruppo]').onclick = () => { chiudi(); setTimeout(apriGruppo, 220); };
   ov.querySelector('[data-a=nome]').onclick = () => { chiudi(); renderChiSei(); };
   ov.querySelector('[data-a=foto]').onclick = () => { chiudi(); setTimeout(apriFoto, 220); };
+  ov.querySelector('[data-a=ricarica]').onclick = () => location.reload();
   ov.querySelector('[data-a=esci]').onclick = () => { chiudi(); logout(); };
 }
 function route() {

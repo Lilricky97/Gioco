@@ -102,6 +102,15 @@ await ricky.setInputFiles('.sheet #av-file', await immagini(ricky, 1, 800, 800))
 await ricky.waitForSelector('.toast:has-text("Foto utente aggiornata")'); await fotoCaricata(ricky, 'Ricky'); ok(true, 'dal menu ☰: "Scegli una foto"')
 await ricky.waitForFunction(() => !document.querySelector('.ov'))
 await shot(ricky, '02-novita-vuota')
+// icona dell'app sulla schermata Home + "Ricarica il sito" (nell'app a tutto schermo non c'è la barra di Safari)
+ok(await ricky.evaluate(() => { const l = document.querySelector('link[rel=apple-touch-icon]'); return !!l && /\/sito\/icone\/app-180\.png$/.test(l.href) && document.querySelector('meta[name=apple-mobile-web-app-capable]').content === 'yes' }), 'icona per la schermata Home e apertura a tutto schermo')
+for (const [f, n] of [['app-180', 180], ['app-192', 192], ['app-512', 512], ['favicon-64', 64]]) {
+  const png = fs.readFileSync(new URL(`./icone/${f}.png`, import.meta.url))
+  ok(png.readUInt32BE(16) === n && png.readUInt32BE(20) === n && png[25] === 2, `icona ${f}.png: ${n}×${n}, senza trasparenza`)
+}
+await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in [data-a=ricarica]')
+await Promise.all([ricky.waitForEvent('load'), ricky.click('.mz [data-a=ricarica]')]); await ricky.waitForSelector('#feed .empty')
+ok(await ricky.evaluate(() => S.me) === 'Ricky', 'menu ☰ → "Ricarica il sito": ricarica e resta dentro')
 
 // ---------------- NOVITÀ ----------------
 await ricky.fill('#np-text', 'Ciao a tutti! Il sito è online 🎉 #Pippeghi\nGuardate qui https://example.com/prova?x=1&y=2#ancora')
