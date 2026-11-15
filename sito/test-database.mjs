@@ -278,18 +278,34 @@ ok(l3.people.length===1 && l3.excl.length===0,'tolto Luca: sparisce anche dalle 
 await q('select ss_leave($1,$2,$3,$4)',[PW,ev3,'giulia','1111'])
 ok((await one('select ss_list($1)',[PW])).find(e=>e.id===ev3).people.length===0,'Giulia esce col suo PIN')
 ok((await err('select ss_leave($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')]))==='CHIEDI_ORGANIZZATORE','dopo il sorteggio per uscire bisogna chiedere all\'organizzatore')
-// FOTO DELLE STORIE SCADUTE: dopo 24 ore il sito le cancella (solo quelle)
-await q(`insert into storage.objects(bucket_id, name, created_at) values
-  ('foto','storie/vecchia.jpg', now() - interval '25 hours'), ('foto','storie/vecchia_t.jpg', now() - interval '25 hours'),
-  ('foto','storie/nuova.jpg', now() - interval '2 hours'), ('foto','novita/post.jpg', now() - interval '30 days'),
-  ('foto','album/x/foto.jpg', now() - interval '30 days'), ('foto','avatar/io.jpg', now() - interval '30 days'), ('altro','storie/z.jpg', now() - interval '3 days')`)
-const scad = await one('select foto_scadute($1)',[PW])
-ok(JSON.stringify(scad.slice().sort())===JSON.stringify(['storie/vecchia.jpg','storie/vecchia_t.jpg']),'foto da cancellare: solo quelle delle storie con più di 24 ore (non post, cartelle, foto utente, storie nuove)')
-ok((await err('select foto_scadute($1)',['x']))==='PASSWORD_ERRATA','elenco protetto dalla password')
-const storageSql = fs.readFileSync(new URL('./storage.sql', import.meta.url),'utf8')
-ok([...storageSql.matchAll(/for (select|delete) to anon, authenticated\s+using \(([^;]*)\);/g)].length===2 && [...storageSql.matchAll(/for (select|delete) to anon, authenticated\s+using \(([^;]*)\);/g)].every(m => m[2].includes("name like 'storie/%'") && m[2].includes("interval '24 hours'")),
-  'lo spazio foto lascia vedere e cancellare alla chiave pubblica SOLO le foto delle storie scadute')
-await q('delete from storage.objects where true')
+// FOTO DA CANCELLARE: storie dopo 24 ore, foto dei post dopo 7 giorni (tranne i post in evidenza); il resto resta
+{
+  const pFisso = await one('select post_add($1,$2,$3,$4)',[PW,'Ricky','Post in evidenza con foto',['novita/fisso.jpg']])
+  const pVecchio = await one('select post_add($1,$2,$3,$4)',[PW,'Marco','Foto vecchia',['novita/vecchio.jpg']])
+  await q(`update posts set created_at = now() - interval '8 days' where id = any($1)`,[[pFisso, pVecchio]])
+  await q('select post_pin($1,$2,$3,$4)',[PW,pFisso,'4321',true])
+  await q(`insert into storage.objects(bucket_id, name, created_at) values
+    ('foto','storie/vecchia.jpg', now() - interval '25 hours'), ('foto','storie/vecchia_t.jpg', now() - interval '25 hours'),
+    ('foto','storie/nuova.jpg', now() - interval '2 hours'),
+    ('foto','novita/vecchio.jpg', now() - interval '8 days'), ('foto','novita/vecchio_t.jpg', now() - interval '8 days'),
+    ('foto','novita/fisso.jpg', now() - interval '8 days'), ('foto','novita/fisso_t.jpg', now() - interval '8 days'),
+    ('foto','novita/recente.jpg', now() - interval '6 days'),
+    ('foto','album/x/foto.jpg', now() - interval '30 days'), ('foto','avatar/io.jpg', now() - interval '30 days'),
+    ('foto','eventi/cena.jpg', now() - interval '30 days'), ('altro','storie/z.jpg', now() - interval '3 days')`)
+  const scad = await one('select foto_scadute($1)',[PW])
+  ok(JSON.stringify(scad.slice().sort())===JSON.stringify(['novita/vecchio.jpg','novita/vecchio_t.jpg','storie/vecchia.jpg','storie/vecchia_t.jpg']),
+    'da cancellare: storie con più di 24 ore e foto dei post con più di 7 giorni (non quelle in evidenza, recenti, cartelle, foto utente, eventi)')
+  ok((await err('select foto_scadute($1)',['x']))==='PASSWORD_ERRATA','elenco protetto dalla password')
+  const f = await one('select feed($1)',[PW]), fv = f.find(p=>p.id===pVecchio), ff = f.find(p=>p.id===pFisso)
+  ok(fv.photos.length===0 && fv.foto_scadute===true && ff.photos[0]==='novita/fisso.jpg' && ff.foto_scadute===false,'nelle Novità: post di più di 7 giorni senza foto ("foto scadute"), quello in evidenza le tiene')
+  await q('select post_pin($1,$2,$3,$4)',[PW,pFisso,'4321',false])
+  ok((await one('select foto_scadute($1)',[PW])).includes('novita/fisso.jpg'),'tolto dall\'evidenza, anche le sue foto vecchie si cancellano')
+  const storageSql = fs.readFileSync(new URL('./storage.sql', import.meta.url),'utf8')
+  const pol = [...storageSql.matchAll(/create policy "[^"]+" on storage\.objects for (\w+) to anon, authenticated\s+(?:using|with check) \(([^;]*)\);/g)]
+  ok(pol.length===3 && pol.filter(m=>m[1]==='select'||m[1]==='delete').every(m=>m[2].includes('public.foto_cancellabile(name, created_at)')) && pol.find(m=>m[1]==='insert'),
+    'lo spazio foto lascia vedere e cancellare alla chiave pubblica SOLO le foto scadute (stessa regola)')
+  await q('delete from storage.objects where true'); await q('delete from posts where id = any($1)',[[pFisso, pVecchio]])
+}
 
 // POST IN EVIDENZA (fissati in cima, max 3, solo amministratore)
 {

@@ -212,6 +212,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .tw.big{border-left:4px solid var(--k)}
 .tw-h .tw-k{margin-left:auto;padding:2px 8px;border-radius:4px;border:1px solid var(--k);color:var(--k);font:800 10.5px/1.5 Archivo,sans-serif;text-transform:uppercase;letter-spacing:.08em;box-shadow:0 0 10px -4px var(--k)}
 .tw-h .tw-k~.del{margin-left:0}
+.tw-scad{color:var(--muto2);font-size:13.5px;font-style:italic;margin:6px 0 2px}
 .tw-fisso{font:800 11px/1 Archivo,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--k);margin:0 0 7px;text-shadow:0 0 8px var(--k)}
 #feed .tw.fisso{border-width:1.5px;border-left-width:4px;box-shadow:0 0 22px -8px var(--k)}
 .act.pin{margin-left:auto;color:var(--muto2)}
@@ -411,6 +412,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .mz-x{flex:none;width:40px;height:40px;border:0;background:rgba(255,255,255,.05);color:var(--testo);border-radius:8px;font-size:18px;cursor:pointer}
 .mz-k{font-family:"Bebas Neue",sans-serif;letter-spacing:.3em;font-size:17px;color:var(--menta);text-shadow:0 0 10px var(--menta-g);margin:18px 0 10px}
 .mz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mz-grid>:last-child:nth-child(odd){grid-column:span 2}
 .mz-z{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:14px 12px;color:var(--testo);cursor:pointer;min-height:118px;min-width:0;overflow:hidden;transition:border-color .15s,box-shadow .15s}
 .mz-z .ico{display:block;width:28px;height:28px;color:var(--rosa);filter:drop-shadow(0 0 6px var(--rosa-g))}
 .mz-z svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -978,7 +980,7 @@ const ZONE = [
   { id: 'novita', t: 'Novità', d: 'Post, risposte e #tendenze', menu: false, f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
   { id: 'calendario', t: 'Calendario', d: 'Cene, feste e serate', f: viewCalendario, ico: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/>') },
   { id: 'storie', t: 'Storie', d: 'Foto che durano 24 ore', menu: false, f: viewStorie, ico: svg('<circle cx="12" cy="12" r="8.5" stroke-dasharray="4.2 2.4"/><path d="M12 8.5v7M8.5 12h7"/>') },
-  { id: 'foto', t: 'Foto', d: 'Le cartelle del gruppo', f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
+  { id: 'foto', t: 'Foto', d: 'Le cartelle del gruppo', menu: false, f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
   { id: 'sondaggi', t: 'Sondaggi', d: 'Vota e fai votare', f: viewSondaggi, ico: svg('<path d="M4 6.5h9M4 12h16M4 17.5h6"/><circle cx="17" cy="6.5" r="1.4"/><circle cx="13.5" cy="17.5" r="1.4"/>') },
   { id: 'gioco', t: 'Gioco', d: 'Senza Filtro', f: viewGioco, ico: svg('<rect x="4" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 9.2 12.7)"/><path d="m14.6 5.4 3.7.7a2 2 0 0 1 1.6 2.3l-2 11a2 2 0 0 1-2.3 1.6l-3.2-.6"/>') },
   { id: 'santa', t: 'Secret Santa', d: 'I regali di Natale', f: viewSanta, ico: svg('<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20h14v-7.5M12 8.5V20M12 8.5C10.6 5.3 7 4.6 7 6.8 7 8.3 9.6 8.5 12 8.5zm0 0c1.4-3.2 5-3.9 5-1.7 0 1.5-2.6 1.7-5 1.7z"/>') },
@@ -997,11 +999,11 @@ function start() {
   $('#on-btn').onclick = apriGruppo;
   $('#menu-btn').onclick = apriMenu;
   clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); loadStorie(); } }, 45000);
-  route(); ping(); loadStorie(); rinnovaNotifiche(); puliziaStorie();
+  route(); ping(); loadStorie(); rinnovaNotifiche(); puliziaFoto();
 }
-// foto delle storie scadute (più di 24 ore): il sito le cancella dallo spazio foto, al massimo una volta l'ora per telefono.
-// Lo spazio foto permette di cancellare SOLO quelle (regole in storage.sql)
-async function puliziaStorie() {
+// foto scadute (storie dopo 24 ore, foto dei post dopo 7 giorni se non in evidenza): il sito le cancella dallo spazio foto,
+// al massimo una volta l'ora per telefono. Lo spazio foto permette di cancellare SOLO quelle (regole in storage.sql)
+async function puliziaFoto() {
   if (DEMO || Date.now() - (store.get('pulizia') || 0) < 3600e3) return;
   store.set('pulizia', Date.now());
   try {
@@ -1137,7 +1139,7 @@ function tweetHTML(p, big) {
   return `<article class="tw k-${k}${big ? ' big' : ''}${fisso ? ' fisso' : ''}" data-id="${esc(p.id)}">${avatar(p.author)}<div class="tw-b">
     ${fisso ? '<div class="tw-fisso">📌 In evidenza</div>' : ''}
     <div class="tw-h"><b>${esc(p.author)}</b><span>· ${esc(quando(p.created_at))}</span>${k !== 'post' ? `<span class="tw-k">${TIPI_POST[k]}</span>` : ''}${same(p.author, S.me) ? `<button class="icon del" data-del="${esc(p.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div>
-    ${p.body ? `<div class="tw-t">${richText(p.body)}</div>` : ''}${pics(p)}
+    ${p.body ? `<div class="tw-t">${richText(p.body)}</div>` : ''}${pics(p)}${p.foto_scadute ? '<div class="tw-scad">📷 Foto scadute: le foto dei post restano 7 giorni</div>' : ''}
     <div class="tw-a"><button class="act" data-rep="${esc(p.id)}" aria-label="Rispondi">${ICO.rep}<span>${p.replies || ''}</span></button>${votiHTML(p, p.id)}${adminPin() ? `<button class="act pin ${fisso ? 'on' : ''}" data-pin="${esc(p.id)}" aria-label="${fisso ? 'Togli da In evidenza' : 'Metti in evidenza'}" title="${fisso ? 'Togli da In evidenza' : 'Metti in evidenza'}">${ICO.pin}</button>` : ''}</div>
   </div></article>`;
 }
@@ -1233,7 +1235,8 @@ function viewNovita(tag) {
 }
 function drawPreviews() {
   const el = $('#np-prev'); if (!el) return;
-  el.innerHTML = S.draft.files.map((f, i) => `<div><img src="${esc(f.url)}" alt=""><button data-rm="${i}" aria-label="Togli">✕</button></div>`).join('');
+  el.innerHTML = S.draft.files.map((f, i) => `<div><img src="${esc(f.url)}" alt=""><button data-rm="${i}" aria-label="Togli">✕</button></div>`).join('')
+    + (S.draft.files.length ? '<p class="hint np-7">Le foto dei post restano 7 giorni (finché il post è in evidenza, di più).</p>' : '');
   el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { const [f] = S.draft.files.splice(+b.dataset.rm, 1); URL.revokeObjectURL(f.url); drawPreviews(); });
 }
 async function publish() {
@@ -2936,7 +2939,7 @@ function creaDemo() {
       const id = uid(); D.scomments.push({ id, story_id: a.p_story, author: clean(a.p_author, 30), body: b, created_at: t(0) }); return id;
     },
     story_comment_del: a => { need(a); D.scomments = D.scomments.filter(c => !(c.id === a.p_id && c.author === a.p_author)); },
-    feed: a => { need(a); const ult = D.posts.slice().sort(desc).slice(0, 150); return ult.concat(D.posts.filter(p => p.pinned_at && !ult.includes(p))).map(p => Object.assign({}, p, { likes: D.likes.filter(l => l.post === p.id && l.val === 1).map(l => l.name), dislikes: D.likes.filter(l => l.post === p.id && l.val === -1).map(l => l.name), replies: D.replies.filter(r => r.post_id === p.id).length })); },
+    feed: a => { need(a); const ult = D.posts.slice().sort(desc).slice(0, 150); return ult.concat(D.posts.filter(p => p.pinned_at && !ult.includes(p))).map(p => !p.pinned_at && p.created_at < t(60 * 24 * 7) && p.photos.length ? Object.assign({}, p, { photos: [], foto_scadute: true }) : p).map(p => Object.assign({}, p, { likes: D.likes.filter(l => l.post === p.id && l.val === 1).map(l => l.name), dislikes: D.likes.filter(l => l.post === p.id && l.val === -1).map(l => l.name), replies: D.replies.filter(r => r.post_id === p.id).length })); },
     post_add: a => { need(a); const b = clean(a.p_body, 4000), ph = (a.p_photos || []).slice(0, 20); if (!b && !ph.length) throw err('POST_VUOTO'); const id = uid(); D.posts.push({ id, author: clean(a.p_author, 30), body: b, photos: ph, created_at: t(0) }); return id; },
     post_del: a => { need(a); D.posts = D.posts.filter(p => !(p.id === a.p_id && p.author === a.p_author)); const ok = new Set(D.posts.map(p => p.id)); D.likes = D.likes.filter(l => ok.has(l.post)); D.replies = D.replies.filter(r => ok.has(r.post_id)); },
     post_like: a => {

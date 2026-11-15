@@ -35,6 +35,7 @@ async function apriAdm(page) {
 }
 async function vai(page, z) {
   if (z === 'novita' || z === 'storie') return page.click(`[data-tab=${z}]`)
+  if (z === 'foto') { await page.evaluate(() => { location.hash = '#foto' }); return page.waitForSelector('#albums') }   // le cartelle non sono più nel menu
   await page.click('#menu-btn'); await page.waitForSelector('.mz-ov.in [data-zona]'); await page.click(`.mz [data-zona=${z}]`)
   await page.waitForFunction(() => !document.querySelector('.mz-ov'))
 }
@@ -264,7 +265,7 @@ ok(true, 'sondaggio eliminato')
 const giornoT = k => { const d = new Date(); d.setDate(d.getDate() + k); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 const codaVuota = page => page.waitForFunction(() => Object.values(S.vq).every(q => !q.n))
 await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in [data-zona]')
-ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=novita]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1, 'menu ☰: niente Novità e Storie (sono già in basso), c\'è il Calendario')
+ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=novita]').count() === 0 && await ricky.locator('.mz [data-zona=foto]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1, 'menu ☰: niente Novità, Storie e Foto, c\'è il Calendario')
 ok(await ricky.evaluate(() => { const s = document.querySelector('.tabs [data-tab=novita] span:last-child'), c = getComputedStyle(s); return s.textContent === 'Novità' && c.overflow === 'visible' && parseFloat(c.lineHeight) >= parseFloat(c.fontSize) * 1.5 }), 'barra in basso: "NOVITÀ" con spazio per l\'accento (niente taglio in alto)')
 await ricky.click('.mz [data-zona=calendario]'); await ricky.waitForFunction(() => !document.querySelector('.mz-ov'))
 await ricky.waitForSelector('#ev-list .ev-vuoto'); ok(await ricky.locator('#cal .cd.oggi').count() === 1, 'calendario: il mese con oggi evidenziato, ancora nessun evento')
@@ -430,11 +431,11 @@ ok(true, 'storia eliminata')
 const fotoSpazio = async () => (await (await fetch(BASE + '/__prova/stato')).json()).files
 const storieFile = (await fotoSpazio()).filter(f => f.startsWith('storie/'))
 ok(storieFile.length >= 2, 'la foto della storia (e la miniatura) sono nello spazio foto')
-await ricky.evaluate(() => { localStorage.removeItem('pip_pulizia'); return puliziaStorie() })
+await ricky.evaluate(() => { localStorage.removeItem('pip_pulizia'); return puliziaFoto() })
 ok((await fotoSpazio()).filter(f => f.startsWith('storie/')).length === storieFile.length, 'prima delle 24 ore non si cancella niente')
 await fetch(BASE + '/__prova/invecchia', { method: 'POST', body: JSON.stringify({ prefisso: 'storie/', ore: 25 }) })
 await fetch(BASE + '/__prova/invecchia', { method: 'POST', body: JSON.stringify({ prefisso: 'novita/', ore: 25 }) })
-await marco.evaluate(() => { localStorage.removeItem('pip_pulizia'); return puliziaStorie() })
+await marco.evaluate(() => { localStorage.removeItem('pip_pulizia'); return puliziaFoto() })
 const dopo = await fotoSpazio()
 ok(!dopo.some(f => f.startsWith('storie/')) && dopo.some(f => f.startsWith('novita/')) && dopo.some(f => f.startsWith('album/')), 'dopo 24 ore le foto delle storie spariscono; quelle dei post e delle cartelle restano')
 
@@ -743,6 +744,19 @@ ok(await marco.evaluate(() => S.me) === 'Marco', 'riammesso: Marco ritrova il su
 await marco.evaluate(() => localStorage.setItem('pip_pw', JSON.stringify('vecchia')))
 await marco.goto(BASE + '/#novita'); await marco.reload(); await marco.waitForSelector('#g-pw .err')
 ok((await marco.textContent('#g-pw .err')).includes('cambiata'), 'password cambiata: richiesta di nuovo')
+
+// ---------------- FOTO DEI POST: VIA DOPO 7 GIORNI ----------------
+await ricky.click('[data-tab=novita]'); await ricky.waitForSelector('#np-text')
+await ricky.setInputFiles('#np-file', await immagini(ricky, 1)); await ricky.waitForSelector('#np-prev .np-7')
+ok(true, 'scegliendo una foto per un post, il sito avvisa che resta 7 giorni')
+await ricky.fill('#np-text', 'Questa foto scadrà'); await ricky.click('#np-go'); await ricky.waitForSelector('.toast:has-text("Pubblicato")')
+await fetch(BASE + '/__prova/invecchia', { method: 'POST', body: JSON.stringify({ prefisso: 'novita/', ore: 24 * 8, post: true }) })
+await ricky.evaluate(() => { localStorage.removeItem('pip_pulizia'); return puliziaFoto() })
+const dopoSett = await fotoSpazio()
+ok(!dopoSett.some(f => f.startsWith('novita/')) && ['album/', 'eventi/', 'avatar/'].every(c => dopoSett.some(f => f.startsWith(c))),
+  'dopo 7 giorni le foto dei post spariscono dallo spazio foto; cartelle, copertine degli eventi e foto utente restano')
+await ricky.evaluate(() => loadFeed()); await ricky.waitForSelector('#feed .tw:has-text("Questa foto scadrà") .tw-scad')
+ok(await ricky.locator('#feed .tw:has-text("Questa foto scadrà") .pics').count() === 0, 'nelle Novità il post vecchio dice "📷 Foto scadute" al posto della foto')
 
 // ---------------- MODALITÀ PROVA (sito senza database) ----------------
 const pr = await telefono('Prova', true)

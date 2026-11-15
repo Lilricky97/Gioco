@@ -441,15 +441,28 @@ begin
 end $$;
 
 -- ---------- storie (24 ore) ----------
--- foto delle storie scadute (più di 24 ore dalla pubblicazione): il sito le cancella dallo spazio foto
--- (lo spazio foto permette alla chiave pubblica di cancellare SOLO queste: vedi storage.sql)
+-- Quali foto si cancellano dallo spazio foto (regola unica, usata anche da storage.sql):
+--  - storie: 24 ore dopo la pubblicazione
+--  - foto dei post (novita/): 7 giorni dopo, tranne quelle dei post "in evidenza" (finché restano in evidenza)
+--  - tutto il resto (cartelle, foto utente, copertine degli eventi) resta
+create or replace function foto_cancellabile(p_name text, p_creata timestamptz) returns boolean
+language sql stable security definer set search_path = public, extensions as $$
+  select case
+    when p_name like 'storie/%' then p_creata < now() - interval '24 hours'
+    when p_name like 'novita/%' then p_creata < now() - interval '7 days'
+      and not exists (select 1 from posts x where x.pinned_at is not null
+        and (p_name = any(x.photos) or replace(p_name, '_t.jpg', '.jpg') = any(x.photos)))
+    else false end
+$$;
+
+-- elenco delle foto da cancellare: ci pensa il sito, con la chiave pubblica (lo spazio foto lo permette SOLO per queste)
 create or replace function foto_scadute(p_pw text) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
 begin
   perform _need(p_pw);
   if to_regclass('storage.objects') is null then return '[]'::json; end if;
   return coalesce((select json_agg(x.name) from (select o.name from storage.objects o
-    where o.bucket_id = 'foto' and o.name like 'storie/%' and o.created_at < now() - interval '24 hours'
+    where o.bucket_id = 'foto' and (o.name like 'storie/%' or o.name like 'novita/%') and foto_cancellabile(o.name, o.created_at)
     order by o.created_at limit 200) x), '[]'::json);
 end $$;
 
@@ -526,7 +539,10 @@ language plpgsql stable security definer set search_path = public, extensions as
 begin
   perform _need(p_pw);
   return coalesce((select json_agg(row_to_json(p) order by p.created_at desc)
-    from (select x.id, x.author, x.body, x.photos, x.created_at, x.pinned_at,
+    from (select x.id, x.author, x.body,
+            case when x.pinned_at is null and x.created_at < now() - interval '7 days' then '{}'::text[] else x.photos end as photos,
+            (x.pinned_at is null and x.created_at < now() - interval '7 days' and cardinality(x.photos) > 0) as foto_scadute,
+            x.created_at, x.pinned_at,
             coalesce((select json_agg(l.name order by l.created_at) from post_likes l where l.post_id = x.id and l.val = 1), '[]'::json) as likes,
             coalesce((select json_agg(l.name order by l.created_at) from post_likes l where l.post_id = x.id and l.val = -1), '[]'::json) as dislikes,
             (select count(*) from post_replies r where r.post_id = x.id) as replies
@@ -1776,7 +1792,7 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute,
+grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
   reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,

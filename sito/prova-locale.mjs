@@ -124,19 +124,20 @@ http.createServer(async (req, res) => {
       await db.query(`insert into storage.objects(bucket_id, name) values ('foto', $1)`, [up[1]])
       return send(res, 200, JSON.stringify({ Key: 'foto/' + up[1], Id: crypto.randomUUID() }))
     }
-    // cancellazione (come lo spazio foto vero con le regole di storage.sql: solo storie con più di 24 ore)
+    // cancellazione (come lo spazio foto vero con le regole di storage.sql: solo le foto scadute, regola foto_cancellabile)
     if (p === '/storage/v1/object/foto' && req.method === 'DELETE') {
       if (req.headers.apikey !== KEY) return send(res, 401, JSON.stringify({ message: 'Invalid API key' }))
       const nomi = (JSON.parse((await readBody(req)).toString() || '{}').prefixes || [])
-      const via = (await db.query(`delete from storage.objects where bucket_id = 'foto' and name = any($1) and name like 'storie/%' and created_at < now() - interval '24 hours' returning name`, [nomi])).rows.map(r => r.name)
+      const via = (await db.query(`delete from storage.objects where bucket_id = 'foto' and name = any($1) and foto_cancellabile(name, created_at) returning name`, [nomi])).rows.map(r => r.name)
       via.forEach(n => files.delete(n))
       return send(res, 200, JSON.stringify(via.map(name => ({ name }))))
     }
     // solo per i test: fa "invecchiare" le foto (e le storie) di un certo numero di ore
     if (p === '/__prova/invecchia' && req.method === 'POST') {
-      const { prefisso, ore } = JSON.parse((await readBody(req)).toString())
+      const { prefisso, ore, post } = JSON.parse((await readBody(req)).toString())
       await db.query(`update storage.objects set created_at = created_at - make_interval(hours => $2) where name like $1 || '%'`, [prefisso, ore])
       if (prefisso === 'storie/') await db.query(`update stories set created_at = created_at - make_interval(hours => $1) where true`, [ore])
+      if (post) await db.query(`update posts set created_at = created_at - make_interval(hours => $1) where true`, [ore])
       return send(res, 200, '{}')
     }
     const pub = p.match(/^\/storage\/v1\/object\/public\/foto\/(.+)$/)
