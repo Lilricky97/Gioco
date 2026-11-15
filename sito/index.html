@@ -199,6 +199,19 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .tag-head b{font-size:22px;color:var(--menta);text-shadow:0 0 12px var(--menta-g);overflow-wrap:anywhere}
 .tag-head span{color:var(--muto)}
 .xfeed{padding:0;overflow:hidden}
+/* Novità a blocchi colorati: ogni post è un riquadro al neon del suo colore */
+.tw{--k:#4cc9ff;--kt:rgba(76,201,255,.11);--kb:rgba(76,201,255,.42)}
+.tw.k-evento{--k:#46f5c0;--kt:rgba(70,245,192,.11);--kb:rgba(70,245,192,.42)}
+.tw.k-santa{--k:#ff5d6c;--kt:rgba(255,93,108,.13);--kb:rgba(255,93,108,.45)}
+.tw.k-sondaggio{--k:#ffd86b;--kt:rgba(255,216,107,.11);--kb:rgba(255,216,107,.42)}
+.tw.k-foto{--k:#a78bff;--kt:rgba(167,139,255,.13);--kb:rgba(167,139,255,.45)}
+#feed.xfeed{background:none;border:0;box-shadow:none;overflow:visible}
+#feed .tw{border:1px solid var(--kb);border-left:4px solid var(--k);border-radius:8px;margin:0 0 12px;cursor:pointer;
+  background:linear-gradient(100deg,var(--kt),rgba(0,0,0,0) 70%),var(--card);box-shadow:0 0 18px -10px var(--k)}
+#feed .tw:last-child{border-bottom:1px solid var(--kb)}
+.tw.big{border-left:4px solid var(--k)}
+.tw-h .tw-k{margin-left:auto;padding:2px 8px;border-radius:4px;border:1px solid var(--k);color:var(--k);font:800 10.5px/1.5 Archivo,sans-serif;text-transform:uppercase;letter-spacing:.08em;box-shadow:0 0 10px -4px var(--k)}
+.tw-h .tw-k~.del{margin-left:0}
 .xfeed>.empty,.xfeed>.loading{padding:30px 16px}
 .tw{display:flex;gap:12px;padding:14px 16px 6px;border-bottom:1px solid var(--line)}
 .tw[data-id]:not(.big){cursor:pointer}
@@ -1072,7 +1085,8 @@ function richText(t) {
 function trends() {
   const c = new Map(), lim = Date.now() - 30 * 864e5;
   let posts = (S.feed || []).filter(p => new Date(p.created_at) > lim); if (!posts.length) posts = S.feed || [];
-  for (const p of posts) for (const t of tagsOf(p.body)) c.set(t, (c.get(t) || 0) + 1);
+  const auto = new Set(['evento', 'secretsanta', 'sondaggio', 'album']);   // hashtag degli annunci automatici: non sono "tendenze"
+  for (const p of posts) for (const t of tagsOf(p.body)) if (!auto.has(t)) c.set(t, (c.get(t) || 0) + 1);
   return [...c].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 8);
 }
 function drawTrends() {
@@ -1092,9 +1106,20 @@ function votiHTML(x, attr) {
   const v = voto(x);
   return `<button class="act up ${v === 1 ? 'on' : ''}" data-like="${esc(attr)}" aria-label="Mi piace">${ICO.up}<span>${(x.likes || []).length || ''}</span></button><button class="act down ${v === -1 ? 'on' : ''}" data-dislike="${esc(attr)}" aria-label="Non mi piace">${ICO.down}<span>${(x.dislikes || []).length || ''}</span></button>`;
 }
+// colore del blocco nelle Novità: post azzurro, evento verde, Secret Santa rosso, sondaggio giallo, foto viola
+const TIPI_POST = { post: 'Post', evento: 'Evento', santa: 'Secret Santa', sondaggio: 'Sondaggio', foto: 'Foto' };
+function tipoPost(t) {
+  t = String(t || '');
+  if (/#secretsanta(?![\p{L}\p{N}_])/iu.test(t)) return 'santa';
+  if (/#evento(?![\p{L}\p{N}_])/iu.test(t)) return 'evento';
+  if (/#sondaggio(?![\p{L}\p{N}_])/iu.test(t)) return 'sondaggio';
+  if (/#album(?![\p{L}\p{N}_])/iu.test(t)) return 'foto';
+  return 'post';
+}
 function tweetHTML(p, big) {
-  return `<article class="tw${big ? ' big' : ''}" data-id="${esc(p.id)}">${avatar(p.author)}<div class="tw-b">
-    <div class="tw-h"><b>${esc(p.author)}</b><span>· ${esc(quando(p.created_at))}</span>${same(p.author, S.me) ? `<button class="icon del" data-del="${esc(p.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div>
+  const k = tipoPost(p.body);
+  return `<article class="tw k-${k}${big ? ' big' : ''}" data-id="${esc(p.id)}">${avatar(p.author)}<div class="tw-b">
+    <div class="tw-h"><b>${esc(p.author)}</b><span>· ${esc(quando(p.created_at))}</span>${k !== 'post' ? `<span class="tw-k">${TIPI_POST[k]}</span>` : ''}${same(p.author, S.me) ? `<button class="icon del" data-del="${esc(p.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div>
     ${p.body ? `<div class="tw-t">${richText(p.body)}</div>` : ''}${pics(p)}
     <div class="tw-a"><button class="act" data-rep="${esc(p.id)}" aria-label="Rispondi">${ICO.rep}<span>${p.replies || ''}</span></button>${votiHTML(p, p.id)}</div>
   </div></article>`;
@@ -1400,6 +1425,11 @@ async function addToAlbum(id, files) {
   } finally { S.busy--; set(''); }
   if (ko) toast(`${ok} caricate, ${ko} non riuscite. ${msg(last)}`, 'err'); else toast(ok === 1 ? 'Foto caricata 📸' : `${ok} foto caricate 📸`);
   if (cur().arg === id && S.refresh) S.refresh();
+  const al = (S.albums || []).find(a => a.id === id), chiave = 'annal_' + id;
+  if (ok && al && Date.now() - (store.get(chiave) || 0) > 30 * 60000) {
+    store.set(chiave, Date.now());
+    annuncia(`📸 ${ok === 1 ? 'Nuova foto' : ok + ' foto nuove'} nella cartella «${al.name}» 👉 ${location.href.split('#')[0]}#foto/${id} #album`);
+  }
 }
 
 // ===================== SONDAGGI (stile WhatsApp) =====================
@@ -1492,6 +1522,7 @@ function nuovoSondaggio() {
     <label>Risposte</label><div id="np-opts" style="margin-top:6px"></div>
     <button type="button" class="link" id="np-add">+ Aggiungi risposta</button>
     <label class="check"><input type="checkbox" name="multi"> Consenti più risposte</label>
+    <label class="check"><input type="checkbox" name="a" checked> Annuncialo nelle Novità</label>
     <p class="err" hidden></p>
     <div class="row end"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn" type="submit">Crea</button></div></form>`, (s, close) => {
     const box = s.querySelector('#np-opts'), piu = s.querySelector('#np-add');
@@ -1513,6 +1544,7 @@ function nuovoSondaggio() {
         if (new Set(opts.map(o => o.toLowerCase())).size < 2) throw err('SERVONO_2_RISPOSTE');
         b.disabled = true;
         await rpc('poll_create', { p_author: S.me, p_question: q, p_options: opts, p_multi: f.elements.multi.checked });
+        if (f.elements.a.checked) annuncia(`📊 Nuovo sondaggio: «${q}» — vota anche tu 👉 ${location.href.split('#')[0]}#sondaggi #sondaggio`);
         close(); toast('Sondaggio creato'); await loadPolls();
       } catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; }
     };
@@ -2756,6 +2788,11 @@ function creaDemo() {
   evento('Marco', 'Pizzata – quando? (prova)', 'Da Gino', 'Scegliete le date in cui ci siete 🍕', null, null, null, 60 * 8, [], [
     [piuGiorni(oggiP, 8), '20:00', ['Marco', 'Giulia']], [piuGiorni(oggiP, 9), '20:30', ['Marco', 'Sara', 'Anna']], [piuGiorni(oggiP, 12), null, ['Sara']]]);
   evento('Sara', 'Aperitivo al mare (prova)', 'Bagno Sirena', '', piuGiorni(oggiP, -20), '19:00', null, 60 * 24 * 25, [['Sara', 'si'], ['Giulia', 'si'], ['Anna', 'si']]);
+  // annunci automatici di esempio (un colore per tipo nelle Novità)
+  const baseP = location.href.split('#')[0];
+  post('Giulia', `📅 Nuovo evento: «Cena di Natale (prova)» — ${cap(dataLunga(cena.day, cena.ora))} @ Casa di Giulia. Ci sei? 👉 ${baseP}#calendario/${cena.id} #evento`, 60 * 30);
+  post('Anna', `📊 Nuovo sondaggio: «Dove facciamo Capodanno?» — vota anche tu 👉 ${baseP}#sondaggi #sondaggio`, 119);
+  post('Giulia', `📸 5 foto nuove nella cartella «Sabato al mare (prova)» 👉 ${baseP}#foto/${al} #album`, 60 * 29);
   D.couples = []; D.adminFail = 0; D.adminLock = 0;
   // --- le stesse funzioni del database vero ---
   const pwOk = x => String(x || '').trim().toLowerCase() === D.pw;
@@ -2829,6 +2866,7 @@ function creaDemo() {
     const e = nuovoEvento('Natale 2026 (prova)', '30 €', 'cena del 20 dicembre', 'Marco', '0000'); e.created_at = t(60 * 5); e.excl = [['Marco', 'Sara']];
     [['Marco', '1111', 'Un libro giallo 📚'], ['Giulia', '2222', 'Una tazza gigante per il tè'], ['Sara', '3333', ''], ['Luca', '4444', 'Calzini assurdi 🧦']].forEach(([n, pin, w]) => e.people.push(persona(n, pin, w)));
     e.log.push({ at: t(60 * 5), msg: 'Creato da Marco' });
+    post('Marco', `🎅 Nuovo Secret Santa «Natale 2026 (prova)» (budget 30 €): iscrivetevi! 👉 ${location.href.split('#')[0]}#santa/${e.id} #SecretSanta`, 60 * 5 - 1);
   }
   const F = {
     check_pw: a => pwOk(a.p_pw),
