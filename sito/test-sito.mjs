@@ -266,7 +266,7 @@ const giornoT = k => { const d = new Date(); d.setDate(d.getDate() + k); return 
 const codaVuota = page => page.waitForFunction(() => Object.values(S.vq).every(q => !q.n))
 await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in [data-zona]')
 ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=novita]').count() === 0 && await ricky.locator('.mz [data-zona=foto]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1, 'menu ☰: niente Novità, Storie e Foto, c\'è il Calendario')
-ok(await ricky.evaluate(() => { const s = document.querySelector('.tabs [data-tab=novita] span:last-child'), c = getComputedStyle(s); return s.textContent === 'Novità' && c.overflow === 'visible' && parseFloat(c.lineHeight) >= parseFloat(c.fontSize) * 1.5 }), 'barra in basso: "NOVITÀ" con spazio per l\'accento (niente taglio in alto)')
+ok(await ricky.evaluate(() => { const b = document.querySelector('.tabs [data-tab=novita]'), s = b.querySelector('svg').getBoundingClientRect(); return b.textContent.trim() === '' && b.getAttribute('aria-label') === 'Novità' && s.width >= 28 && s.height >= 28 }), 'barra in basso: solo la casetta (niente scritta), bella grande')
 await ricky.click('.mz [data-zona=calendario]'); await ricky.waitForFunction(() => !document.querySelector('.mz-ov'))
 await ricky.waitForSelector('#ev-list .ev-vuoto'); ok(await ricky.locator('#cal .cd.oggi').count() === 1, 'calendario: il mese con oggi evidenziato, ancora nessun evento')
 // nuovo evento domani, con copertina e annuncio nelle Novità
@@ -845,7 +845,7 @@ for (const [tab, dopo] of [['novita'], ['calendario'], ['calendario', '.evc:has-
     ok(!(await pr.evaluate(() => { const lim = document.querySelector('.mz').getBoundingClientRect().right; return [...document.querySelectorAll('.mz *')].some(e => e.getBoundingClientRect().right > lim + 1) })), '320px: il menu delle zone sta tutto nel suo pannello')
     await shot(pr, '26-prova-menu-320'); await pr.click('.mz [data-close]'); await pr.waitForTimeout(300)
   }
-  if (tab === 'novita') ok(await pr.evaluate(() => [...document.querySelectorAll('.tabs button span:last-child')].every(e => e.scrollWidth <= e.clientWidth + 1)), '320px: le scritte della barra in basso ci stanno')
+  if (tab === 'novita') ok(await pr.evaluate(() => { const r = document.querySelector('.tabs [data-tab=novita] svg').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight }), '320px: la casetta in basso si vede tutta')
 }
 for (const w of [320, 1280]) { await pr.setViewportSize({ width: w, height: w === 320 ? 640 : 860 }); await pr.click('[data-tab=novita]'); await pr.waitForSelector('#feed .tw'); ok(!(await pr.evaluate(() => document.documentElement.scrollWidth > innerWidth)), `prova: niente scorrimento laterale a ${w}px`); await shot(pr, '22-prova-' + w) }
 
