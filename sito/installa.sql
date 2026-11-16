@@ -880,26 +880,44 @@ $$;
 -- chi NON può regalare a chi: matrice n×n "appiattita" (riga = chi regala, colonna = chi riceve)
 -- vietati: se stesso, coppie del gruppo, esclusioni dell'evento (in tutte e due le direzioni)
 -- e, se con_prev, gli stessi abbinamenti del Secret Santa dell'anno prima (solo in quella direzione)
+-- nome "di confronto": senza maiuscole, spazi, punteggiatura ed emoji ("Bea💕" = "bea" = "BEA 💕").
+-- Serve perché le coppie del gruppo hanno i nomi del sito (spesso con emoji) e nel Secret Santa ci si iscrive scrivendo il nome
+create or replace function _nome_chiave(t text) returns text
+language sql immutable as $$
+  select lower(regexp_replace(coalesce(t, ''),
+    '[[:space:][:punct:]\u00A0\u00A9\u00AE\u2000-\u2BFF\u2E00-\u2E7F\u3000-\u303F\uFE00-\uFE0F\uFF00-\uFF0F\U0001F000-\U0001FAFF\U000E0000-\U000E007F]', '', 'g'))
+$$;
+
+-- chi non può pescare chi: se stesso, coppie del gruppo, esclusioni dell'evento, (abbinamenti dell'anno prima)
 create or replace function _ss_vietati(p_event uuid, nms text[], con_prev boolean) returns boolean[]
 language plpgsql stable security definer set search_path = public, extensions as $$
-declare n int := coalesce(array_length(nms, 1), 0); m boolean[]; ln text[]; i int; ia int; ib int; r record; pe uuid;
+declare n int := coalesce(array_length(nms, 1), 0); m boolean[]; ln text[]; i int; j int; r record; pe uuid;
 begin
   if n = 0 then return '{}'; end if;
   m := array_fill(false, array[n * n]);
-  ln := array(select lower(x) from unnest(nms) with ordinality as u(x, k) order by k);
+  ln := array(select _nome_chiave(x) from unnest(nms) with ordinality as u(x, k) order by k);
   for i in 1..n loop m[(i - 1) * n + i] := true; end loop;
-  for r in select lower(a) as a, lower(b) as b from group_couples
-           union select lower(a), lower(b) from ss_excl where event_id = p_event loop
-    ia := array_position(ln, r.a); ib := array_position(ln, r.b);
-    if ia is not null and ib is not null then m[(ia - 1) * n + ib] := true; m[(ib - 1) * n + ia] := true; end if;
+  for r in select _nome_chiave(a) as a, _nome_chiave(b) as b from group_couples
+           union select _nome_chiave(a), _nome_chiave(b) from ss_excl where event_id = p_event loop
+    continue when r.a = '' or r.b = '';
+    for i in 1..n loop
+      continue when ln[i] <> r.a;
+      for j in 1..n loop
+        if ln[j] = r.b then m[(i - 1) * n + j] := true; m[(j - 1) * n + i] := true; end if;
+      end loop;
+    end loop;
   end loop;
   if con_prev then
     select prev_event into pe from ss_events where id = p_event;
     if pe is not null then
-      for r in select lower(g.name) as a, lower(rc.name) as b from ss_pairs s
+      for r in select _nome_chiave(g.name) as a, _nome_chiave(rc.name) as b from ss_pairs s
                join ss_people g on g.id = s.giver join ss_people rc on rc.id = s.receiver where s.event_id = pe loop
-        ia := array_position(ln, r.a); ib := array_position(ln, r.b);
-        if ia is not null and ib is not null then m[(ia - 1) * n + ib] := true; end if;
+        for i in 1..n loop
+          continue when ln[i] <> r.a;
+          for j in 1..n loop
+            if ln[j] = r.b and i <> j then m[(i - 1) * n + j] := true; end if;
+          end loop;
+        end loop;
       end loop;
     end if;
   end if;
@@ -1808,10 +1826,10 @@ grant execute on function check_pw, members_list, member_add, presenza, avatars_
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
-  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria from anon, authenticated;
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
-  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria from public;
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin

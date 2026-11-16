@@ -391,6 +391,31 @@ for (const t of ['events','event_rsvp','event_comments','event_dates','event_dat
   ok(negato, `tabella ${t} chiusa alla chiave pubblica`)
 }
 
+// COPPIE DEL GRUPPO con nomi scritti in modo diverso (emoji, maiuscole, spazi): valgono lo stesso
+{
+  await q('select couples_set($1,$2,$3)',[PW,'4321',JSON.stringify([['Bea💕','Cava 🐴'],['Fra 💗','Nico']])])
+  const evc = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Natale emoji','','','Ricky','1234',null])
+  for (const [n, pin] of [['Bea','1111'],['cava','2222'],['Fra💗','3333'],['NICO','4444'],['Ema','5555'],['Ricky','6666']]) await q('select ss_join($1,$2,$3,$4,$5)',[PW,evc,n,pin,''])
+  let violazioni = 0, giri = 0
+  for (let t = 0; t < 200; t++) {
+    if (t) await q('select ss_undo($1,$2,$3)',[PW,evc,'1234'])
+    const d = await one('select ss_draw($1,$2,$3)',[PW,evc,'1234']); if (!d.ok) continue; giri++
+    for (const r of await q(`select g.name gn, r.name rn from ss_pairs s join ss_people g on g.id=s.giver join ss_people r on r.id=s.receiver where s.event_id=$1`,[evc]))
+      if ([['Bea','cava'],['cava','Bea'],['Fra💗','NICO'],['NICO','Fra💗']].some(([x,y]) => r.gn===x && r.rn===y)) violazioni++
+  }
+  ok(giri===200 && violazioni===0, `coppie del gruppo "Bea💕 ↔ Cava 🐴" e "Fra 💗 ↔ Nico" rispettate anche se iscritti come "Bea", "cava", "Fra💗", "NICO" (${giri} sorteggi)`)
+  ok((await one('select ss_check($1,$2)',[PW,evc])).ok===true,'la verifica conferma: sorteggio regolare')
+  // un sorteggio fatto "a mano" con una coppia insieme viene segnalato dalla verifica
+  const ids = Object.fromEntries((await q('select id, name from ss_people where event_id=$1',[evc])).map(r=>[r.name,r.id]))
+  await q('delete from ss_pairs where event_id=$1',[evc])
+  const giro = ['Bea','cava','Fra💗','NICO','Ema','Ricky']
+  for (let i = 0; i < giro.length; i++) await q('insert into ss_pairs(event_id, giver, receiver) values ($1,$2,$3)',[evc, ids[giro[i]], ids[giro[(i+1)%giro.length]]])
+  const ck = await one('select ss_check($1,$2)',[PW,evc])
+  ok(ck.ok===false && ck.excluded_pairs===2,'se una coppia si pesca, la verifica lo scopre (2 abbinamenti vietati)')
+  await q('select ss_event_del($1,$2,$3)',[PW,evc,'1234'])
+  await q('select couples_set($1,$2,$3)',[PW,'4321','[]'])
+}
+
 // NOTIFICHE SUL TELEFONO
 {
 const comeRuolo = async (ruolo, sql, p = []) => { await db.exec(`set role ${ruolo}`); try { return await one(sql, p) } finally { await db.exec('reset role') } }

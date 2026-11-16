@@ -597,6 +597,9 @@ if (!SU_HTMLPREVIEW) {   // nell'app sulla schermata Home: nome, icone e apertur
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const same = (a, b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+// nome "di confronto" (come _nome_chiave nel database): senza maiuscole, spazi, punteggiatura ed emoji → "Bea💕" = "bea"
+const chiaveNome = t => String(t ?? '').normalize('NFC').replace(/[\s\p{P}\p{S}\u200B-\u200D\u20E3\uFE00-\uFE0F\u{E0000}-\u{E007F}]/gu, '').toLowerCase();
+const stessaPersona = (a, b) => !!chiaveNome(a) && chiaveNome(a) === chiaveNome(b);
 const store = {
   get(k, d = null) { try { const v = localStorage.getItem(PFX + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(PFX + k, JSON.stringify(v)); } catch (e) {} },
@@ -1971,14 +1974,18 @@ function drawAdm(ev) {
     return;
   }
   const tutti = ev.people.concat(att);
-  const coppieG = (S.couples || []).filter(([a, b]) => tutti.some(x => same(x, a)) && tutti.some(x => same(x, b)));
+  // coppie del gruppo: valgono anche se nel Secret Santa il nome è scritto senza emoji o con maiuscole diverse
+  const chi = n => tutti.find(x => stessaPersona(x, n));
+  const coppieG = (S.couples || []).filter(([a, b]) => chi(a) && chi(b)).map(([a, b]) => [chi(a), chi(b)]);
+  const aMeta = (S.couples || []).filter(([a, b]) => !!chi(a) !== !!chi(b)).map(([a, b]) => chi(a) ? [chi(a), b] : [chi(b), a]);
   const chiave = ev.draw_no + ':' + n + ':' + att.length + ':' + (ev.log || []).length;
   if (drawn && (!S.ui.stat[id] || S.ui.stat[id].at !== chiave)) { caricaStato(ev, apin, chiave); }
   const opts = sel => ev.people.map(p => `<option ${p === sel ? 'selected' : ''}>${esc(p)}</option>`).join('');
   el.innerHTML = `
     <div class="adm-sec"><h4>💑 Coppie ed esclusioni</h4><p class="muto">Chi non deve pescarsi a vicenda.</p>
       ${coppieG.length ? `<div class="qa-k">Coppie del gruppo (automatiche)</div>${coppieG.map(x => `<div class="excl"><span>${esc(x[0])} ↔ ${esc(x[1])}</span><small class="muto">auto</small></div>`).join('')}`
-        : `<p class="hint" style="margin:0 0 8px">Le coppie del gruppo si impostano in ☰ → Chi c'è nel gruppo → Area amministratore.</p>`}
+        : `<p class="hint" style="margin:0 0 8px">${(S.couples || []).length ? 'Nessuna coppia del gruppo ha entrambi i partner iscritti.' : 'Le coppie del gruppo si impostano in ☰ → Chi c\'è nel gruppo → Area amministratore.'}</p>`}
+      ${aMeta.length ? `<p class="hint coppie-meta">${aMeta.map(([c, f]) => `${esc(c)} è in coppia con <b>${esc(f)}</b>, che non è (ancora) iscritto`).join('<br>')}</p>` : ''}
       <div class="qa-k">Solo per questo Secret Santa</div>
       ${ev.excl.map((x, i) => `<div class="excl"><span>${esc(x[0])} ↔ ${esc(x[1])}</span>${drawn ? '' : `<button class="icon" data-x="unex" data-i="${i}" aria-label="Togli">✕</button>`}</div>`).join('') || '<p class="hint" style="margin:0">Nessuna.</p>'}
       ${!drawn && n >= 2 ? `<div class="exadd"><select id="ex-a">${opts(ev.people[0])}</select><span>↔</span><select id="ex-b">${opts(ev.people[1])}</select><button class="btn ghost sm" data-x="addex">Aggiungi esclusione</button></div>` : ''}</div>
@@ -2875,8 +2882,8 @@ function creaDemo() {
   const vietato = (e, conPrev) => {
     const pe = conPrev && e.prev_event ? D.ss.find(x => x.id === e.prev_event) : null;
     const prima = pe && pe.pairs ? [...pe.pairs].map(([g, r]) => [pe.people.find(p => p.id === g), pe.people.find(p => p.id === r)]).filter(([g, r]) => g && r).map(([g, r]) => [g.name, r.name]) : [];
-    return (g, r) => g === r || D.couples.concat(e.excl).some(([a, b]) => (same(a, g.name) && same(b, r.name)) || (same(a, r.name) && same(b, g.name)))
-      || prima.some(([x, y]) => same(x, g.name) && same(y, r.name));
+    return (g, r) => g === r || D.couples.concat(e.excl).some(([a, b]) => (stessaPersona(a, g.name) && stessaPersona(b, r.name)) || (stessaPersona(a, r.name) && stessaPersona(b, g.name)))
+      || prima.some(([x, y]) => stessaPersona(x, g.name) && stessaPersona(y, r.name));
   };
   // esiste un sorteggio valido? (abbinamento completo, ordine casuale)
   const abbina = (P, v) => {

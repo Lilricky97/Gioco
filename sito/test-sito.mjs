@@ -497,6 +497,8 @@ await ricky.waitForSelector('#cp-a')
 await ricky.selectOption('#cp-a', 'Ricky'); await ricky.selectOption('#cp-b', 'Giulia'); await ricky.click('[data-couple]')
 await ricky.waitForFunction(() => [...document.querySelectorAll('#gruppo .excl span')].some(s => s.textContent.includes('Giulia') && s.textContent.includes('Ricky')))
 ok(true, 'coppia del gruppo Ricky ↔ Giulia salvata dall\'amministratore')
+ok(await ricky.evaluate(() => [['Bea💕', ' bea '], ['Cava 🐴', 'CAVA'], ['Fra 💗', 'Fra💗'], ['Anna❤️', 'anna'], ['Niccolò', 'NICCOLÒ']].every(([x, y]) => stessaPersona(x, y)) && !stessaPersona('Marco', 'Marco B.') && !stessaPersona('🎉', '💗')),
+  'coppie: "Bea💕" e "bea", "Cava 🐴" e "CAVA" sono la stessa persona (emoji, spazi e maiuscole non contano)')
 await shot(ricky, '09a-coppie-gruppo')
 await ricky.click('#gruppo [data-adm-lock]'); await ricky.click('.sheet [data-close]'); await ricky.waitForTimeout(250)
 
