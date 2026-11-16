@@ -1268,8 +1268,8 @@ function drawFeed() {
   const el = $('#feed'); if (!el || !S.feed) return;
   const c = cur(), tag = c.sec === 'tag' ? c.arg : '';
   drawTrends();
-  // nella home i post in evidenza non compaiono: stanno nella sezione della puntina (nelle pagine #tag sì)
-  const list = tag ? S.feed.filter(p => tagsOf(p.body).has(tag)) : S.feed.filter(p => !p.pinned_at);
+  // i post in evidenza stanno SOLO nella sezione della puntina: né nella home né nelle pagine #tag
+  const base = S.feed.filter(p => !p.pinned_at), list = tag ? base.filter(p => tagsOf(p.body).has(tag)) : base;
   const tn = $('#tag-n'); if (tn) tn.textContent = ` · ${list.length} post`;
   const sig = JSON.stringify(list) + S.me + tag + !!adminPin(); if (el.dataset.sig === sig) return; el.dataset.sig = sig;
   if (!list.length) { el.innerHTML = `<div class="empty">${tag ? `Nessun post con #${esc(tag)}.<br>Scrivine uno tu!` : 'Ancora niente qui.<br>Scrivi la prima novità! ✨'}</div>`; return; }
