@@ -53,7 +53,7 @@ create table if not exists posts (
   photos text[] not null default '{}',
   created_at timestamptz not null default now()
 );
-alter table posts add column if not exists pinned_at timestamptz;   -- "In evidenza": fissato in cima alle Novità (max 3)
+alter table posts add column if not exists pinned_at timestamptz;   -- "In evidenza": sezione a parte con la puntina (max 5), non compare nelle Novità
 
 create table if not exists post_likes (         -- i "mi piace"
   post_id uuid not null references posts(id) on delete cascade,
@@ -567,7 +567,7 @@ begin
   if not found then return json_build_object('err', 'POST_NON_TROVATO'); end if;
   if coalesce(p_pin, true) then
     if not exists (select 1 from posts where id = p_id and pinned_at is not null)
-       and (select count(*) from posts where pinned_at is not null) >= 3 then
+       and (select count(*) from posts where pinned_at is not null) >= 5 then
       return json_build_object('err', 'TROPPI_FISSATI');
     end if;
     update posts set pinned_at = coalesce(pinned_at, now()) where id = p_id;

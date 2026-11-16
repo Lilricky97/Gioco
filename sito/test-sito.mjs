@@ -34,7 +34,7 @@ async function apriAdm(page) {
   if (!await page.evaluate(() => document.querySelector('#ss-adm').open)) await page.click('#ss-adm summary')
 }
 async function vai(page, z) {
-  if (z === 'novita') return page.click('[data-tab=novita]')
+  if (z === 'novita' || z === 'pin') return page.click(`[data-tab=${z}]`)
   if (z === 'foto') { await page.evaluate(() => { location.hash = '#foto' }); return page.waitForSelector('#albums') }   // le cartelle non sono più nel menu
   await page.click('#menu-btn'); await page.waitForSelector('.mz-ov.in [data-zona]'); await page.click(`.mz [data-zona=${z}]`)
   await page.waitForFunction(() => !document.querySelector('.mz-ov'))
@@ -266,7 +266,8 @@ const giornoT = k => { const d = new Date(); d.setDate(d.getDate() + k); return 
 const codaVuota = page => page.waitForFunction(() => Object.values(S.vq).every(q => !q.n))
 await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in [data-zona]')
 ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=novita]').count() === 0 && await ricky.locator('.mz [data-zona=foto]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1, 'menu ☰: niente Novità, Storie e Foto, c\'è il Calendario')
-ok(await ricky.evaluate(() => { const b = document.querySelector('.tabs [data-tab=novita]'), s = b.querySelector('svg').getBoundingClientRect(); return b.textContent.trim() === '' && b.getAttribute('aria-label') === 'Novità' && s.width >= 28 && s.height >= 28 }), 'barra in basso: solo la casetta (niente scritta), bella grande')
+ok(await ricky.evaluate(() => { const B = [...document.querySelectorAll('.tabs button')]; return B.map(b => b.dataset.tab + ':' + b.getAttribute('aria-label')).join() === 'novita:Novità,pin:In evidenza' && B.every(b => { const s = b.querySelector('svg').getBoundingClientRect(); return b.textContent.trim() === '' && s.width >= 28 && s.height >= 28 }) }), 'barra in basso: solo la casetta e la puntina disegnate (niente scritte), belle grandi')
+ok(await ricky.locator('.mz [data-zona=pin]').count() === 0, 'menu ☰: "In evidenza" non c\'è (è la puntina in basso)')
 await ricky.click('.mz [data-zona=calendario]'); await ricky.waitForFunction(() => !document.querySelector('.mz-ov'))
 await ricky.waitForSelector('#ev-list .ev-vuoto'); ok(await ricky.locator('#cal .cd.oggi').count() === 1, 'calendario: il mese con oggi evidenziato, ancora nessun evento')
 // nuovo evento domani, con copertina e annuncio nelle Novità
@@ -394,7 +395,8 @@ ok(await marco.evaluate(() => { const t = [...document.querySelectorAll('#feed .
 
 // ---------------- STORIE (24 ore): fila di riquadri in cima alle Novità ----------------
 await vai(ricky, 'novita'); await ricky.waitForSelector('#st-hub #st-add')
-ok(await ricky.locator('.tabs button').count() === 1 && await ricky.locator('[data-tab=storie]').count() === 0, 'barra in basso: solo Novità (niente più Storie)')
+ok(await ricky.locator('[data-tab=storie]').count() === 0, 'barra in basso: niente più Storie')
+ok(await ricky.locator('#view h1').count() === 0, 'nelle Novità niente più scritta "NOVITÀ" in alto')
 await ricky.waitForFunction(() => document.querySelector('#st-hub').textContent.includes('Nessuna storia'))
 ok(true, 'storie vuote: invito a pubblicare')
 ok(await ricky.evaluate(() => document.querySelector('#st-hub').getBoundingClientRect().bottom <= document.querySelector('.composer').getBoundingClientRect().top), 'la fila delle storie è in cima alle Novità, sopra "Che succede"')
@@ -670,7 +672,7 @@ await ricky.evaluate(() => { document.querySelector('#gl-f').dataset.segno = 'st
 await ricky.click('#gl-min'); await ricky.waitForSelector('#gl-pill')
 ok(await ricky.locator('#gl').isHidden() && ricky.url().endsWith('#gioco'), '‹ Sito: torno al sito, il gioco resta aperto dietro')
 await ricky.click('[data-tab=novita]'); await ricky.waitForSelector('#feed')
-// post in evidenza: solo l'amministratore, al massimo 3
+// post in evidenza: sezione a parte con la puntina in basso, li sceglie solo l'amministratore, al massimo 5
 ok(await ricky.locator('#feed [data-pin]').count() === 0, 'senza PIN amministratore niente puntina 📌, nemmeno per Ricky')
 await ricky.evaluate(() => ping()); await ricky.click('#on-btn'); await ricky.waitForSelector('#gruppo [data-adm-open]')
 await ricky.click('#gruppo [data-adm-open]'); await ricky.fill('#adm-form [name=p]', '9999'); await ricky.click('#adm-form button')
@@ -678,19 +680,26 @@ await ricky.waitForSelector('#gruppo [data-adm-lock]'); await ricky.click('.shee
 await ricky.evaluate(() => loadFeed()); await ricky.waitForSelector('#feed [data-pin]')
 await marco.click('[data-tab=novita]'); await marco.waitForSelector('#feed .tw')
 ok(await marco.locator('#feed [data-pin]').count() === 0, 'chi non è amministratore non vede la puntina 📌')
-await ricky.click('#feed .tw:has-text("Il sito è online") [data-pin]'); await ricky.waitForSelector('.toast:has-text("Post fissato")')
-await ricky.waitForFunction(() => { const p = document.querySelector('#feed .tw'); return p.classList.contains('fisso') && p.textContent.includes('Il sito è online') && p.querySelector('.tw-fisso') })
-ok(true, 'post fissato: va in cima con "📌 In evidenza"')
-for (let n = 2; n <= 3; n++) {
-  await ricky.click('#feed .tw:not(.fisso) [data-pin] >> nth=0'); await ricky.waitForFunction(n => document.querySelectorAll('#feed .tw.fisso').length === n, n)
-}
-await ricky.click('#feed .tw:not(.fisso) [data-pin] >> nth=0'); await ricky.waitForSelector('.toast:has-text("al massimo 3")')
-ok(await ricky.locator('#feed .tw.fisso').count() === 3, 'il quarto no: al massimo 3 post in evidenza')
-await marco.evaluate(() => loadFeed()); await marco.waitForFunction(() => [...document.querySelectorAll('#feed .tw')].slice(0, 3).every(p => p.classList.contains('fisso')))
-ok(await marco.locator('#feed .tw.fisso').count() === 3 && await marco.locator('#feed .tw.fisso .tw-fisso').count() === 3 && await marco.locator('#feed [data-pin]').count() === 0, 'gli amici vedono i 3 post in evidenza in cima (senza puntina)')
+const nHome = await ricky.locator('#feed .tw').count()
+await ricky.click('#feed .tw:has-text("Il sito è online") [data-pin]'); await ricky.waitForSelector('.toast:has-text("Messo in evidenza")')
+await ricky.waitForFunction(() => ![...document.querySelectorAll('#feed .tw')].some(p => p.textContent.includes('Il sito è online')))
+ok(await ricky.locator('#feed .tw.fisso').count() === 0, 'post messo in evidenza: sparisce dalle Novità')
+for (let n = 2; n <= 5; n++) { await ricky.click('#feed .tw [data-pin] >> nth=0'); await ricky.waitForFunction(k => document.querySelectorAll('#feed .tw').length === k, nHome - n) }
+await ricky.click('#feed .tw [data-pin] >> nth=0'); await ricky.waitForSelector('.toast:has-text("al massimo 5")')
+ok(await ricky.locator('#feed .tw').count() === nHome - 5, 'il sesto no: al massimo 5 post in evidenza')
+await ricky.click('[data-tab=pin]'); await ricky.waitForFunction(() => document.querySelectorAll('#pinfeed .tw').length === 5)
+ok((await ricky.textContent('#pinfeed')).includes('Il sito è online') && await ricky.locator('#pinfeed .tw-fisso').count() === 0 && await ricky.locator('#pinfeed .tw.kfeed, .kfeed#pinfeed').count() === 1, 'la puntina in basso apre i 5 post in evidenza (blocchi colorati, senza etichetta ripetuta)')
+await marco.click('[data-tab=pin]'); await marco.waitForFunction(() => document.querySelectorAll('#pinfeed .tw').length === 5)
+ok(await marco.locator('#pinfeed [data-pin]').count() === 0 && await marco.evaluate(() => document.querySelector('[data-tab=pin]').classList.contains('on') && !document.querySelector('[data-tab=novita]').classList.contains('on')), 'gli amici vedono i 5 post in evidenza dalla puntina (accesa), senza poterli togliere')
+await marco.click('[data-tab=novita]'); await marco.waitForSelector('#feed .tw')
+ok(!(await marco.textContent('#feed')).includes('Il sito è online'), 'nelle Novità degli amici i post in evidenza non ci sono')
 await shot(ricky, '37-in-evidenza')
-for (let n = 2; n >= 0; n--) { await ricky.click('#feed .tw.fisso [data-pin] >> nth=0'); await ricky.waitForFunction(n => document.querySelectorAll('#feed .tw.fisso').length === n, n) }
-ok(true, 'l\'amministratore li toglie dalla cima')
+await ricky.click('#pinfeed .tw .tw-t >> nth=0'); await ricky.waitForSelector('#thread .tw'); await ricky.click('#pb'); await ricky.waitForSelector('#pinfeed .tw')
+ok(true, 'aperto un post in evidenza, "Indietro" torna alla puntina')
+for (let n = 4; n >= 0; n--) { await ricky.click('#pinfeed .tw [data-pin] >> nth=0'); await ricky.waitForFunction(n => document.querySelectorAll('#pinfeed .tw').length === n, n) }
+await ricky.waitForFunction(() => document.querySelector('#pinfeed').textContent.includes('Ancora nessun post'))
+await ricky.click('[data-tab=novita]'); await ricky.waitForFunction(k => document.querySelectorAll('#feed .tw').length === k, nHome)
+ok(true, 'l\'amministratore li toglie: tornano nelle Novità')
 await ricky.click('#on-btn'); await ricky.waitForSelector('#gruppo [data-adm-lock]'); await ricky.click('#gruppo [data-adm-lock]'); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
 
 // blocchi colorati nelle Novità: post azzurro, evento verde, Secret Santa rosso, sondaggio giallo, foto viola
@@ -763,6 +772,7 @@ ok(!dopoSett.some(f => f.startsWith('novita/')) && ['album/', 'eventi/', 'avatar
   'dopo 7 giorni le foto dei post spariscono dallo spazio foto; cartelle, copertine degli eventi e foto utente restano')
 await ricky.evaluate(() => loadFeed()); await ricky.waitForSelector('#feed .tw:has-text("Questa foto scadrà") .tw-scad')
 ok(await ricky.locator('#feed .tw:has-text("Questa foto scadrà") .pics').count() === 0, 'nelle Novità il post vecchio dice "📷 Foto scadute" al posto della foto')
+ok(await ricky.evaluate(() => document.querySelector('#trends-m').textContent.trim() === '' && getComputedStyle(document.querySelector('#trends-m')).display === 'none'), 'hashtag di tendenza: contano solo gli ultimi 3 giorni (post di 8 giorni fa: la fila sparisce)')
 
 // ---------------- MODALITÀ PROVA (sito senza database) ----------------
 const pr = await telefono('Prova', true)
@@ -776,7 +786,7 @@ await pr.evaluate(() => localStorage.clear()); await pr.reload()
 await shot(pr, '20-prova-ingresso')
 await pr.fill('#g-in', 'prova'); await pr.click('#g-pw [type=submit]'); await pr.waitForSelector('#g-who [data-n=Marco]')
 await pr.fill('#g-name input', 'Ricky'); await pr.click('#g-name button'); await pr.waitForSelector('#feed .tw')
-ok(await pr.locator('.demo-bar').count() === 1 && await pr.locator('#feed .tw').count() === 9, 'prova: 9 post di esempio e striscia "modalità prova"')
+ok(await pr.locator('.demo-bar').count() === 1 && await pr.locator('#feed .tw').count() === 8, 'prova: 8 post di esempio (+1 in evidenza) e striscia "modalità prova"')
 ok(await pr.evaluate(() => ['post', 'evento', 'santa', 'sondaggio', 'foto'].every(k => document.querySelector('#feed .tw.k-' + k))), 'prova: un blocco per ogni colore (post, evento, Secret Santa, sondaggio, foto)')
 await pr.waitForFunction(() => document.querySelector('#on-btn b').textContent === '3')
 ok(true, 'prova: 3 online (Giulia, Marco e io)')
@@ -804,14 +814,20 @@ await pr.waitForFunction(() => document.querySelector('.sv-img').naturalWidth > 
 await shot(pr, '23-prova-storia'); await pr.click('.sv-stage'); await pr.waitForTimeout(300); await pr.click('.sv-x')
 await pr.click('[data-tab=novita]'); await pr.waitForSelector('#feed .tw')
 ok((await pr.textContent('#trends-m')).includes('#capodanno2') && (await pr.textContent('#trends-m')).includes('#mare2'), 'prova: tendenze #capodanno e #mare')
+await pr.evaluate(() => window.scrollTo(0, 700)); await pr.waitForTimeout(150)
+ok(await pr.evaluate(() => document.querySelector('#trends-m').getBoundingClientRect().bottom <= document.querySelector('header.top').getBoundingClientRect().bottom), 'prova: scorrendo, la fila delle tendenze sparisce (non resta attaccata in alto)')
+await pr.evaluate(() => window.scrollTo(0, 0))
 await pr.waitForFunction(() => [...document.querySelectorAll('#feed img')].every(i => i.complete && i.naturalWidth > 0))
 await shot(pr, '21-prova-novita')
-ok((await pr.textContent('#feed .tw >> nth=0')).includes('In evidenza') && (await pr.textContent('#feed .tw >> nth=0')).includes('Benvenuti'), 'prova: il post di benvenuto è in evidenza, in cima')
+ok(!(await pr.textContent('#feed')).includes('Benvenuti'), 'prova: il post di benvenuto (in evidenza) non è nelle Novità…')
+await vai(pr, 'pin'); await pr.waitForSelector('#pinfeed .tw')
+ok(await pr.locator('#pinfeed .tw').count() === 1 && (await pr.textContent('#pinfeed')).includes('Benvenuti'), '…ma sotto la puntina in basso')
+await shot(pr, '38-prova-in-evidenza'); await vai(pr, 'novita'); await pr.waitForSelector('#feed .tw')
 const mp = '#feed .tw:has-text("Stasera da me") [data-like]'
 await pr.click(mp); await pr.waitForFunction(s => document.querySelector(s.replace(':has-text("Stasera da me")', '')) && [...document.querySelectorAll('#feed .tw')].find(t => t.textContent.includes('Stasera da me')).querySelector('[data-like]').classList.contains('on'), mp)
 ok((await pr.textContent(mp + ' span')) === '3', 'prova: mi piace (2 → 3)')
 await pr.setInputFiles('#np-file', await immagini(pr, 1)); await pr.fill('#np-text', 'Foto di prova #test'); await pr.click('#np-go')
-await pr.waitForFunction(() => document.querySelectorAll('#feed .tw').length === 10)
+await pr.waitForFunction(() => document.querySelectorAll('#feed .tw').length === 9)
 await pr.waitForFunction(() => document.querySelector('#feed .tw .pics img').naturalWidth > 0)
 ok(true, 'prova: post con foto caricato e visibile')
 await vai(pr, 'foto'); await pr.waitForSelector('#albums .album'); await pr.click('#albums .album')
@@ -835,7 +851,7 @@ const dTo = (await pr.textContent('.rv-name')).trim()
 ok(['Marco', 'Giulia', 'Sara', 'Luca'].includes(dTo), 'prova: sorteggio fatto, Ricky fa il regalo a ' + dTo)
 await pr.click('#ver-open'); await pr.waitForSelector('.ver-ok'); ok((await pr.textContent('.ver-ok')).includes('regolare') && await pr.locator('.ver-r').count() === 5, 'prova: verifica con 5 lettere, sorteggio regolare')
 await pr.setViewportSize({ width: 320, height: 640 })
-for (const [tab, dopo] of [['novita'], ['calendario'], ['calendario', '.evc:has-text("Cena")'], ['calendario', '.evc:has-text("Pizzata")'], ['sondaggi'], ['foto', '#albums .album'], ['gioco'], ['santa', '.ss-item'], ['fanta']]) {
+for (const [tab, dopo] of [['novita'], ['pin'], ['calendario'], ['calendario', '.evc:has-text("Cena")'], ['calendario', '.evc:has-text("Pizzata")'], ['sondaggi'], ['foto', '#albums .album'], ['gioco'], ['santa', '.ss-item'], ['fanta']]) {
   await vai(pr, tab); await pr.waitForTimeout(250)
   if (dopo) { await pr.click(dopo); await pr.waitForTimeout(400) }
   const fuori = await pr.evaluate(() => [...document.querySelectorAll('#view *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > innerWidth + 1 && !e.closest('.trend-row,.st-strip,.pgrid,.pics') }).map(e => e.tagName + '.' + e.className + ': ' + (e.textContent || '').trim().slice(0, 30)).slice(0, 3))
@@ -845,7 +861,7 @@ for (const [tab, dopo] of [['novita'], ['calendario'], ['calendario', '.evc:has-
     ok(!(await pr.evaluate(() => { const lim = document.querySelector('.mz').getBoundingClientRect().right; return [...document.querySelectorAll('.mz *')].some(e => e.getBoundingClientRect().right > lim + 1) })), '320px: il menu delle zone sta tutto nel suo pannello')
     await shot(pr, '26-prova-menu-320'); await pr.click('.mz [data-close]'); await pr.waitForTimeout(300)
   }
-  if (tab === 'novita') ok(await pr.evaluate(() => { const r = document.querySelector('.tabs [data-tab=novita] svg').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight }), '320px: la casetta in basso si vede tutta')
+  if (tab === 'novita') ok(await pr.evaluate(() => [...document.querySelectorAll('.tabs svg')].every(s => { const r = s.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight })), '320px: casetta e puntina in basso si vedono tutte')
 }
 for (const w of [320, 1280]) { await pr.setViewportSize({ width: w, height: w === 320 ? 640 : 860 }); await pr.click('[data-tab=novita]'); await pr.waitForSelector('#feed .tw'); ok(!(await pr.evaluate(() => document.documentElement.scrollWidth > innerWidth)), `prova: niente scorrimento laterale a ${w}px`); await shot(pr, '22-prova-' + w) }
 

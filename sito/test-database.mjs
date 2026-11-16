@@ -307,18 +307,18 @@ ok((await err('select ss_leave($1,$2,$3,$4)',[PW,ev,'Marco',pinDi('Marco')]))===
   await q('delete from storage.objects where true'); await q('delete from posts where id = any($1)',[[pFisso, pVecchio]])
 }
 
-// POST IN EVIDENZA (fissati in cima, max 3, solo amministratore)
+// POST IN EVIDENZA (sezione con la puntina, max 5, solo amministratore)
 {
   const ids = []
-  for (const t of ['Uno', 'Due', 'Tre', 'Quattro']) ids.push(await one('select post_add($1,$2,$3,$4)',[PW,'Marco','Fissami '+t,[]]))
+  for (const t of ['Uno', 'Due', 'Tre', 'Quattro', 'Cinque', 'Sei']) ids.push(await one('select post_add($1,$2,$3,$4)',[PW,'Marco','Fissami '+t,[]]))
   ok((await err('select post_pin($1,$2,$3,$4)',[PW,ids[0],'0000',true]))==='PIN_ADMIN_ERRATO','senza PIN amministratore giusto non si fissa niente')
-  for (const id of ids.slice(0,3)) ok((await one('select post_pin($1,$2,$3,$4)',[PW,id,'4321',true])).ok===true,'post fissato')
-  ok((await err('select post_pin($1,$2,$3,$4)',[PW,ids[3],'4321',true]))==='TROPPI_FISSATI','il quarto no: al massimo 3 post in evidenza')
-  ok((await one('select post_pin($1,$2,$3,$4)',[PW,ids[0],'4321',true])).ok===true,'rifissare uno già fissato va bene (resta uno dei 3)')
+  for (const id of ids.slice(0,5)) ok((await one('select post_pin($1,$2,$3,$4)',[PW,id,'4321',true])).ok===true,'post fissato')
+  ok((await err('select post_pin($1,$2,$3,$4)',[PW,ids[5],'4321',true]))==='TROPPI_FISSATI','il sesto no: al massimo 5 post in evidenza')
+  ok((await one('select post_pin($1,$2,$3,$4)',[PW,ids[0],'4321',true])).ok===true,'rifissare uno già fissato va bene (resta uno dei 5)')
   let f = await one('select feed($1)',[PW])
-  ok(f.filter(p=>p.pinned_at).length===3 && f.find(p=>p.id===ids[3]).pinned_at===null,'il feed dice quali sono fissati')
+  ok(f.filter(p=>p.pinned_at).length===5 && f.find(p=>p.id===ids[5]).pinned_at===null,'il feed dice quali sono fissati')
   await q('select post_pin($1,$2,$3,$4)',[PW,ids[1],'4321',false])
-  ok((await one('select post_pin($1,$2,$3,$4)',[PW,ids[3],'4321',true])).ok===true,'tolto uno, se ne può fissare un altro')
+  ok((await one('select post_pin($1,$2,$3,$4)',[PW,ids[5],'4321',true])).ok===true,'tolto uno, se ne può fissare un altro')
   // un post fissato resta nel feed anche se è vecchissimo (oltre i 150 più recenti)
   await q(`update posts set created_at = now() - interval '2 years' where id = $1`,[ids[0]])
   for (let i = 0; i < 151; i++) await q('select post_add($1,$2,$3,$4)',[PW,'Luca','riempitivo '+i,[]])
