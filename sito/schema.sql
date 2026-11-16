@@ -41,6 +41,13 @@ create table if not exists story_comments (     -- commenti alle storie (sparisc
   created_at timestamptz not null default now()
 );
 
+create table if not exists story_likes (         -- ❤️ alle storie (spariscono con la storia)
+  story_id uuid not null references stories(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  primary key (story_id, name)
+);
+
 create table if not exists posts (
   id uuid primary key default gen_random_uuid(),
   author text not null,
@@ -261,12 +268,15 @@ create table if not exists notif_queue (        -- "cassetta delle lettere" dell
   created_at timestamptz not null default now(),
   sent_at timestamptz
 );
+-- notifiche personali (es. "ha commentato la tua storia"): solo a questi nomi (in minuscolo), anche se non hanno scelto quel tipo
+alter table notif_queue add column if not exists dest text[];
 
 alter table app_config enable row level security;
 alter table members   enable row level security;
 alter table stories     enable row level security;
 alter table story_views enable row level security;
 alter table story_comments enable row level security;
+alter table story_likes enable row level security;
 alter table posts     enable row level security;
 alter table post_likes   enable row level security;
 alter table post_replies enable row level security;
@@ -472,10 +482,32 @@ begin
   perform _need(p_pw);
   return coalesce((select json_agg(x order by x.created_at) from (
     select s.id, s.author, s.path, s.caption, s.created_at,
-      case when lower(s.author) = lower(coalesce(p_name, '')) then   -- chi l'ha vista: solo per l'autore
+      case when lower(s.author) = lower(coalesce(p_name, '')) then   -- chi l'ha vista e chi ha messo ❤️: solo per l'autore
         coalesce((select json_agg(v.name order by v.seen_at) from story_views v where v.story_id = s.id), '[]'::json) end as views,
-      (select count(*) from story_comments c where c.story_id = s.id) as comments
+      case when lower(s.author) = lower(coalesce(p_name, '')) then
+        coalesce((select json_agg(l.name order by l.created_at) from story_likes l where l.story_id = s.id), '[]'::json) end as likers,
+      (select count(*) from story_comments c where c.story_id = s.id) as comments,
+      (select count(*) from story_likes l where l.story_id = s.id) as likes,
+      exists (select 1 from story_likes l where l.story_id = s.id and lower(l.name) = lower(coalesce(p_name, ''))) as liked,
+      exists (select 1 from story_views v where v.story_id = s.id and lower(v.name) = lower(coalesce(p_name, ''))) as vista   -- già vista (anche da un altro telefono)
     from stories s where s.created_at > now() - interval '24 hours') x), '[]'::json);
+end $$;
+
+-- ❤️ a una storia (p_like = true metti, false togli). Non alla propria. Restituisce quanti ❤️ ha
+create or replace function story_like(p_pw text, p_story uuid, p_name text, p_like boolean) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); a text;
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  select author into a from stories where id = p_story and created_at > now() - interval '24 hours';
+  if not found then raise exception 'STORIA_SCADUTA'; end if;
+  if lower(a) <> lower(n) then
+    delete from story_likes where story_id = p_story and lower(name) = lower(n);
+    if coalesce(p_like, true) then insert into story_likes(story_id, name) values (p_story, n); end if;
+  end if;
+  return json_build_object('liked', exists (select 1 from story_likes where story_id = p_story and lower(name) = lower(n)),
+    'likes', (select count(*) from story_likes where story_id = p_story));
 end $$;
 
 create or replace function story_add(p_pw text, p_author text, p_path text, p_caption text) returns uuid
@@ -1696,6 +1728,32 @@ end $$;
 drop trigger if exists notif_storia on stories;
 create trigger notif_storia after insert on stories for each row execute function _notif_storia();
 
+-- commento a una storia: avvisa chi l'ha pubblicata e chi l'aveva già commentata (non chi scrive).
+-- Sono notifiche personali: arrivano anche a chi ha tolto le "storie" dai tipi scelti
+create or replace function _notif_commento_storia() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text; altri text[]; corpo text := left(regexp_replace(new.body, '\s+', ' ', 'g'), 150);
+begin
+  select author into a from stories where id = new.story_id;
+  if a is null then return new; end if;
+  delete from notif_queue where created_at < now() - interval '30 days';
+  if lower(a) <> lower(new.author) then
+    insert into notif_queue(kind, author, title, body, url, dest)
+    values ('storie', new.author, left('💬 ' || new.author || ' ha commentato la tua storia', 80), corpo, '#storie/' || new.story_id, array[lower(a)]);
+  end if;
+  select array_agg(distinct lower(c.author)) into altri from story_comments c
+    where c.story_id = new.story_id and c.id <> new.id and lower(c.author) not in (lower(a), lower(new.author));
+  if altri is not null then
+    insert into notif_queue(kind, author, title, body, url, dest)
+    values ('storie', new.author, left('💬 ' || new.author || case when lower(a) = lower(new.author) then ' ha risposto nella sua storia' else ' sulla storia di ' || a end, 80),
+      corpo, '#storie/' || new.story_id, altri);
+  end if;
+  return new;
+exception when others then return new;          -- una notifica non deve mai bloccare un commento
+end $$;
+drop trigger if exists notif_commento_storia on story_comments;
+create trigger notif_commento_storia after insert on story_comments for each row execute function _notif_commento_storia();
+
 create or replace function _notif_post() returns trigger
 language plpgsql security definer set search_path = public, extensions as $$
 begin
@@ -1775,8 +1833,8 @@ begin
 end $$;
 
 -- ===== solo per la funzione "notifica" di Supabase (chiave service_role), mai per il sito =====
--- prende la notifica UNA volta sola e dice a chi mandarla: tutti quelli che l'hanno chiesta, tranne chi l'ha fatta,
--- chi è stato rimosso e (per i promemoria) chi ha detto "Non ci sono"
+-- prende la notifica UNA volta sola e dice a chi mandarla: tutti quelli che l'hanno chiesta (o, se è personale, solo i
+-- nomi in "dest"), tranne chi l'ha fatta, chi è stato rimosso e (per i promemoria) chi ha detto "Non ci sono"
 create or replace function notif_claim(p_id bigint) returns json
 language plpgsql security definer set search_path = public, extensions as $$
 declare q notif_queue%rowtype;
@@ -1785,7 +1843,7 @@ begin
   if not found then return null; end if;
   return json_build_object('title', q.title, 'body', q.body, 'url', q.url, 'tag', q.kind || '-' || coalesce(q.event_id::text, q.id::text),
     'subs', coalesce((select json_agg(json_build_object('endpoint', s.endpoint, 'p256dh', s.p256dh, 'auth', s.auth)) from push_subs s
-      where q.kind = any(s.kinds) and lower(s.name) <> lower(q.author)
+      where (case when q.dest is null then q.kind = any(s.kinds) else lower(s.name) = any(q.dest) end) and lower(s.name) <> lower(q.author)
         and not exists (select 1 from members m where lower(m.name) = lower(s.name) and m.banned)
         and not (q.title like '⏰%' and exists (select 1 from event_rsvp r where r.event_id = q.event_id and lower(r.name) = lower(s.name) and r.ans = 'no'))), '[]'::json));
 end $$;
@@ -1810,7 +1868,7 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
+grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_like, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
   reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
@@ -1821,10 +1879,10 @@ grant execute on function check_pw, members_list, member_add, presenza, avatars_
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
-  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave from anon, authenticated;
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
-  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave from public;
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin

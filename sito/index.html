@@ -406,6 +406,15 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .sv-bot .btn.ghost.rosso{color:var(--rosso);border-color:rgba(255,93,108,.5)}
 .sv-bot svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
 .sv-bot .btn{text-transform:none;letter-spacing:.01em;font-size:14px}
+.sv-like{min-width:52px}
+.sv-bot .sv-like svg{width:24px;height:24px;stroke-width:2}
+.sv-bot .btn.ghost.sv-like.on{color:var(--rosa);border-color:rgba(255,62,165,.65);box-shadow:0 0 16px -4px var(--rosa-g)}
+.sv-like.on svg{fill:var(--rosa)}
+.sv-like.pop svg{animation:cuore .4s ease-out}
+@keyframes cuore{0%{transform:scale(1)}35%{transform:scale(1.45)}100%{transform:scale(1)}}
+.sv-lk{display:inline-flex;align-items:center;gap:3px;color:var(--rosa);font-style:normal;font-weight:700;margin-left:6px}
+.sv-lk svg{width:15px;height:15px;fill:var(--rosa);stroke:var(--rosa);stroke-width:1.8}
+.prs .sv-lk svg{width:18px;height:18px}
 
 /* ---------- menu delle zone ---------- */
 .top-l{display:flex;align-items:center;gap:6px;min-width:0}
@@ -1039,7 +1048,7 @@ function apriMenu() {
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
   // "#storie" (es. tocco sulla notifica di una storia): Novità + si aprono le storie nuove
-  if (cur().sec === 'storie') { S.apriStorie = true; history.replaceState(null, '', '#novita'); }
+  if (cur().sec === 'storie') { S.apriStorie = cur().arg || true; history.replaceState(null, '', '#novita'); }
   document.querySelectorAll('.ov,.lb,.sv').forEach(x => x.remove()); document.body.classList.remove('noscroll');
   const c = cur(), inGioco = c.sec === 'gioco' && c.arg === 'gioca';
   if (inGioco) { giocoLayer().hidden = false; document.body.classList.add('noscroll'); } else if ($('#gl')) $('#gl').hidden = true;
@@ -2471,7 +2480,7 @@ function apriNotifiche() {
   sheet(`<div class="notif-s"><h3>🔔 Notifiche</h3>${spiega ? `<p class="muto">${spiega}</p><div class="row end"><button class="btn" data-close>Ok</button></div>` : `
     <p class="muto">${on ? 'Le notifiche sono <b>attive</b> su questo telefono.' : 'Ti avvisiamo sul telefono, anche a schermo spento, quando qualcuno:'}</p>
     <div class="notif-k">${TIPI_NOTIF.map(([k, t]) => `<label class="check"><input type="checkbox" name="${k}" ${kinds.includes(k) ? 'checked' : ''}> ${esc(cap(t))}</label>`).join('')}</div>
-    <p class="hint">Le tue cose non ti arrivano, e chi ha detto "Non ci sono" non riceve il promemoria.</p><p class="err" hidden></p>
+    <p class="hint">In più ti avvisiamo sempre quando qualcuno commenta una tua storia (o una storia che hai commentato). Le tue cose non ti arrivano, e chi ha detto "Non ci sono" non riceve il promemoria.</p><p class="err" hidden></p>
     <div class="row end">${on ? '<button class="btn ghost rosso" data-a="off">Disattiva</button>' : '<button class="btn ghost" data-close>Più tardi</button>'}<button class="btn" data-a="on">${on ? 'Salva' : 'Attiva notifiche'}</button></div>`}</div>`,
     (s, close) => {
       const e = s.querySelector('.err'), si = s.querySelector('[data-a=on]'), off = s.querySelector('[data-a=off]');
@@ -2643,11 +2652,15 @@ async function loadStorie() {
   try { S.storie = await rpc('stories_list', { p_name: S.me }); S.noStorie = false; }
   catch (e) { if (e.message === 'NO_DB') S.noStorie = true; }
   drawHub();
-  // arrivati da "#storie" (notifica di una storia): si aprono subito le storie nuove
+  // arrivati da una notifica: "#storie" apre subito le storie nuove, "#storie/<id>" (commento) quella storia con i commenti
   if (S.apriStorie && S.storie && $('#st-hub')) {
-    S.apriStorie = false;
-    const gs = gruppiStorie(), k = gs.findIndex(g => g.nuove);
-    if (k >= 0 && !document.querySelector('.sv')) guardaStorie(gs, k);
+    const quale = S.apriStorie; S.apriStorie = false;
+    if (document.querySelector('.sv')) return;
+    const gs = gruppiStorie();
+    if (typeof quale === 'string') {
+      const k = gs.findIndex(g => g.items.some(s => s.id === quale));
+      if (k >= 0) guardaStorie(gs, k, { storia: quale, commenti: true }); else toast('Questa storia non c\'è più: le storie durano 24 ore');
+    } else { const k = gs.findIndex(g => g.nuove); if (k >= 0) guardaStorie(gs, k); }
   }
 }
 // storie raggruppate per persona: prima le mie, poi quelle non ancora viste, poi le più recenti
@@ -2659,7 +2672,8 @@ function gruppiStorie() {
   }
   return [...m.values()].map(g => {
     g.items.sort((a, b) => a.created_at < b.created_at ? -1 : 1);
-    g.mio = same(g.author, S.me); g.nuove = !g.mio && g.items.some(s => !v.has(s.id)); g.ultima = g.items[g.items.length - 1].created_at;
+    // già vista = vista su questo telefono oppure (per il database) da me su un altro telefono
+    g.mio = same(g.author, S.me); g.nuove = !g.mio && g.items.some(s => !v.has(s.id) && !s.vista); g.ultima = g.items[g.items.length - 1].created_at;
     return g;
   }).sort((a, b) => (b.mio - a.mio) || (b.nuove - a.nuove) || (a.ultima < b.ultima ? 1 : -1));
 }
@@ -2694,11 +2708,16 @@ function componiStoria(file) {
     };
   }, () => URL.revokeObjectURL(url));
 }
-// visore a schermo intero: tocco a destra = avanti, a sinistra = indietro, tieni premuto = pausa, giù = chiudi
-function guardaStorie(gs, gi) {
-  if (!gs[gi]) return;
-  const DUR = 5500; let g = gi, i = 0, raf = 0, t0 = 0, acc = 0, va = false;
-  { const v = visti(), k = gs[g].items.findIndex(s => !v.has(s.id)); i = k >= 0 && !gs[g].mio ? k : 0; }
+// visore a schermo intero: tocco a destra = avanti, a sinistra = indietro, tieni premuto = pausa, giù = chiudi.
+// Come Instagram: dopo la persona toccata si passa SOLO a chi ha storie nuove; le già viste restano "spente"
+// (si riguardano solo toccandole). In una persona con storie nuove si parte dalla prima non vista.
+const ICO_CUORE = svg('<path d="M12 20.3s-7.6-4.6-7.6-10.4A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.6 2.7c0 5.8-7.6 10.4-7.6 10.4z"/>');
+function guardaStorie(tutte, gi, opz = {}) {
+  if (!tutte[gi]) return;
+  const gs = [tutte[gi], ...tutte.slice(gi + 1).filter(x => x.nuove)];
+  const inizio = G => { const v = visti(), k = G.items.findIndex(s => !v.has(s.id) && !s.vista); return k >= 0 && !G.mio ? k : 0; };
+  const DUR = 5500; let g = 0, i = inizio(gs[0]), raf = 0, t0 = 0, acc = 0, va = false;
+  if (opz.storia) { const k = gs[0].items.findIndex(s => s.id === opz.storia); if (k >= 0) i = k; }
   const el = document.createElement('div'); el.className = 'sv';
   el.innerHTML = `<div class="sv-bars"></div><div class="sv-top"><div class="sv-who"></div><button class="sv-x" aria-label="Chiudi">✕</button></div>
     <div class="sv-stage"><img class="sv-img" alt=""><div class="sv-cap"></div></div><div class="sv-bot"></div>`;
@@ -2715,7 +2734,7 @@ function guardaStorie(gs, gi) {
   const pausa = () => { if (!va) return; va = false; acc += performance.now() - t0; cancelAnimationFrame(raf); };
   const key = e => { if (e.key === 'Escape') chiudi(); if (e.key === 'ArrowRight') avanti(); if (e.key === 'ArrowLeft') indietro(); };
   const chiudi = () => { va = false; cancelAnimationFrame(raf); el.remove(); sblocca(); drawHub(); document.removeEventListener('keydown', key); };
-  const avanti = () => { const G = gs[g]; if (i < G.items.length - 1) i++; else if (g < gs.length - 1) { g++; i = 0; } else return chiudi(); mostra(); };
+  const avanti = () => { const G = gs[g]; if (i < G.items.length - 1) i++; else if (g < gs.length - 1) { g++; i = inizio(gs[g]); } else return chiudi(); mostra(); };
   const indietro = () => { if (i > 0) i--; else if (g > 0) { g--; i = gs[g].items.length - 1; } mostra(); };
   const mostra = () => {
     va = false; cancelAnimationFrame(raf); acc = 0;
@@ -2725,7 +2744,18 @@ function guardaStorie(gs, gi) {
     const cap = el.querySelector('.sv-cap'); cap.textContent = s.caption || ''; cap.hidden = !s.caption;
     const etichetta = () => `${ICO.rep}<span>${s.comments ? s.comments + (s.comments == 1 ? ' commento' : ' commenti') : 'Commenta'}</span>`;
     el.querySelector('.sv-bot').innerHTML = `<button class="btn ghost sm" id="sv-com">${etichetta()}</button>` +
-      (G.mio ? `<button class="btn ghost sm" id="sv-viste">${ICO_EYE}<span>Visto da ${s.views ? s.views.length : 0}</span></button><button class="btn ghost rosso sm" id="sv-del" aria-label="Elimina la storia">${ICO.del}</button>` : '');
+      (G.mio ? `<button class="btn ghost sm" id="sv-viste">${ICO_EYE}<span>Visto da ${s.views ? s.views.length : 0}</span>${s.likes ? `<i class="sv-lk">${ICO_CUORE}${s.likes}</i>` : ''}</button><button class="btn ghost rosso sm" id="sv-del" aria-label="Elimina la storia">${ICO.del}</button>`
+        : `<button class="btn ghost sm sv-like${s.liked ? ' on' : ''}" id="sv-like" aria-label="Mi piace" aria-pressed="${!!s.liked}">${ICO_CUORE}</button>`);
+    // ❤️: si accende subito; le richieste partono in fila (anche toccando più volte con internet lento)
+    const lk = el.querySelector('#sv-like');
+    if (lk) lk.onclick = () => {
+      s.liked = !s.liked; lk.classList.toggle('on', s.liked); lk.setAttribute('aria-pressed', s.liked);
+      lk.classList.remove('pop'); void lk.offsetWidth; if (s.liked) lk.classList.add('pop');
+      const voglio = s.liked;
+      s.lq = (s.lq || Promise.resolve()).then(() => rpc('story_like', { p_story: s.id, p_name: S.me, p_like: voglio }))
+        .then(r => { if (r && s.liked === voglio) s.likes = r.likes; })
+        .catch(e => { toast(msg(e), 'err'); if (s.liked === voglio) { s.liked = !voglio; const b = el.querySelector('#sv-like'); if (b) b.classList.toggle('on', s.liked); } });
+    };
     el.querySelector('#sv-com').onclick = () => {
       pausa();
       commentiSheet({
@@ -2744,7 +2774,10 @@ function guardaStorie(gs, gi) {
     else {
       el.querySelector('#sv-viste').onclick = () => {
         pausa();
-        sheet(`<h3>Visto da</h3>${(s.views || []).length ? s.views.map(n => `<div class="prs">${avatar(n, 's')}<span class="prs-n">${esc(n)}</span></div>`).join('') : '<p class="muto">Ancora nessuno.</p>'}<div class="row end"><button class="btn" data-close>Ok</button></div>`, null, riprendi);
+        // chi l'ha vista, con il ❤️ accanto a chi ha messo mi piace (prima loro)
+        const L = s.likers || [], cuore = n => L.some(x => same(x, n));
+        const chi = [...L, ...(s.views || [])].filter((n, k, a) => a.findIndex(x => same(x, n)) === k).sort((a, b) => cuore(b) - cuore(a));
+        sheet(`<h3>Visto da ${(s.views || []).length}${L.length ? ` · <span class="sv-lk">${ICO_CUORE}${L.length}</span>` : ''}</h3>${chi.length ? chi.map(n => `<div class="prs">${avatar(n, 's')}<span class="prs-n">${esc(n)}</span>${cuore(n) ? `<span class="sv-lk" aria-label="Mi piace">${ICO_CUORE}</span>` : ''}</div>`).join('') : '<p class="muto">Ancora nessuno.</p>'}<div class="row end"><button class="btn" data-close>Ok</button></div>`, null, riprendi);
       };
       el.querySelector('#sv-del').onclick = async () => {
         pausa();
@@ -2771,6 +2804,7 @@ function guardaStorie(gs, gi) {
   st.addEventListener('pointercancel', () => { clearTimeout(hold); play(); });
   document.addEventListener('keydown', key);
   mostra();
+  if (opz.commenti) el.querySelector('#sv-com').click();   // dalla notifica di un commento: si aprono subito i commenti
 }
 
 // ===================== MODALITÀ PROVA =====================
@@ -2779,7 +2813,7 @@ function guardaStorie(gs, gi) {
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: [], stories: [], views: [], scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
@@ -2803,6 +2837,7 @@ function creaDemo() {
   [['Giulia', 180, '☕', 'Colazione'], ['Giulia', 50, '🐶', 'Buongiorno da Pippo', 'Il nuovo arrivato 🐶'], ['Marco', 360, '🏋️', 'Palestra']]
     .forEach(([author, min, emo, scritta, caption], i) => D.stories.push({ id: uid(), author, path: fotoFinta(i + 10, emo, scritta, 720, 1280, 'storia'), caption: caption || '', created_at: t(min) }));
   D.scomments.push({ id: uid(), story_id: D.stories[1].id, author: 'Sara', body: 'Che cucciolo!! 😍', created_at: t(30) });
+  D.slikes.push({ story: D.stories[1].id, name: 'Sara' }, { story: D.stories[1].id, name: 'Luca' });
   // --- contenuti di esempio ---
   const al = uid(); D.albums.push({ id: al, name: 'Sabato al mare (prova)', created_by: 'Giulia', created_at: t(60 * 30) });
   const fs = [['🏖️', 'Spiaggia'], ['🍕', 'Pizzata'], ['🌅', 'Tramonto'], ['🍹', 'Aperitivo'], ['🎉', 'Festa']].map(([e, s], i) => fotoFinta(i, e, s));
@@ -2943,11 +2978,22 @@ function creaDemo() {
     stories_list: a => {
       need(a); const lim = Date.now() - 864e5;
       return D.stories.filter(s => new Date(s.created_at) > lim).sort((x, y) => x.created_at < y.created_at ? -1 : 1)
-        .map(s => ({ id: s.id, author: s.author, path: s.path, caption: s.caption, created_at: s.created_at, views: same(s.author, a.p_name || '') ? D.views.filter(v => v.story === s.id).map(v => v.name) : null, comments: D.scomments.filter(c => c.story_id === s.id).length }));
+        .map(s => {
+          const mia = same(s.author, a.p_name || ''), L = D.slikes.filter(l => l.story === s.id);
+          return { id: s.id, author: s.author, path: s.path, caption: s.caption, created_at: s.created_at, views: mia ? D.views.filter(v => v.story === s.id).map(v => v.name) : null,
+            likers: mia ? L.map(l => l.name) : null, comments: D.scomments.filter(c => c.story_id === s.id).length, likes: L.length,
+            liked: L.some(l => same(l.name, a.p_name || '')), vista: D.views.some(v => v.story === s.id && same(v.name, a.p_name || '')) };
+        });
+    },
+    story_like: a => {
+      need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO');
+      const st = D.stories.find(x => x.id === a.p_story); if (!st || new Date(st.created_at) < Date.now() - 864e5) throw err('STORIA_SCADUTA');
+      if (!same(st.author, n)) { D.slikes = D.slikes.filter(l => !(l.story === st.id && same(l.name, n))); if (a.p_like !== false) D.slikes.push({ story: st.id, name: n }); }
+      const L = D.slikes.filter(l => l.story === st.id); return { liked: L.some(l => same(l.name, n)), likes: L.length };
     },
     story_add: a => { need(a); const p = clean(a.p_path, 300); if (!p) throw err('POST_VUOTO'); const id = uid(); D.stories.push({ id, author: clean(a.p_author, 30), path: p, caption: clean(a.p_caption, 150), created_at: t(0) }); return id; },
     story_seen: a => { need(a); const n = clean(a.p_name, 30), s = D.stories.find(x => x.id === a.p_id); if (n && s && !same(s.author, n) && !D.views.some(v => v.story === s.id && same(v.name, n))) D.views.push({ story: s.id, name: n }); },
-    story_del: a => { need(a); D.stories = D.stories.filter(s => !(s.id === a.p_id && s.author === a.p_author)); D.scomments = D.scomments.filter(c => D.stories.some(s => s.id === c.story_id)); },
+    story_del: a => { need(a); D.stories = D.stories.filter(s => !(s.id === a.p_id && s.author === a.p_author)); D.scomments = D.scomments.filter(c => D.stories.some(s => s.id === c.story_id)); D.slikes = D.slikes.filter(l => D.stories.some(s => s.id === l.story)); },
     story_comments: a => { need(a); return D.scomments.filter(c => c.story_id === a.p_story).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(c => ({ id: c.id, author: c.author, body: c.body, created_at: c.created_at })); },
     story_comment_add: a => {
       need(a); const b = clean(a.p_body, 500); if (!b) throw err('POST_VUOTO');
