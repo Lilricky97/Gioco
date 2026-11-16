@@ -71,7 +71,7 @@ main.view{max-width:640px;margin:0 auto;padding:6px 16px calc(var(--bar) + 30px 
 .tabs button:not(.on):hover{color:var(--muto)}
 .tabs button.on{color:var(--menta)}
 .tabs button.on .ico{filter:drop-shadow(0 0 5px var(--menta)) drop-shadow(0 0 12px var(--menta-g))}
-.tabs button.on::before{content:"";position:absolute;top:-5px;left:32%;right:32%;height:2px;border-radius:2px;background:var(--menta);box-shadow:0 0 10px var(--menta)}
+.tabs button.on::before{content:"";position:absolute;top:-5px;left:50%;width:120px;transform:translateX(-50%);height:2px;border-radius:2px;background:var(--menta);box-shadow:0 0 10px var(--menta)}
 
 /* ---------- elementi ---------- */
 .card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)),var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 14px}
@@ -367,15 +367,25 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .adm-box form{margin-top:8px}
 .x-side h3 .dot{vertical-align:2px;margin-right:2px}
 /* ---------- storie ---------- */
-.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:14px 8px;margin-top:14px}
-.st-p{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--testo)}
-.st-p .ring{position:relative;width:70px;height:70px;border-radius:50%;padding:3px;background:var(--line)}
-.st-p.nuove .ring{background:conic-gradient(var(--rosa),var(--menta),var(--giallo),var(--rosa))}
-.st-p .in{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;overflow:hidden;border:3px solid var(--notte2);background:var(--campo)}
-.st-p .in img{width:100%;height:100%;object-fit:cover}
-.st-p .in .av{width:100%;height:100%;font-size:24px;border:0;box-shadow:none}
-.st-p .plus{position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:var(--menta);color:#06261c;font-weight:900;display:grid;place-items:center;border:2px solid var(--notte2);font-size:17px;line-height:1}
-.st-p .nm{font-size:13px;font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* fila in cima alle Novità (come Instagram, ma con riquadri quadrati): bordo colorato = storie nuove, grigio = già viste */
+.st-strip{display:flex;gap:10px;overflow-x:auto;margin:-2px -16px 14px;padding:4px 16px 6px;scroll-snap-type:x proximity;scroll-padding:0 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.st-strip::-webkit-scrollbar{display:none}
+.st-strip[hidden]{display:none}
+.stq{flex:none;width:78px;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;color:var(--muto);scroll-snap-align:start;font:inherit}
+.stq-q{position:relative;width:74px;height:74px;border-radius:12px;padding:3px;background:var(--line)}
+.stq.nuove .stq-q{background:linear-gradient(135deg,var(--rosa),var(--giallo) 55%,var(--menta));box-shadow:0 0 16px -3px var(--rosa-g)}
+.stq.mia .stq-q{background:rgba(70,245,192,.6)}
+.stq-in{display:grid;place-items:center;width:100%;height:100%;border-radius:9px;overflow:hidden;border:2px solid var(--notte2);background:var(--campo)}
+.stq-in .av{width:100%;height:100%;border-radius:0;border:0;box-shadow:none;font-size:30px;text-shadow:0 0 12px var(--c)}
+.stq-in .av.foto img{border-radius:0}
+.stq-n{max-width:100%;font-size:12px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stq.nuove .stq-n{color:var(--testo);font-weight:700}
+.stq.add .stq-q{background:none;border:1.5px dashed rgba(70,245,192,.6);padding:0}
+.stq.add .stq-in{border:0;background:rgba(70,245,192,.06)}
+.stq-plus{font-size:42px;font-weight:300;line-height:1;color:var(--menta);text-shadow:0 0 12px var(--menta-g)}
+.stq.add .stq-n{color:var(--menta)}
+.stq:active .stq-q{transform:scale(.96)}
+.st-vuoto{flex:0 1 220px;align-self:center;margin:0 0 18px;color:var(--muto2);font-size:13.5px;line-height:1.35}
 .st-prev{border-radius:10px;overflow:hidden;background:#000;display:grid;place-items:center}
 .st-prev img{max-width:100%;max-height:44vh;display:block}
 .sv{position:fixed;inset:0;z-index:65;background:#000;color:#fff;display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -430,28 +440,8 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .notif-k .check{margin-top:10px}
 .mz-rel{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;background:none;border:0;padding:12px;color:var(--muto);font:600 14px Archivo,sans-serif;cursor:pointer}
 .mz-rel svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-/* ---------- barra in basso: solo Novità e Storie ---------- */
+/* ---------- barra in basso: solo Novità ---------- */
 .tabs button{flex-direction:row;justify-content:center;gap:10px;font-size:12px;padding:12px 0}
-.tabs .tab-n{min-width:20px;height:20px;border-radius:10px;background:var(--rosa);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 6px;letter-spacing:0;box-shadow:0 0 10px var(--rosa-g)}
-.tabs .tab-n[hidden]{display:none}
-.tabs button.nuove .ico{color:var(--rosa);filter:drop-shadow(0 0 6px var(--rosa))}
-/* ---------- pagina storie ---------- */
-.stc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.stc{position:relative;aspect-ratio:9/15;border-radius:10px;overflow:hidden;border:0;padding:0;cursor:pointer;background:var(--campo);color:#fff;text-align:left}
-.stc>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.stc::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 30%,transparent 55%,rgba(0,0,0,.8))}
-.stc-ring{position:absolute;top:10px;left:10px;z-index:1;border-radius:50%;padding:3px;background:var(--line)}
-.stc.nuove .stc-ring{background:conic-gradient(var(--rosa),var(--menta),var(--giallo),var(--rosa))}
-.stc-ring .av{border:2px solid #000;box-shadow:none;background:#000}
-.stc-n{position:absolute;left:10px;right:10px;bottom:10px;z-index:1;display:flex;flex-direction:column;line-height:1.2}
-.stc-n b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stc-n small{color:rgba(255,255,255,.75);font-size:12px}
-.stc.nuove{box-shadow:0 0 0 2px var(--rosa),0 0 20px -4px var(--rosa-g)}
-.stc.add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(70,245,192,.05);border:1.5px dashed rgba(70,245,192,.5);text-align:center;padding:10px}
-.stc.add::after{display:none}
-.stc-plus{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:34px;font-weight:300;color:#05261b;background:var(--menta);box-shadow:0 0 18px var(--menta-g);line-height:1}
-.stc.add b{font-family:"Bebas Neue",sans-serif;font-weight:400;font-size:24px;letter-spacing:.04em;color:var(--menta)}
-.stc.add small{color:var(--muto);font-size:12px}
 
 /* ---------- sondaggi ---------- */
 .poll .tw-h{margin-bottom:6px}
@@ -978,18 +968,17 @@ function logout(avviso) {
 
 // ===================== STRUTTURA =====================
 const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
-// tutte le zone del sito (menu ☰); in basso solo Novità e Storie
+// tutte le zone del sito (menu ☰); in basso solo Novità. Le storie sono la fila in cima alle Novità (#storie porta lì)
 const ZONE = [
   { id: 'novita', t: 'Novità', d: 'Post, risposte e #tendenze', menu: false, f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
   { id: 'calendario', t: 'Calendario', d: 'Cene, feste e serate', f: viewCalendario, ico: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/>') },
-  { id: 'storie', t: 'Storie', d: 'Foto che durano 24 ore', menu: false, f: viewStorie, ico: svg('<circle cx="12" cy="12" r="8.5" stroke-dasharray="4.2 2.4"/><path d="M12 8.5v7M8.5 12h7"/>') },
   { id: 'foto', t: 'Foto', d: 'Le cartelle del gruppo', menu: false, f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
   { id: 'sondaggi', t: 'Sondaggi', d: 'Vota e fai votare', f: viewSondaggi, ico: svg('<path d="M4 6.5h9M4 12h16M4 17.5h6"/><circle cx="17" cy="6.5" r="1.4"/><circle cx="13.5" cy="17.5" r="1.4"/>') },
   { id: 'gioco', t: 'Gioco', d: 'Senza Filtro', f: viewGioco, ico: svg('<rect x="4" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 9.2 12.7)"/><path d="m14.6 5.4 3.7.7a2 2 0 0 1 1.6 2.3l-2 11a2 2 0 0 1-2.3 1.6l-3.2-.6"/>') },
   { id: 'santa', t: 'Secret Santa', d: 'I regali di Natale', f: viewSanta, ico: svg('<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20h14v-7.5M12 8.5V20M12 8.5C10.6 5.3 7 4.6 7 6.8 7 8.3 9.6 8.5 12 8.5zm0 0c1.4-3.2 5-3.9 5-1.7 0 1.5-2.6 1.7-5 1.7z"/>') },
   { id: 'fanta', t: 'Fanta Sanremo', d: 'In arrivo', f: viewFanta, ico: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>') }
 ];
-const BARRA = ['novita', 'storie'];
+const BARRA = ['novita'];
 const ICO_MENU = svg('<path d="M4 7h16M4 12h16M4 17h10"/>');
 const ICO_RICARICA = svg('<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/>');
 const ICO_CAMPANA = svg('<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>');
@@ -998,11 +987,11 @@ function start() {
     <div class="top-r"><button class="on-btn" id="on-btn" hidden aria-label="Chi è online"><i class="dot"></i><b>0</b><span>online</span></button></div></header>
     ${DEMO ? '<div class="demo-bar">🧪 MODALITÀ PROVA · dati finti, si azzerano se ricarichi</div>' : ''}
     <main class="view" id="view"></main>
-    <nav class="tabs">${BARRA.map(id => zona(id)).map(t => `<button data-go="#${t.id}" data-tab="${t.id}"><span class="ico">${t.ico}</span><span>${t.t}</span>${t.id === 'storie' ? '<b class="tab-n" hidden></b>' : ''}</button>`).join('')}</nav>`;
+    <nav class="tabs">${BARRA.map(id => zona(id)).map(t => `<button data-go="#${t.id}" data-tab="${t.id}"><span class="ico">${t.ico}</span><span>${t.t}</span></button>`).join('')}</nav>`;
   $('#on-btn').onclick = apriGruppo;
   $('#menu-btn').onclick = apriMenu;
-  clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); loadStorie(); } }, 45000);
-  route(); ping(); loadStorie(); rinnovaNotifiche(); puliziaFoto();
+  clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); if ($('#st-hub')) loadStorie(); } }, 45000);
+  route(); ping(); rinnovaNotifiche(); puliziaFoto();
 }
 // foto scadute (storie dopo 24 ore, foto dei post dopo 7 giorni se non in evidenza): il sito le cancella dallo spazio foto,
 // al massimo una volta l'ora per telefono. Lo spazio foto permette di cancellare SOLO quelle (regole in storage.sql)
@@ -1043,6 +1032,8 @@ function apriMenu() {
 }
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
+  // "#storie" (es. tocco sulla notifica di una storia): Novità + si aprono le storie nuove
+  if (cur().sec === 'storie') { S.apriStorie = true; history.replaceState(null, '', '#novita'); }
   document.querySelectorAll('.ov,.lb,.sv').forEach(x => x.remove()); document.body.classList.remove('noscroll');
   const c = cur(), inGioco = c.sec === 'gioco' && c.arg === 'gioca';
   if (inGioco) { giocoLayer().hidden = false; document.body.classList.add('noscroll'); } else if ($('#gl')) $('#gl').hidden = true;
@@ -1056,7 +1047,7 @@ function route() {
   t.f(c.arg);
 }
 window.addEventListener('hashchange', route);
-document.addEventListener('visibilitychange', () => { if (document.hidden || !S.pw || !S.me) return; if (S.refresh) S.refresh(); ping(); loadStorie(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden || !S.pw || !S.me) return; if (S.refresh) S.refresh(); ping(); });
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-go]');
   if (g) {
@@ -1205,6 +1196,7 @@ function viewNovita(tag) {
   tag = tag || '';
   S.lastFeed = tag ? '#tag/' + encodeURIComponent(tag) : '#novita';
   $('#view').innerHTML = `<h1 class="neon">Novità</h1>
+    ${tag ? '' : '<div class="st-strip" id="st-hub"></div><input type="file" id="st-file" accept="image/*" hidden>'}
     <div class="trend-row" id="trends-m"></div>
     <div class="x-wrap"><div class="x-main">
       ${tag ? '' : '<div id="ev-oggi"></div>'}
@@ -1230,11 +1222,12 @@ function viewNovita(tag) {
     e.target.value = ''; drawPreviews();
   };
   $('#np-go').onclick = publish;
+  if (!tag) { $('#st-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) componiStoria(f); }; drawHub(); }
   $('#grp-all').onclick = apriGruppo; drawOnline();
   drawPreviews();
   if (S.busy) { $('#np-go').disabled = true; }
   if (S.feed) drawFeed();
-  S.refresh = loadFeed; loadFeed(); drawOggi();
+  S.refresh = () => { loadFeed(); if (!tag) loadStorie(); }; S.refresh(); drawOggi();
 }
 function drawPreviews() {
   const el = $('#np-prev'); if (!el) return;
@@ -2627,7 +2620,13 @@ async function loadStorie() {
   if (!S.pw || !S.me) return;
   try { S.storie = await rpc('stories_list', { p_name: S.me }); S.noStorie = false; }
   catch (e) { if (e.message === 'NO_DB') S.noStorie = true; }
-  drawFab(); drawHub();
+  drawHub();
+  // arrivati da "#storie" (notifica di una storia): si aprono subito le storie nuove
+  if (S.apriStorie && S.storie && $('#st-hub')) {
+    S.apriStorie = false;
+    const gs = gruppiStorie(), k = gs.findIndex(g => g.nuove);
+    if (k >= 0 && !document.querySelector('.sv')) guardaStorie(gs, k);
+  }
 }
 // storie raggruppate per persona: prima le mie, poi quelle non ancora viste, poi le più recenti
 function gruppiStorie() {
@@ -2642,28 +2641,16 @@ function gruppiStorie() {
     return g;
   }).sort((a, b) => (b.mio - a.mio) || (b.nuove - a.nuove) || (a.ultima < b.ultima ? 1 : -1));
 }
-// il numerino sulla voce "Storie" in basso = persone con storie nuove
-function drawFab() {
-  const nuove = gruppiStorie().filter(g => g.nuove).length, n = $('.tab-n'), t = $('[data-tab=storie]');
-  if (n) { n.hidden = !nuove; n.textContent = nuove; }
-  if (t) t.classList.toggle('nuove', nuove > 0);
-}
-function viewStorie() {
-  $('#view').innerHTML = `<h1 class="neon">Storie</h1><p class="intro">Foto che spariscono dopo 24 ore.</p>
-    <div id="st-hub"><div class="loading">Carico le storie</div></div><input type="file" id="st-file" accept="image/*" hidden>`;
-  $('#st-file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) componiStoria(f); };
-  if (S.storie || S.noStorie) drawHub();
-  S.refresh = loadStorie; loadStorie();
-}
+// la fila delle storie in cima alle Novità: "Nuova storia" + un riquadro quadrato per persona
+// (bordo colorato = storie nuove, verde = le mie, grigio = già viste)
 function drawHub() {
   const el = $('#st-hub'); if (!el) return;
-  if (S.noStorie) { el.innerHTML = `<div class="empty">${esc(MSG.NO_DB)}</div>`; return; }
-  if (!S.storie) return;
-  const gs = gruppiStorie(), sig = JSON.stringify(gs) + [...visti()].length; if (el.dataset.sig === sig) return; el.dataset.sig = sig;
-  el.innerHTML = `<div class="stc-grid"><button class="stc add" id="st-add"><span class="stc-plus">+</span><b>Crea storia</b><small>Dalla galleria o fotocamera</small></button>
-    ${gs.map((g, i) => { const u = g.items[g.items.length - 1]; return `<button class="stc ${g.nuove ? 'nuove' : ''}" data-g="${i}">${img(u.path)}<span class="stc-ring">${avatar(g.author, 's')}</span>
-      <span class="stc-n"><b>${g.mio ? 'La tua storia' : esc(g.author)}</b><small>${esc(quando(u.created_at))}${g.items.length > 1 ? ' · ' + g.items.length + ' foto' : ''}</small></span></button>`; }).join('')}</div>
-    ${gs.length ? '' : '<p class="muto" style="margin-top:16px">Nessuna storia nelle ultime 24 ore. Pubblica la prima!</p>'}`;
+  el.hidden = !!S.noStorie; if (S.noStorie) return;
+  const gs = S.storie ? gruppiStorie() : [], sig = JSON.stringify(gs) + [...visti()].length + !!S.storie;
+  if (el.dataset.sig === sig) return; el.dataset.sig = sig;
+  el.innerHTML = `<button class="stq add" id="st-add" aria-label="Pubblica una storia"><span class="stq-q"><span class="stq-in"><span class="stq-plus">+</span></span></span><span class="stq-n">Nuova storia</span></button>
+    ${gs.map((g, i) => `<button class="stq${g.nuove ? ' nuove' : ''}${g.mio ? ' mia' : ''}" data-g="${i}" title="${esc(g.author)} · ${esc(quando(g.ultima))}"><span class="stq-q"><span class="stq-in">${avatar(g.author)}</span></span><span class="stq-n">${g.mio ? 'La tua storia' : esc(g.author)}</span></button>`).join('')}
+    ${S.storie && !gs.length ? '<p class="st-vuoto">Nessuna storia nelle ultime 24 ore: pubblica la prima!</p>' : ''}`;
   $('#st-add').onclick = () => $('#st-file').click();
   el.querySelectorAll('[data-g]').forEach(b => b.onclick = () => guardaStorie(gs, +b.dataset.g));
 }
@@ -2705,7 +2692,7 @@ function guardaStorie(gs, gi) {
   const riprendi = () => setTimeout(play, 230);
   const pausa = () => { if (!va) return; va = false; acc += performance.now() - t0; cancelAnimationFrame(raf); };
   const key = e => { if (e.key === 'Escape') chiudi(); if (e.key === 'ArrowRight') avanti(); if (e.key === 'ArrowLeft') indietro(); };
-  const chiudi = () => { va = false; cancelAnimationFrame(raf); el.remove(); sblocca(); drawFab(); drawHub(); document.removeEventListener('keydown', key); };
+  const chiudi = () => { va = false; cancelAnimationFrame(raf); el.remove(); sblocca(); drawHub(); document.removeEventListener('keydown', key); };
   const avanti = () => { const G = gs[g]; if (i < G.items.length - 1) i++; else if (g < gs.length - 1) { g++; i = 0; } else return chiudi(); mostra(); };
   const indietro = () => { if (i > 0) i--; else if (g > 0) { g--; i = gs[g].items.length - 1; } mostra(); };
   const mostra = () => {
