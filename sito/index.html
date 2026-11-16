@@ -2745,7 +2745,8 @@ function guardaStorie(tutte, gi, opz = {}) {
     const etichetta = () => `${ICO.rep}<span>${s.comments ? s.comments + (s.comments == 1 ? ' commento' : ' commenti') : 'Commenta'}</span>`;
     el.querySelector('.sv-bot').innerHTML = `<button class="btn ghost sm" id="sv-com">${etichetta()}</button>` +
       (G.mio ? `<button class="btn ghost sm" id="sv-viste">${ICO_EYE}<span>Visto da ${s.views ? s.views.length : 0}</span>${s.likes ? `<i class="sv-lk">${ICO_CUORE}${s.likes}</i>` : ''}</button><button class="btn ghost rosso sm" id="sv-del" aria-label="Elimina la storia">${ICO.del}</button>`
-        : `<button class="btn ghost sm sv-like${s.liked ? ' on' : ''}" id="sv-like" aria-label="Mi piace" aria-pressed="${!!s.liked}">${ICO_CUORE}</button>`);
+        : s.likes === undefined ? '' :   // database non ancora aggiornato (installa.sql): niente cuore, niente errori
+          `<button class="btn ghost sm sv-like${s.liked ? ' on' : ''}" id="sv-like" aria-label="Mi piace" aria-pressed="${!!s.liked}">${ICO_CUORE}</button>`);
     // ❤️: si accende subito; le richieste partono in fila (anche toccando più volte con internet lento)
     const lk = el.querySelector('#sv-like');
     if (lk) lk.onclick = () => {
