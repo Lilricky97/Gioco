@@ -2298,14 +2298,37 @@ function statoHTML(st) {
   return `<p class="muto" style="margin:0 0 6px">👀 ${visti} su ${P.length} hanno guardato · 🎁 ${presi} su ${P.length} hanno preso il regalo</p>
     ${P.map(p => `<div class="prow"><b>${esc(p.name)}</b><span class="st">${p.seen ? '<span class="si">✓ ha guardato</span>' : '<span class="no">non ancora</span>'}${p.bought ? '<span class="si">🎁 preso</span>' : ''}</span></div>`).join('')}`;
 }
+// l'organizzatore ha dimenticato il suo PIN: l'amministratore del sito (PIN amministratore) ne dà uno nuovo
+function nuovoPinOrg(ev) {
+  const ap = adminPin();
+  formSheet({ title: 'Nuovo PIN organizzatore', ok: 'Salva',
+    intro: `<p class="muto">Per «${esc(ev.name)}». Solo l'amministratore del sito può farlo: il nuovo PIN <b>non</b> fa vedere gli abbinamenti e finisce nel diario.</p>`,
+    fields: (ap ? [] : [{ k: 'a', label: 'PIN amministratore', type: 'pin' }]).concat([
+      { k: 'p1', label: 'Nuovo PIN organizzatore (4–8 cifre)', type: 'pin' },
+      { k: 'p2', label: 'Ripeti il nuovo PIN', type: 'pin' }]),
+    submit: async v => {
+      const a = ap || v.a;
+      if (!a) throw err('PIN_ADMIN_ERRATO');
+      if (!/^\d{4,8}$/.test(v.p1)) throw err('PIN_NON_VALIDO');
+      if (v.p1 !== v.p2) throw err('PIN_DIVERSI');
+      try { await rpc('ss_org_pin', { p_event: ev.id, p_admin: a, p_new_pin: v.p1 }); }
+      catch (e) { if (/PIN_ADMIN_ERRATO|ADMIN_BLOCCATO/.test(e.message)) store.del('admin'); throw e; }
+      if (!ap) store.set('admin', a);
+      store.set('ssadm_' + ev.id, v.p1); S.ui.adm[ev.id] = true; delete S.ui.admErr;
+      toast('Nuovo PIN organizzatore salvato 🔑');
+      await loadSS(); drawEvento(true);
+    } });
+}
 function drawAdm(ev) {
   const el = $('#adm-body'); if (!el) return;
   const id = ev.id, apin = store.get('ssadm_' + id), drawn = ev.status === 'drawn', n = ev.people.length, att = ev.pending || [];
   if (!apin) {
     const ae = S.ui.admErr && S.ui.admErr.id === id ? S.ui.admErr.t : '';
     el.innerHTML = `<p class="muto" style="margin-top:12px">Solo per chi ha creato questo Secret Santa (${esc(ev.organizer)}).${DEMO ? ' <b>Nel Secret Santa di prova il PIN è 0000.</b>' : ''}</p>
-      <form id="adm-in" class="row" novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN organizzatore"><button class="btn sm" type="submit">Sblocca</button></form><p class="err" ${ae ? '' : 'hidden'}>${esc(ae)}</p>`;
+      <form id="adm-in" class="row" novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN organizzatore"><button class="btn sm" type="submit">Sblocca</button></form><p class="err" ${ae ? '' : 'hidden'}>${esc(ae)}</p>
+      <button class="link" id="adm-nuovo" type="button" style="margin-top:10px">🔑 Hai dimenticato il PIN organizzatore? L'amministratore del sito può darne uno nuovo</button>`;
     const f = $('#adm-in'), e = el.querySelector('.err');
+    $('#adm-nuovo').onclick = () => nuovoPinOrg(ev);
     f.onsubmit = async x => {
       x.preventDefault(); e.hidden = true; delete S.ui.admErr;
       const pin = f.p.value.trim();
@@ -3897,6 +3920,12 @@ function creaDemo() {
       return { ok: true, cambiati };
     },
     ss_admin_check: a => { need(a); const x = admE(evt(a.p_event), a.p_admin_pin); return x ? { err: x } : { ok: true }; },
+    ss_org_pin: a => {
+      need(a); const x = admG(a.p_admin); if (x) return { err: x === 'PIN_BLOCCATO' ? 'ADMIN_BLOCCATO' : x };
+      if (!/^\d{4,8}$/.test(a.p_new_pin || '')) return { err: 'PIN_NON_VALIDO' };
+      const e = D.ss.find(y => y.id === a.p_event); if (!e) return { err: 'EVENTO_NON_TROVATO' };
+      e.admin_pin = a.p_new_pin; e.admin_fail = 0; e.admin_lock = 0; logga(e, 'L\'amministratore del sito ha dato un nuovo PIN organizzatore'); return { ok: true };
+    },
     ss_reset_pin: a => {
       need(a); const e = evt(a.p_event), x = admE(e, a.p_admin_pin); if (x) return { err: x }; if (!pinOk(a.p_new_pin)) throw err('PIN_NON_VALIDO');
       const p = e.people.find(q => same(q.name, clean(a.p_name, 30))); if (!p) throw err('NOME_NON_TROVATO');

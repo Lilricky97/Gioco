@@ -1535,6 +1535,24 @@ begin
   return json_build_object('ok', true);
 end $$;
 
+-- l'organizzatore ha dimenticato il SUO PIN: l'amministratore del sito (PIN amministratore) ne dà uno nuovo.
+-- Non fa vedere gli abbinamenti, toglie il blocco dei 15 minuti e finisce nel diario (Ricky, 17/11/2026)
+create or replace function ss_org_pin(p_pw text, p_event uuid, p_admin text, p_new_pin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text;
+begin
+  perform _need(p_pw);
+  x := _admin_try(p_admin);
+  if x = 'PIN_BLOCCATO' then return json_build_object('err', 'ADMIN_BLOCCATO'); end if;
+  if x is not null then return json_build_object('err', x); end if;
+  if coalesce(p_new_pin, '') !~ '^[0-9]{4,8}$' then return json_build_object('err', 'PIN_NON_VALIDO'); end if;
+  perform 1 from ss_events where id = p_event for update;
+  if not found then return json_build_object('err', 'EVENTO_NON_TROVATO'); end if;
+  update ss_events set admin_pin = extensions.crypt(p_new_pin, extensions.gen_salt('bf')), admin_fail = 0, admin_lock = null where id = p_event;
+  perform _ss_log(p_event, 'L''amministratore del sito ha dato un nuovo PIN organizzatore');
+  return json_build_object('ok', true);
+end $$;
+
 -- chi ha dimenticato il PIN: l'organizzatore gliene imposta uno nuovo (finisce nel diario)
 create or replace function ss_reset_pin(p_pw text, p_event uuid, p_admin_pin text, p_name text, p_new_pin text) returns json
 language plpgsql security definer set search_path = public, extensions as $$
@@ -2350,7 +2368,7 @@ grant execute on function check_pw, members_list, member_add, presenza, accesso_
   reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
-  ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin,
+  ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin, ss_org_pin,
   ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer,
   events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
   event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste,

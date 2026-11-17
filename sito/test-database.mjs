@@ -712,6 +712,19 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
   await db.exec(`create or replace function _io(p_name text) returns void language sql as $$ select $$`)   // per il resto dei test
 }
 
+// PIN ORGANIZZATORE DIMENTICATO: l'amministratore del sito ne dà uno nuovo
+{
+  const e = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Natale PIN','','','Ricky','1111',null])
+  for (let i = 0; i < 5; i++) await one('select ss_admin_check($1,$2,$3)',[PW,e,'9999'])
+  ok((await one('select ss_admin_check($1,$2,$3)',[PW,e,'1111'])).err==='PIN_BLOCCATO','organizzatore: 5 PIN sbagliati → bloccato (anche col PIN giusto)')
+  ok((await one('select ss_org_pin($1,$2,$3,$4)',[PW,e,'0000','2222'])).err==='PIN_ADMIN_ERRATO','nuovo PIN organizzatore: serve il PIN amministratore')
+  ok((await one('select ss_org_pin($1,$2,$3,$4)',[PW,e,'4321','12'])).err==='PIN_NON_VALIDO','…e un PIN nuovo da 4 a 8 cifre')
+  ok((await one('select ss_org_pin($1,$2,$3,$4)',[PW,e,'4321','2222'])).ok===true,'l\'amministratore dà un nuovo PIN organizzatore')
+  ok((await one('select ss_admin_check($1,$2,$3)',[PW,e,'2222'])).ok===true && (await one('select ss_admin_check($1,$2,$3)',[PW,e,'1111'])).err==='PIN_ORGANIZZATORE_ERRATO','il nuovo PIN funziona subito (blocco tolto), il vecchio non più')
+  ok((await one('select ss_list($1)',[PW])).find(x=>x.id===e).log.some(l=>l.msg.includes('nuovo PIN organizzatore')),'il nuovo PIN organizzatore finisce nel diario')
+  ok((await err('select ss_org_pin($1,$2,$3,$4)',['x',e,'4321','2222']))==='PASSWORD_ERRATA' && (await one('select ss_org_pin($1,$2,$3,$4)',[PW,'00000000-0000-0000-0000-000000000000','4321','2222'])).err==='EVENTO_NON_TROVATO','protetto dalla password; Secret Santa inesistente: errore')
+}
+
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)
 for(let i=0;i<5;i++) await err('select member_kick($1,$2,$3,$4)',[PW,'0000','Luca',true])
 ok((await err('select member_kick($1,$2,$3,$4)',[PW,'4321','Luca',true]))==='PIN_BLOCCATO','5 PIN amministratore sbagliati: blocco di 15 minuti')
