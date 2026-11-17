@@ -99,7 +99,7 @@ http.createServer(async (req, res) => {
         return send(res, 404, JSON.stringify({ code: 'PGRST202', message: `Argomenti sbagliati per ${f.name}: mancano [${missing}] in più [${extra}]` }))
       const vals = [], sql = f.args.map((a, i) => {
         let v = args[a]
-        if (f.types[i] === 'json' && v !== null && typeof v !== 'string') v = JSON.stringify(v)
+        if (/^jsonb?$/.test(f.types[i]) && v !== null && typeof v !== 'string') v = JSON.stringify(v)
         vals.push(v); return `${a} => $${vals.length}::${f.types[i]}`
       })
       try {

@@ -2157,6 +2157,158 @@ begin
   return json_build_object('ok', true);
 end $$;
 
+-- ---------- MAPPA PIPPEGOSA: i posti dove siamo stati insieme (Ricky, 17/11/2026) ----------
+-- Per ogni posto: nome, punto sulla mappa, paese (nome + codice per la bandierina), quando (anno e mese facoltativi), chi c'era.
+create table if not exists luoghi (
+  id uuid primary key default gen_random_uuid(),
+  author text not null,
+  nome text not null,
+  lat double precision not null,
+  lon double precision not null,
+  paese text not null default '',
+  cc text not null default '',                    -- codice del paese (es. "ES")
+  anno smallint,
+  mese smallint,
+  chi text[] not null default '{}',               -- chi c'era (nomi del sito)
+  tappe jsonb,                                    -- road trip: le tappe in ordine [{nome, lat, lon, cc, paese}] (null = posto singolo)
+  percorso jsonb,                                 -- road trip: il tragitto [[lon, lat], ...] lungo le strade (null = linee dritte tra le tappe)
+  km int,                                         -- road trip: chilometri del tragitto
+  created_at timestamptz not null default now(),
+  constraint luoghi_punto check (lat between -90 and 90 and lon between -180 and 180),
+  constraint luoghi_quando check ((anno is null or anno between 1950 and 2100) and (mese is null or (mese between 1 and 12 and anno is not null)))
+);
+alter table luoghi enable row level security;
+
+-- nomi di "chi c'era": puliti, senza doppioni (maiuscole non contano), nell'ordine dato, al massimo 60
+create or replace function _luogo_chi(p_chi text[]) returns text[]
+language sql immutable as $$
+  select coalesce(array_agg(n order by k), '{}') from (
+    select n, k from (
+      select distinct on (lower(n)) n, k from (
+        select _clean(x, 30) as n, k from unnest(coalesce(p_chi, '{}'::text[])) with ordinality as u(x, k)) a
+      where n <> '' order by lower(n), k) b
+    order by k limit 60) c
+$$;
+
+create or replace function _luogo_ok(p_nome text, p_anno int, p_mese int) returns void
+language plpgsql immutable as $$
+begin
+  if _clean(p_nome, 80) = '' then raise exception 'NOME_VUOTO'; end if;
+  if p_anno is not null and p_anno not between 1950 and 2100 then raise exception 'DATA_NON_VALIDA'; end if;
+  if p_mese is not null and p_anno is null then raise exception 'MESE_SENZA_ANNO'; end if;
+  if p_mese is not null and p_mese not between 1 and 12 then raise exception 'DATA_NON_VALIDA'; end if;
+end $$;
+
+-- road trip: da 2 a 30 tappe, ognuna con nome e punto valido (ripulite); il tragitto al massimo 8000 punti
+create or replace function _luogo_tappe(p jsonb) returns jsonb
+language plpgsql immutable as $$
+declare t jsonb; out jsonb := '[]'; n text; la double precision; lo double precision; c text;
+begin
+  if p is null or jsonb_typeof(p) = 'null' then return null; end if;
+  if jsonb_typeof(p) <> 'array' or jsonb_array_length(p) not between 2 and 30 then raise exception 'TAPPE_NON_VALIDE'; end if;
+  for t in select x from jsonb_array_elements(p) x loop
+    if jsonb_typeof(t) <> 'object' or jsonb_typeof(t->'lat') <> 'number' or jsonb_typeof(t->'lon') <> 'number' then raise exception 'TAPPE_NON_VALIDE'; end if;
+    n := _clean(t->>'nome', 80); la := (t->>'lat')::double precision; lo := (t->>'lon')::double precision; c := upper(_clean(t->>'cc', 2));
+    if n = '' or la not between -90 and 90 or lo not between -180 and 180 then raise exception 'TAPPE_NON_VALIDE'; end if;
+    if c !~ '^[A-Z]{2}$' then c := ''; end if;
+    out := out || jsonb_build_array(jsonb_build_object('nome', n, 'lat', la, 'lon', lo, 'cc', c, 'paese', _clean(t->>'paese', 60)));
+  end loop;
+  return out;
+end $$;
+
+create or replace function _luogo_percorso(p jsonb) returns jsonb
+language plpgsql immutable as $$
+declare t jsonb;
+begin
+  if p is null or jsonb_typeof(p) = 'null' then return null; end if;
+  if jsonb_typeof(p) <> 'array' or jsonb_array_length(p) > 8000 then raise exception 'PERCORSO_NON_VALIDO'; end if;
+  for t in select x from jsonb_array_elements(p) x loop
+    if jsonb_typeof(t) <> 'array' or jsonb_array_length(t) <> 2 or jsonb_typeof(t->0) <> 'number' or jsonb_typeof(t->1) <> 'number'
+       or (t->>0)::double precision not between -180 and 180 or (t->>1)::double precision not between -90 and 90 then raise exception 'PERCORSO_NON_VALIDO'; end if;
+  end loop;
+  return p;
+end $$;
+
+create or replace function luoghi_list(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return coalesce((select json_agg(json_build_object('id', l.id, 'author', l.author, 'nome', l.nome, 'lat', l.lat, 'lon', l.lon,
+      'paese', l.paese, 'cc', l.cc, 'anno', l.anno, 'mese', l.mese, 'chi', l.chi, 'tappe', l.tappe, 'percorso', l.percorso, 'km', l.km, 'created_at', l.created_at)
+      order by l.anno desc nulls last, l.mese desc nulls last, l.created_at desc)
+    from (select * from luoghi order by created_at desc limit 3000) l), '[]'::json);
+end $$;
+
+-- p_tappe (road trip): le tappe in ordine; il punto, il paese e la bandierina del posto diventano quelli della prima tappa
+create or replace function luogo_add(p_pw text, p_author text, p_nome text, p_lat double precision, p_lon double precision,
+  p_paese text, p_cc text, p_anno int, p_mese int, p_chi text[], p_tappe jsonb, p_percorso jsonb, p_km int) returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid; c text := upper(_clean(p_cc, 2)); t jsonb := _luogo_tappe(p_tappe); la double precision := p_lat; lo double precision := p_lon; pa text := _clean(p_paese, 60);
+begin
+  perform _need(p_pw); perform _io(p_author);
+  perform _luogo_ok(p_nome, p_anno, p_mese);
+  if t is not null then la := (t->0->>'lat')::double precision; lo := (t->0->>'lon')::double precision; c := t->0->>'cc'; pa := t->0->>'paese'; end if;
+  if la is null or lo is null or la not between -90 and 90 or lo not between -180 and 180 then raise exception 'POSTO_NON_VALIDO'; end if;
+  if c !~ '^[A-Z]{2}$' then c := ''; end if;
+  insert into luoghi(author, nome, lat, lon, paese, cc, anno, mese, chi, tappe, percorso, km)
+  values (_clean(p_author, 30), _clean(p_nome, 80), la, lo, pa, c, p_anno, p_mese, _luogo_chi(p_chi),
+          t, case when t is null then null else _luogo_percorso(p_percorso) end, case when t is null or p_km not between 0 and 100000 then null else p_km end)
+  returning id into new_id;
+  return new_id;
+end $$;
+
+-- modifica (solo chi l'ha messo): nome, quando, chi c'era, e le tappe del road trip (p_tappe null = posto singolo: il punto non cambia)
+create or replace function luogo_edit(p_pw text, p_id uuid, p_author text, p_nome text, p_anno int, p_mese int, p_chi text[],
+  p_tappe jsonb, p_percorso jsonb, p_km int) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text; t jsonb := _luogo_tappe(p_tappe);
+begin
+  perform _need(p_pw); perform _io(p_author);
+  select author into a from luoghi where id = p_id for update;
+  if a is null then raise exception 'LUOGO_SPARITO'; end if;
+  if lower(a) <> lower(_clean(p_author, 30)) then raise exception 'NON_AUTORIZZATO'; end if;
+  perform _luogo_ok(p_nome, p_anno, p_mese);
+  update luoghi set nome = _clean(p_nome, 80), anno = p_anno, mese = p_mese, chi = _luogo_chi(p_chi), tappe = t,
+    percorso = case when t is null then null else _luogo_percorso(p_percorso) end,
+    km = case when t is null or p_km not between 0 and 100000 then null else p_km end where id = p_id;
+  if t is not null then
+    update luoghi set lat = (t->0->>'lat')::double precision, lon = (t->0->>'lon')::double precision, cc = t->0->>'cc', paese = t->0->>'paese' where id = p_id;
+  end if;
+  return json_build_object('ok', true);
+end $$;
+
+-- "C'ero anch'io" / "Non c'ero": ognuno solo per sé. Restituisce chi c'era
+create or replace function luogo_cero(p_pw text, p_id uuid, p_name text, p_si boolean) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); c text[];
+begin
+  perform _need(p_pw); perform _io(p_name);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  select chi into c from luoghi where id = p_id for update;
+  if not found then raise exception 'LUOGO_SPARITO'; end if;
+  c := array(select x from unnest(c) x where lower(x) <> lower(n));
+  if coalesce(p_si, true) then c := c || n; end if;
+  update luoghi set chi = _luogo_chi(c) where id = p_id returning chi into c;
+  return json_build_object('chi', c);
+end $$;
+
+-- elimina: chi l'ha messo, oppure l'amministratore col PIN
+create or replace function luogo_del(p_pw text, p_id uuid, p_author text, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text; x text;
+begin
+  perform _need(p_pw); perform _io(p_author);
+  select author into a from luoghi where id = p_id;
+  if a is null then return json_build_object('ok', true); end if;
+  if lower(a) <> lower(_clean(p_author, 30)) then
+    if coalesce(p_admin, '') = '' then raise exception 'NON_AUTORIZZATO'; end if;
+    x := _admin_try(p_admin);
+    if x is not null then return json_build_object('err', x); end if;
+  end if;
+  delete from luoghi where id = p_id;
+  return json_build_object('ok', true);
+end $$;
+
 -- ---------- CAMPANELLA: le interazioni degli altri con le tue cose ----------
 -- Le riempiono i trigger qui sotto. Ognuno vede solo le sue (dest). Dopo 7 giorni si cancellano da sole.
 -- Se la cosa viene annullata (mi piace tolto, commento cancellato, post eliminato) l'attività sparisce.
@@ -2377,16 +2529,17 @@ grant execute on function check_pw, members_list, member_add, presenza, accesso_
   ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer,
   events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
   event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste,
-  avvento_inizia, avvento_gioca, avvento_classifica, avvento_fuori, comment_like to anon, authenticated;
+  avvento_inizia, avvento_gioca, avvento_classifica, avvento_fuori, comment_like,
+  luoghi_list, luogo_add, luogo_edit, luogo_cero, luogo_del to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _avvento_oggi, _avvento_max, _avvento_aperta, _io from anon, authenticated;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _avvento_oggi, _avvento_max, _avvento_aperta, _io from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _avvento_oggi, _avvento_max, _avvento_aperta, _io from public;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _avvento_oggi, _avvento_max, _avvento_aperta, _io from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin

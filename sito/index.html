@@ -738,6 +738,87 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .soon{text-align:center;padding:34px 18px}
 .soon .mic{font-size:64px;filter:drop-shadow(0 0 16px var(--rosa-g))}
 .soon .neon{font-size:72px}
+/* ---------- Mappa pippegosa: cartina vera scura, pallamondo o cartina piatta, puntine al neon ---------- */
+.mp-stat{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;color:var(--muto);margin:-6px 0 12px;font-size:15px;min-height:22px}
+.mp-stat b{color:var(--testo);font-size:17px}
+.mp-band{font-size:19px;letter-spacing:3px;line-height:1.2;overflow-wrap:anywhere}
+.mp-box{position:relative;height:min(62vh,560px);min-height:320px;border-radius:var(--r);overflow:hidden;border:1.5px solid rgba(255,62,165,.55);
+  box-shadow:0 0 24px -8px var(--rosa);background:#070b1d;margin:0 0 12px}
+#mp-map{position:absolute;inset:0}
+.mp-msg{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;color:var(--muto);background:#070b1d}
+.mp-msg[hidden]{display:none}
+.mp-ctl{position:absolute;z-index:3;top:10px;display:flex;gap:2px;padding:3px;background:rgba(10,15,36,.86);border:1px solid var(--line);border-radius:8px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.mp-ctl.l{left:10px}.mp-ctl.r{right:10px}
+.mp-ctl button{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--muto);font:800 12px/1 Archivo,sans-serif;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-radius:6px;cursor:pointer}
+.mp-ctl svg{display:block;width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mp-ctl button.on{color:#05261c;background:var(--menta);box-shadow:0 0 12px -2px var(--menta-g)}
+.mp-pin{width:30px;height:30px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
+.mp-pin i{position:relative;display:block;width:15px;height:15px;border-radius:50%;background:var(--rosa);border:2px solid #fff3fa;box-shadow:0 0 6px var(--rosa),0 0 16px var(--rosa-g);transition:transform .2s}
+.mp-pin i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--rosa);opacity:0;animation:mp-onda 2.6s ease-out infinite}
+.mp-pin.sel i{background:var(--menta);border-color:#effff9;box-shadow:0 0 8px var(--menta),0 0 22px var(--menta-g);transform:scale(1.3)}
+.mp-pin.sel i::after{border-color:var(--menta)}
+@keyframes mp-onda{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mp-pin i::after{animation:none}}
+.mp-card{position:absolute;z-index:4;left:10px;right:10px;bottom:10px;max-height:calc(100% - 70px);overflow:auto;background:rgba(12,18,46,.96);border:1px solid rgba(70,245,192,.55);border-radius:8px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 18px -8px var(--menta)}
+.mp-card[hidden]{display:none}
+.mp-card h3{margin:0 34px 2px 0;font-size:20px;overflow-wrap:anywhere}
+.mp-card .mp-x{position:absolute;top:4px;right:4px;padding:10px;color:var(--muto)}
+.mp-card .muto{margin:0 0 8px}
+.mp-cchi{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.mp-cchi .chip{padding:3px 10px 3px 3px;font-size:14px}
+.mp-cbtn{display:flex;align-items:center;gap:8px}
+.mp-cbtn .pmenu{margin-left:auto}
+.mp-mira{position:absolute;inset:0;z-index:3;pointer-events:none}
+.mp-mira[hidden]{display:none}
+.mp-mira i{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border:2px solid var(--rosa);border-radius:50%;box-shadow:0 0 14px var(--rosa-g),inset 0 0 10px var(--rosa-g)}
+.mp-mira i::before,.mp-mira i::after{content:"";position:absolute;background:var(--rosa);box-shadow:0 0 6px var(--rosa)}
+.mp-mira i::before{left:50%;top:-12px;bottom:-12px;width:2px;margin-left:-1px}
+.mp-mira i::after{top:50%;left:-12px;right:-12px;height:2px;margin-top:-1px}
+.mp-mira div{pointer-events:auto;position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(12,18,46,.96);border:1px solid rgba(255,62,165,.6);border-radius:8px;padding:10px 12px}
+.mp-mira div p{flex:1 1 160px;margin:0;font-size:14px;color:var(--muto)}
+.mp-chi{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:4px -2px 4px;scrollbar-width:none}
+.mp-chi::-webkit-scrollbar{display:none}
+.mp-chi .chip{flex:none;padding:5px 12px 5px 5px;font-size:14px}
+.mp-chi .chip.solo{padding:8px 14px}
+.mp-chi .chip.on{border-color:var(--menta);color:var(--menta);box-shadow:0 0 12px -4px var(--menta-g)}
+.mp-anno{font-family:"Bebas Neue",sans-serif;font-weight:400;font-size:26px;letter-spacing:.06em;color:var(--menta);text-shadow:0 0 10px var(--menta-g);margin:14px 0 6px}
+.mp-it{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0 0 8px;cursor:pointer;color:inherit;font:inherit}
+.mp-it.sel{border-color:var(--menta);box-shadow:0 0 14px -6px var(--menta)}
+.mp-it .fl{font-size:26px;line-height:1;flex:none;width:30px;text-align:center}
+.mp-it .tx{min-width:0;flex:1}
+.mp-it b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-it small{display:block;color:var(--muto);font-size:13.5px}
+.mp-it .po-av{flex:none}
+.cp-r{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.cp-r button{display:flex;align-items:center;gap:10px;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:inherit;font:inherit;cursor:pointer}
+.cp-r button .fl{font-size:22px;flex:none}
+.cp-r button small{display:block;color:var(--muto);font-size:13px}
+.lf-q{display:flex;gap:10px}.lf-q label{flex:1}
+.lf-chi{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.lf-chi .chip{padding:4px 11px 4px 4px;font-size:14px;cursor:pointer}
+.lf-chi .chip.on{border-color:var(--menta);color:var(--menta);background:rgba(70,245,192,.08)}
+/* road trip: tappe numerate e tragitto del colore del viaggio */
+.mp-tappa{width:24px;height:24px;padding:0;border-radius:50%;border:2px solid var(--c);background:#070b1d;color:var(--c);font:800 11px/20px Archivo,sans-serif;text-align:center;cursor:pointer;box-shadow:0 0 8px var(--c)}
+.mp-tappa.sel{background:var(--c);color:#070b1d;box-shadow:0 0 14px var(--c)}
+.mp-n{flex:none;display:inline-block;width:22px;height:22px;border-radius:50%;border:2px solid var(--c);color:var(--c);font:800 11px/18px Archivo,sans-serif;text-align:center;box-shadow:0 0 6px var(--c)}
+.mp-ct{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:4px 10px}
+.mp-ct button{display:flex;align-items:center;gap:6px;background:none;border:0;color:inherit;font:inherit;font-size:14.5px;padding:3px 0;cursor:pointer;text-align:left}
+.mp-ct li:not(:last-child) button::after{content:"→";color:var(--muto2);margin-left:4px}
+.mp-rt{display:inline-flex;align-items:center;gap:5px;color:var(--c);font-weight:700}
+.mp-rt svg,.mp-it .fl.rt svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mp-it .fl.rt{color:var(--c);filter:drop-shadow(0 0 5px var(--c));display:grid;place-items:center}
+.mp-it .fl.rt svg{width:28px;height:28px}
+.lf-rt{margin:2px 0 12px}
+.lf-t{list-style:none;margin:6px 0 8px;padding:0;display:flex;flex-direction:column;gap:6px}
+.lf-t li{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:5px 4px 5px 8px}
+.lf-t li .tn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lf-t li .icon{padding:7px 8px;color:var(--muto);font-size:15px}
+.lf-add{gap:8px}.lf-add input{flex:1;min-width:0}
+.tw.k-mappa{--k:#ff9a3c;--kt:rgba(255,154,60,.12);--kb:rgba(255,154,60,.45)}
+.maplibregl-ctrl-attrib{font:11px/1.4 Archivo,sans-serif}
+.maplibregl-ctrl-attrib.maplibregl-compact{background:rgba(10,15,36,.85)!important;color:var(--muto2)}
+.maplibregl-ctrl-attrib a{color:var(--muto)!important}
+.maplibregl-ctrl-attrib-button{filter:invert(1) opacity(.6)}
 </style>
 </head>
 <body>
@@ -822,6 +903,13 @@ const MSG = {
   ESCLUSIONI_IMPOSSIBILI: 'Con queste esclusioni il sorteggio è impossibile: togline qualcuna.',
   EVENTO_NON_TROVATO: 'Questo Secret Santa non esiste più.',
   EVENTO_SPARITO: 'Questo evento non esiste più.',
+  LUOGO_SPARITO: 'Questo posto non c’è più sulla mappa.',
+  POSTO_NON_VALIDO: 'Posto non valido: cercalo di nuovo.',
+  TAPPE_POCHE: 'Un road trip ha almeno 2 tappe: aggiungine un’altra.',
+  TAPPE_NON_VALIDE: 'Le tappe vanno da 2 a 30, ognuna con un nome.',
+  PERCORSO_NON_VALIDO: 'Il tragitto non è venuto bene: riprova.',
+  MESE_SENZA_ANNO: 'Se scegli il mese, scegli anche l’anno.',
+  MAPPA_NON_CARICA: 'La mappa non si carica: controlla la connessione e riprova.',
   COMMENTO_SPARITO: 'Questo commento non c’è più (cancellato o storia scaduta).',
   TIPO_NON_VALIDO: 'Qualcosa non va: ricarica il sito.',
   TITOLO_VUOTO: 'Scrivi il nome dell\'evento (es. "Cena da Marco").',
@@ -1233,6 +1321,7 @@ const ZONE = [
   { id: 'pin', t: 'In evidenza', d: 'I post fissati', menu: false, f: viewPin, ico: svg('<path d="M8.5 3.5h7l-1.2 5.8 3.7 3.7v1.8H6v-1.8l3.7-3.7z"/><path d="M12 14.8v6"/>') },
   { id: 'avvento', t: 'Avvento', d: '19 giochini fino al 19 dicembre', f: viewAvvento, ico: svg('<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="m12 7.4 1.4 2.8 3.1.5-2.2 2.2.5 3.1-2.8-1.5-2.8 1.5.5-3.1-2.2-2.2 3.1-.5z"/>') },
   { id: 'calendario', t: 'Calendario', d: 'Cene, feste e serate', f: viewCalendario, ico: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/>') },
+  { id: 'mappa', t: 'Mappa pippegosa', d: 'I posti dove siamo stati', f: viewMappa, ico: svg('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/>') },
   { id: 'foto', t: 'Foto', d: 'Le cartelle del gruppo', menu: false, f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
   { id: 'sondaggi', t: 'Sondaggi', d: 'Vota e fai votare', f: viewSondaggi, ico: svg('<path d="M4 6.5h9M4 12h16M4 17.5h6"/><circle cx="17" cy="6.5" r="1.4"/><circle cx="13.5" cy="17.5" r="1.4"/>') },
   { id: 'gioco', t: 'Gioco', d: 'Senza Filtro', f: viewGioco, ico: svg('<rect x="4" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 9.2 12.7)"/><path d="m14.6 5.4 3.7.7a2 2 0 0 1 1.6 2.3l-2 11a2 2 0 0 1-2.3 1.6l-3.2-.6"/>') },
@@ -1300,6 +1389,7 @@ function route() {
   // "#storie" (es. tocco sulla notifica di una storia): Novità + si aprono le storie nuove
   if (cur().sec === 'storie') { S.apriStorie = cur().arg || true; history.replaceState(null, '', '#novita'); }
   document.querySelectorAll('.ov,.lb,.sv').forEach(x => x.remove()); document.body.classList.remove('noscroll');
+  chiudiMappa();
   const c = cur(), inGioco = c.sec === 'gioco' && c.arg === 'gioca';
   if (inGioco) { giocoLayer().hidden = false; document.body.classList.add('noscroll'); } else if ($('#gl')) $('#gl').hidden = true;
   drawPill();
@@ -1363,7 +1453,7 @@ function richText(t) {
 function trends() {
   const c = new Map(), lim = Date.now() - 3 * 864e5;
   const posts = (S.feed || []).filter(p => new Date(p.created_at) > lim);
-  const auto = new Set(['evento', 'secretsanta', 'sondaggio', 'album']);   // hashtag degli annunci automatici: non sono "tendenze"
+  const auto = new Set(['evento', 'secretsanta', 'sondaggio', 'album', 'mappa']);   // hashtag degli annunci automatici: non sono "tendenze"
   for (const p of posts) for (const t of tagsOf(p.body)) if (!auto.has(t)) c.set(t, (c.get(t) || 0) + 1);
   return [...c].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 8);
 }
@@ -1385,13 +1475,14 @@ function votiHTML(x, attr) {
   return `<button class="act up ${v === 1 ? 'on' : ''}" data-like="${esc(attr)}" aria-label="Mi piace">${ICO.up}<span>${(x.likes || []).length || ''}</span></button><button class="act down ${v === -1 ? 'on' : ''}" data-dislike="${esc(attr)}" aria-label="Non mi piace">${ICO.down}<span>${(x.dislikes || []).length || ''}</span></button>`;
 }
 // colore del blocco nelle Novità: post azzurro, evento verde, Secret Santa rosso, sondaggio giallo, foto viola
-const TIPI_POST = { post: 'Post', evento: 'Evento', santa: 'Secret Santa', sondaggio: 'Sondaggio', foto: 'Foto' };
+const TIPI_POST = { post: 'Post', evento: 'Evento', santa: 'Secret Santa', sondaggio: 'Sondaggio', foto: 'Foto', mappa: 'Mappa' };
 function tipoPost(t) {
   t = String(t || '');
   if (/#secretsanta(?![\p{L}\p{N}_])/iu.test(t)) return 'santa';
   if (/#evento(?![\p{L}\p{N}_])/iu.test(t)) return 'evento';
   if (/#sondaggio(?![\p{L}\p{N}_])/iu.test(t)) return 'sondaggio';
   if (/#album(?![\p{L}\p{N}_])/iu.test(t)) return 'foto';
+  if (/#mappa(?![\p{L}\p{N}_])/iu.test(t)) return 'mappa';
   return 'post';
 }
 function tweetHTML(p, big) {
@@ -1634,6 +1725,426 @@ function drawPost(id) {
   el.querySelectorAll('[data-rdel]').forEach(b => b.onclick = async () => {
     if (!await ask('Eliminare la risposta?', '', 'Elimina', true)) return;
     try { await rpc('reply_del', { p_id: b.dataset.rdel, p_author: S.me }); toast('Risposta eliminata'); await loadThread(id); } catch (ex) { toast(msg(ex), 'err'); }
+  });
+}
+
+// ===================== MAPPA PIPPEGOSA =====================
+// I posti dove siamo stati insieme (Ricky, 17/11/2026): cartina vera scura (OpenFreeMap) con MapLibre, pallamondo che gira o cartina piatta.
+// Ricerca: Open-Meteo (capisce i nomi italiani: "Parigi", "Monaco di Baviera") + OpenStreetMap (vie e locali, solo premendo Cerca).
+const MAPLIBRE = 'https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl';
+const MAPPA_STILE = 'https://tiles.openfreemap.org/styles/dark';
+const ICO_GLOBO = svg('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/>');
+const ICO_CARTINA = svg('<path d="m3.5 6.5 5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>');
+const ICO_TUTTI = svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>');
+let mlPromessa = null, stilePromessa = null;
+function caricaMaplibre() {
+  if (window.maplibregl) return Promise.resolve();
+  return mlPromessa || (mlPromessa = new Promise((ok, ko) => {
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = MAPLIBRE + '.css'; document.head.appendChild(l);
+    const s = document.createElement('script'); s.src = MAPLIBRE + '.js';
+    s.onload = () => ok(); s.onerror = () => { mlPromessa = null; s.remove(); ko(err('MAPPA_NON_CARICA')); };
+    document.head.appendChild(s);
+  }));
+}
+// lo stile scuro di OpenFreeMap coi colori del sito: terra blu notte, mare scurissimo, confini rosa neon, nomi in italiano
+function stileMappa() {
+  return stilePromessa || (stilePromessa = fetch(MAPPA_STILE).then(r => { if (!r.ok) throw err('MAPPA_NON_CARICA'); return r.json(); }).then(st => {
+    const nome = ['coalesce', ['get', 'name:it'], ['get', 'name:latin'], ['get', 'name']];
+    for (const l of st.layers) {
+      const p = l.paint || (l.paint = {}), y = l.layout || {};
+      if (l.id === 'background') p['background-color'] = '#141c40';
+      else if (l.id === 'water' || l.id === 'waterway') p[l.type === 'fill' ? 'fill-color' : 'line-color'] = '#060a1c';
+      else if (/^landcover_(ice|glacier)/.test(l.id)) p['fill-color'] = '#1a2350';
+      else if (/^(landcover_wood|landuse_park)$/.test(l.id)) p['fill-color'] = '#17204a';
+      else if (l.id === 'landuse_residential') p['fill-color'] = '#1a2452';
+      else if (l.id === 'building') { p['fill-color'] = '#1e2858'; p['fill-outline-color'] = '#26326a'; }
+      else if (/^boundary_country/.test(l.id)) p['line-color'] = 'rgba(255,62,165,.62)';
+      else if (l.id === 'boundary_state') p['line-color'] = 'rgba(255,62,165,.2)';
+      else if (l.type === 'line' && /^highway_(minor|path)/.test(l.id)) p['line-color'] = '#222d61';
+      else if (l.type === 'line' && /^highway_major_(inner|subtle)/.test(l.id)) p['line-color'] = '#2c3874';
+      if (l.type === 'symbol' && y['text-field'] && /^(place_|water_name)/.test(l.id)) {
+        y['text-field'] = nome;
+        p['text-color'] = /^place_country/.test(l.id) ? '#ffb3dc' : l.id === 'water_name' ? '#4a5aa0' : '#c9cff5';
+        p['text-halo-color'] = '#070b1d';
+      }
+    }
+    st.sky = { 'sky-color': '#070b1d', 'horizon-color': '#ff3ea5', 'fog-color': '#070b1d', 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, .9, 5, .6, 7, 0] };
+    return st;
+  }).catch(e => { stilePromessa = null; throw e; }));
+}
+const bandiera = cc => /^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[...cc].map(c => 127397 + c.charCodeAt(0))) : '';
+function nomePaese(cc, dflt) { try { return /^[A-Z]{2}$/.test(cc || '') ? new Intl.DisplayNames(['it'], { type: 'region' }).of(cc) : (dflt || ''); } catch (e) { return dflt || ''; } }
+const quandoLuogo = l => l.anno ? (l.mese ? MESI[l.mese - 1] + ' ' : '') + l.anno : '';
+// road trip (Ricky, 17/11/2026): più tappe in ordine, colorate, col tragitto lungo le strade (OSRM, servizio gratuito)
+const COLORI_VIAGGI = ['#46f5c0', '#ffd86b', '#4cc9ff', '#a78bff', '#ff9a3c', '#ff5d6c'];
+const coloreViaggio = id => { let h = 7; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COLORI_VIAGGI[h % COLORI_VIAGGI.length]; };
+const eRoadTrip = l => Array.isArray(l.tappe) && l.tappe.length > 1;
+const paesiDi = l => eRoadTrip(l) ? l.tappe.map(t => t.cc).filter(Boolean) : (l.cc ? [l.cc] : []);
+const ICO_AUTO = svg('<path d="M5.5 16.5v-4l1.8-4.6a1.5 1.5 0 0 1 1.4-.9h6.6a1.5 1.5 0 0 1 1.4.9l1.8 4.6v4"/><rect x="3.5" y="12" width="17" height="5" rx="1.5"/><path d="M6.5 17v2.2M17.5 17v2.2"/><circle cx="7.5" cy="14.5" r=".8"/><circle cx="16.5" cy="14.5" r=".8"/>');
+const kmDritti = (a, b) => { const r = x => x * Math.PI / 180, h = Math.sin(r(b.lat - a.lat) / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(r(b.lon - a.lon) / 2) ** 2; return 12742 * Math.asin(Math.sqrt(h)); };
+async function osrm(punti) {
+  const u = 'https://router.project-osrm.org/route/v1/driving/' + punti.map(p => (+p.lon).toFixed(5) + ',' + (+p.lat).toFixed(5)).join(';') + '?overview=simplified&geometries=geojson';
+  const d = await (await fetch(u)).json(); if (!d || d.code !== 'Ok' || !d.routes || !d.routes[0]) throw new Error('NO_ROUTE');
+  return { coords: d.routes[0].geometry.coordinates, km: d.routes[0].distance / 1000 };
+}
+// tutto il tragitto in macchina; se non si può (mare, oceano) a pezzi: strada dove c'è, linea dritta dove no
+async function calcolaTragitto(tappe) {
+  const r5 = c => [+(+c[0]).toFixed(5), +(+c[1]).toFixed(5)];
+  try { const r = await osrm(tappe); return { percorso: r.coords.map(r5), km: Math.round(r.km) }; } catch (e) {}
+  let pts = [], km = 0;
+  for (let i = 0; i < tappe.length - 1; i++) {
+    const a = tappe[i], b = tappe[i + 1];
+    try { const r = await osrm([a, b]); pts = pts.concat(r.coords.map(r5)); km += r.km; }
+    catch (e) { pts.push(r5([a.lon, a.lat]), r5([b.lon, b.lat])); km += kmDritti(a, b); }
+  }
+  return { percorso: pts.length > 1 && pts.length <= 8000 ? pts : null, km: Math.round(km) };
+}
+const linkLuogo = id => location.href.split('#')[0] + '#mappa/' + id;
+const pocoMoto = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// zoom per vedere il pallamondo intero nel riquadro (a zoom 0.6 è largo circa 278 px)
+function zoomPalla() { const b = $('#mp-box'); return b ? Math.max(0, Math.min(2, .6 + Math.log2(.84 * Math.min(b.clientWidth, b.clientHeight) / 278))) : .7; }
+function chiudiMappa() {
+  const mp = S.mp; S.mp = null; if (!mp) return;
+  clearTimeout(mp.tg); if (mp.map) { try { mp.map.remove(); } catch (e) {} }
+}
+function viewMappa(arg) {
+  if (!S.ui.mp) S.ui.mp = { chi: null };
+  const vista = store.get('mpvista') === 'piatta' ? 'piatta' : 'globo';
+  $('#view').innerHTML = `<h1 class="neon">Mappa pippegosa</h1>
+    <div class="mp-stat" id="mp-stat"></div>
+    <section class="mp-box" id="mp-box"><div id="mp-map"></div>
+      <div class="mp-ctl l" role="group" aria-label="Vista"><button data-v="globo">${ICO_GLOBO}Pallamondo</button><button data-v="piatta">${ICO_CARTINA}Cartina</button></div>
+      <div class="mp-ctl r"><button id="mp-tutti" aria-label="Vedi tutti i posti">${ICO_TUTTI}</button></div>
+      <div class="mp-msg" id="mp-msg"><div class="loading">Carico la mappa</div></div>
+      <div class="mp-mira" id="mp-mira" hidden><i></i><div><p>Sposta la mappa finché il mirino è sul posto</p><button class="btn ghost sm" id="mp-mira-no">Annulla</button><button class="btn sm" id="mp-mira-ok">Metti qui</button></div></div>
+      <div class="mp-card" id="mp-card" hidden></div>
+    </section>
+    <button class="btn wide" id="mp-add">+ Aggiungi un posto</button>
+    <div class="mp-chi" id="mp-chi"></div>
+    <div id="mp-list"><div class="loading">Carico i posti</div></div>`;
+  S.mp = { vista, markers: new Map(), sel: null, selIniz: arg || null };
+  document.querySelectorAll('.mp-ctl [data-v]').forEach(b => { b.classList.toggle('on', b.dataset.v === vista); b.onclick = () => cambiaVista(b.dataset.v); });
+  $('#mp-tutti').onclick = () => { chiudiCard(); vediTutti(); };
+  $('#mp-add').onclick = cercaPosto;
+  $('#mp-mira-no').onclick = () => { $('#mp-mira').hidden = true; };
+  $('#mp-mira-ok').onclick = mettiQui;
+  avviaMappa();
+  if (S.luoghi) drawLuoghi();
+  S.refresh = loadLuoghi; loadLuoghi();
+}
+async function avviaMappa() {
+  const mp = S.mp, msgEl = () => S.mp === mp && $('#mp-msg');
+  try {
+    await caricaMaplibre(); const st = await stileMappa();
+    if (S.mp !== mp || !$('#mp-map')) return;
+    const map = new maplibregl.Map({ container: 'mp-map', style: Object.assign({}, st, { projection: { type: mp.vista === 'globo' ? 'globe' : 'mercator' } }),
+      center: [12.5, 41.9], zoom: mp.vista === 'globo' ? zoomPalla() : .8, minZoom: 0, maxPitch: 0, dragRotate: false, pitchWithRotate: false, attributionControl: { compact: true } });
+    mp.map = map;
+    map.touchZoomRotate.disableRotation();
+    map.on('load', () => {
+      if (S.mp !== mp) return;
+      const m = msgEl(); if (m) m.hidden = true;
+      mp.pronta = true; disegnaPuntine(); selIniziale();
+      const at = document.querySelector('#mp-map .maplibregl-ctrl-attrib'); if (at) at.classList.remove('maplibregl-compact-show');   // crediti chiusi nella (i)
+      if (!mp.sel) { vediTutti(true, true); giroDopo(1500); }
+    });
+    // pallamondo che gira da solo: si ferma appena lo tocchi, riparte dopo un po'
+    const tocco = () => { mp.gira = false; clearTimeout(mp.tg); };
+    map.on('mousedown', tocco); map.on('touchstart', tocco); map.on('wheel', tocco);
+    map.on('moveend', e => { if (mp.gira) giraAncora(); else if (e.originalEvent) giroDopo(9000); });
+    map.on('click', e => {
+      if (e.originalEvent && e.originalEvent.target.closest('.mp-pin,.mp-tappa')) return;
+      const f = map.getLayer('viaggi-alone') ? map.queryRenderedFeatures([[e.point.x - 14, e.point.y - 14], [e.point.x + 14, e.point.y + 14]], { layers: ['viaggi-alone'] }) : [];
+      if (f.length) selezionaLuogo(f[0].properties.id); else if (mp.sel) chiudiCard();
+    });
+  } catch (e) {
+    const m = msgEl(); if (!m) return;
+    m.hidden = false; m.innerHTML = `<p>😕 La mappa non si carica (controlla la connessione).</p><button class="btn ghost sm" id="mp-riprova">Riprova</button>`;
+    $('#mp-riprova').onclick = () => { m.innerHTML = '<div class="loading">Carico la mappa</div>'; avviaMappa(); };
+  }
+}
+function giroDopo(ms) { const mp = S.mp; if (!mp) return; clearTimeout(mp.tg); mp.tg = setTimeout(() => { if (S.mp === mp && !mp.sel) { mp.gira = true; giraAncora(); } }, ms); }
+function giraAncora() {
+  const mp = S.mp, m = mp && mp.map;
+  if (!m || !mp.gira || mp.vista !== 'globo' || mp.sel || pocoMoto() || m.getZoom() > 3 || !$('#mp-mira').hidden) { if (mp) mp.gira = false; return; }
+  const c = m.getCenter(); c.lng -= 5; m.easeTo({ center: c, duration: 1000, easing: n => n });
+}
+function cambiaVista(v) {
+  const mp = S.mp; if (!mp || mp.vista === v) return;
+  mp.vista = v; store.set('mpvista', v);
+  document.querySelectorAll('.mp-ctl [data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  if (!mp.map || !mp.pronta) return;
+  mp.gira = false; mp.map.stop();
+  mp.map.setProjection({ type: v === 'globo' ? 'globe' : 'mercator' });
+  if (mp.sel) return;
+  vediTutti(false, true); if (v === 'globo') giroDopo(2500);
+}
+function luoghiVisibili() { const f = S.ui.mp && S.ui.mp.chi; return (S.luoghi || []).filter(l => !f || l.chi.some(n => same(n, f))); }
+// palla = il pallamondo intero (all'apertura e passando al pallamondo), centrato sui posti; altrimenti si avvicina a tutti i posti
+function vediTutti(subito, palla) {
+  const mp = S.mp, m = mp && mp.map; if (!m || !mp.pronta) return;
+  const L = luoghiVisibili(), d = subito ? 0 : 1200, z0 = mp.vista === 'globo' ? zoomPalla() : .8;
+  if (!L.length) return m.easeTo({ center: [12.5, 41.9], zoom: z0, duration: d });
+  const b = new maplibregl.LngLatBounds(); L.forEach(l => b.extend([l.lon, l.lat]));
+  if (palla && mp.vista === 'globo') return m.easeTo({ center: b.getCenter(), zoom: z0, duration: d });
+  if (L.length === 1) return m.easeTo({ center: [L[0].lon, L[0].lat], zoom: 4, duration: d });
+  m.fitBounds(b, { padding: { top: 70, bottom: 40, left: 40, right: 40 }, maxZoom: 5, duration: d });
+}
+function disegnaPuntine() {
+  const mp = S.mp; if (!mp || !mp.map || !mp.pronta || !S.luoghi) return;
+  // una puntina per ogni posto; per i road trip una pallina numerata per ogni tappa (chiave con le coordinate: se le tappe cambiano si rifà)
+  const vis = luoghiVisibili(), voci = [];
+  vis.forEach(l => { if (eRoadTrip(l)) l.tappe.forEach((t, i) => voci.push({ k: l.id + '#' + i + '#' + t.lat + ',' + t.lon, l, t, i })); else voci.push({ k: l.id, l }); });
+  const chiavi = new Set(voci.map(v => v.k));
+  for (const [k, mk] of mp.markers) if (!chiavi.has(k)) { mk.remove(); mp.markers.delete(k); }
+  voci.forEach(({ k, l, t, i }) => {
+    let mk = mp.markers.get(k);
+    if (!mk) {
+      const el = document.createElement('button'); el.dataset.l = l.id;
+      if (t) { el.className = 'mp-tappa'; el.textContent = i + 1; el.style.setProperty('--c', coloreViaggio(l.id)); } else { el.className = 'mp-pin'; el.innerHTML = '<i></i>'; }
+      el.addEventListener('click', ev => { ev.stopPropagation(); selezionaLuogo(el.dataset.l); });
+      mk = new maplibregl.Marker({ element: el }).setLngLat(t ? [t.lon, t.lat] : [l.lon, l.lat]).addTo(mp.map); mp.markers.set(k, mk);
+    }
+    const el = mk.getElement(); el.setAttribute('aria-label', t ? `${l.nome}: tappa ${i + 1}, ${t.nome}` : l.nome); el.classList.toggle('sel', mp.sel === l.id);
+  });
+  disegnaTragitti();
+}
+// i tragitti dei road trip: una linea al neon del colore del viaggio (con alone), più spessa se è quello scelto
+function disegnaTragitti() {
+  const mp = S.mp, m = mp && mp.map; if (!m || !mp.pronta || !m.isStyleLoaded()) return;
+  const fc = { type: 'FeatureCollection', features: luoghiVisibili().filter(eRoadTrip).map(l => ({ type: 'Feature',
+    properties: { id: l.id, c: coloreViaggio(l.id), sel: mp.sel === l.id ? 1 : 0 },
+    geometry: { type: 'LineString', coordinates: Array.isArray(l.percorso) && l.percorso.length > 1 ? l.percorso : l.tappe.map(t => [t.lon, t.lat]) } })) };
+  const src = m.getSource('viaggi'); if (src) return src.setData(fc);
+  m.addSource('viaggi', { type: 'geojson', data: fc });
+  const lay = { 'line-cap': 'round', 'line-join': 'round' };
+  m.addLayer({ id: 'viaggi-alone', type: 'line', source: 'viaggi', layout: lay, paint: { 'line-color': ['get', 'c'], 'line-width': ['case', ['==', ['get', 'sel'], 1], 16, 10], 'line-opacity': .3, 'line-blur': 6 } });
+  m.addLayer({ id: 'viaggi', type: 'line', source: 'viaggi', layout: lay, paint: { 'line-color': ['get', 'c'], 'line-width': ['case', ['==', ['get', 'sel'], 1], 4.5, 2.8] } });
+}
+function selIniziale() {
+  const mp = S.mp; if (!mp || !mp.selIniz || !mp.pronta || !S.luoghi) return;
+  const id = mp.selIniz; mp.selIniz = null;
+  if (S.luoghi.some(l => l.id === id)) selezionaLuogo(id, true); else toast(msg(err('LUOGO_SPARITO')), 'err');
+}
+function selezionaLuogo(id, subito) {
+  const mp = S.mp, l = (S.luoghi || []).find(x => x.id === id); if (!mp || !l) return;
+  if (S.ui.mp.chi && !l.chi.some(n => same(n, S.ui.mp.chi))) { S.ui.mp.chi = null; drawLuoghi(); }
+  mp.sel = id; mp.gira = false; clearTimeout(mp.tg);
+  disegnaPuntine(); drawCard(); segnaLista();
+  if (!mp.map || !mp.pronta) return;
+  if (eRoadTrip(l)) {
+    const b = new maplibregl.LngLatBounds(); l.tappe.forEach(t => b.extend([t.lon, t.lat]));
+    const box = $('#mp-box'), card = $('#mp-card'), giu = Math.min(card ? card.offsetHeight + 24 : 200, box.clientHeight * .6);
+    return mp.map.fitBounds(b, { padding: { top: 64, bottom: giu, left: 36, right: 36 }, maxZoom: 9, duration: subito ? 0 : 1500, essential: true });
+  }
+  mp.map.flyTo({ center: [l.lon, l.lat], zoom: Math.max(mp.map.getZoom(), 4.5), offset: [0, -70], duration: subito ? 0 : 1500, essential: true });
+}
+function vaiTappa(l, i) { const mp = S.mp, t = l.tappe[i]; if (mp && mp.map && mp.pronta && t) mp.map.flyTo({ center: [t.lon, t.lat], zoom: Math.max(mp.map.getZoom(), 9), offset: [0, -70], duration: 1200, essential: true }); }
+function chiudiCard() {
+  const mp = S.mp; if (!mp || !mp.sel) return;
+  mp.sel = null; drawCard(); disegnaPuntine(); segnaLista(); giroDopo(9000);
+}
+function segnaLista() { const sel = S.mp && S.mp.sel; document.querySelectorAll('#mp-list [data-l]').forEach(b => b.classList.toggle('sel', b.dataset.l === sel)); }
+function drawCard() {
+  const mp = S.mp, el = $('#mp-card'); if (!el || !mp) return;
+  const l = mp.sel && (S.luoghi || []).find(x => x.id === mp.sel);
+  el.hidden = !l; if (!l) return;
+  const io = l.chi.some(n => same(n, S.me)), mio = same(l.author, S.me), q = quandoLuogo(l);
+  const rt = eRoadTrip(l), col = coloreViaggio(l.id);
+  el.innerHTML = `<button class="icon mp-x" id="mpc-x" aria-label="Chiudi">✕</button>
+    <h3>${esc(l.nome)} ${rt ? [...new Set(paesiDi(l))].map(bandiera).join('') : bandiera(l.cc)}</h3>
+    ${rt ? `<p class="small" style="margin:0 0 6px"><span class="mp-rt" style="--c:${col}">${ICO_AUTO}Road trip · ${l.tappe.length} tappe${l.km ? ' · ' + l.km.toLocaleString('it-IT') + ' km' : ''}</span></p>
+      <ol class="mp-ct">${l.tappe.map((t, i) => `<li><button data-t="${i}"><span class="mp-n" style="--c:${col}">${i + 1}</span>${esc(t.nome)}</button></li>`).join('')}</ol>` : ''}
+    <p class="muto small">${[rt ? '' : l.paese, q ? cap(q) : ''].filter(Boolean).map(esc).join(' · ')}${(!rt && l.paese) || q ? ' · ' : ''}messo da ${esc(l.author)}</p>
+    <div class="mp-cchi">${l.chi.length ? l.chi.map(n => `<span class="chip">${avatar(n, 'xs')}${esc(n)}</span>`).join('') : '<span class="muto small">Ancora nessuno ha detto che c\'era</span>'}</div>
+    <div class="mp-cbtn"><button class="btn sm ${io ? 'ghost' : ''}" id="mpc-io">${io ? 'Non c\'ero' : 'C\'ero anch\'io'}</button>${mio || adminPin() ? `<button class="icon pmenu" id="mpc-menu" aria-label="Opzioni del posto">${ICO_PUNTINI}</button>` : ''}</div>`;
+  $('#mpc-x').onclick = chiudiCard;
+  el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => vaiTappa(l, +b.dataset.t));
+  $('#mpc-io').onclick = () => ceroAnchio(l, !io);
+  const mn = $('#mpc-menu'); if (mn) mn.onclick = () => menuLuogo(l);
+}
+function ceroAnchio(l, si) {
+  l.chi = si ? l.chi.concat(S.me) : l.chi.filter(n => !same(n, S.me));
+  drawLuoghi();
+  inFila('cero' + l.id, async q => {
+    try { const r = await rpc('luogo_cero', { p_id: l.id, p_name: S.me, p_si: si }); if (q.n === 1 && r && Array.isArray(r.chi)) { l.chi = r.chi; drawLuoghi(); } }
+    catch (ex) { toast(msg(ex), 'err'); if (q.n === 1) loadLuoghi(); }
+  });
+}
+function menuLuogo(l) {
+  const mio = same(l.author, S.me);
+  sheet(`<h3>${esc(l.nome)}</h3><div class="col">${mio ? '<button class="btn ghost wide" data-a="edit">✏️ Modifica</button>' : ''}<button class="btn ghost rosso wide" data-a="del">🗑️ Elimina dalla mappa</button></div>
+    <div class="row end"><button class="btn ghost" data-close>Annulla</button></div>`, (s, close) => {
+    s.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
+      close();
+      if (b.dataset.a === 'edit') return formLuogo(l);
+      if (!await ask('Eliminare questo posto?', `«${esc(l.nome)}» sparisce dalla mappa per tutti.`, 'Elimina', true)) return;
+      try { await rpc('luogo_del', { p_id: l.id, p_author: S.me, p_admin: mio ? null : adminPin() }); toast('Posto eliminato'); if (S.mp) S.mp.sel = null; await loadLuoghi(); }
+      catch (e) { if (/PIN_ADMIN_ERRATO|PIN_BLOCCATO/.test(e.message)) store.del('admin'); toast(msg(e), 'err'); }
+    });
+  });
+}
+async function loadLuoghi() {
+  try { S.luoghi = await rpc('luoghi_list'); S.noLuoghi = false; if (cur().sec === 'mappa') { drawLuoghi(); selIniziale(); } }
+  catch (e) { if (e.message === 'NO_DB') S.noLuoghi = true; const el = $('#mp-list'); if (el && !S.luoghi) el.innerHTML = errBox(e); }
+}
+function drawLuoghi() {
+  const el = $('#mp-list'); if (!el || !S.luoghi) return;
+  const f = S.ui.mp.chi, L = luoghiVisibili(), paesi = [...new Set(L.flatMap(paesiDi))];
+  $('#mp-stat').innerHTML = L.length ? `<span><b>${L.length}</b> ${L.length === 1 ? 'posto' : 'posti'}${f ? ' di ' + esc(f) : ''}</span><span><b>${paesi.length}</b> ${paesi.length === 1 ? 'paese' : 'paesi'}</span><span class="mp-band">${paesi.map(bandiera).join('')}</span>` : '';
+  // filtro "chi c'era": tutte le persone che compaiono sulla mappa (le più viaggiatrici prima)
+  const conta = new Map(); S.luoghi.forEach(l => l.chi.forEach(n => { const k = [...conta.keys()].find(x => same(x, n)) || n; conta.set(k, (conta.get(k) || 0) + 1); }));
+  const pers = [...conta.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(x => x[0]);
+  $('#mp-chi').innerHTML = pers.length ? `<button class="chip solo ${f ? '' : 'on'}" data-f="">Tutti</button>${pers.map(n => `<button class="chip ${f && same(f, n) ? 'on' : ''}" data-f="${esc(n)}">${avatar(n, 'xs')}${esc(n)} <small class="muto">${conta.get(n)}</small></button>`).join('')}` : '';
+  $('#mp-chi').querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
+    S.ui.mp.chi = b.dataset.f || null; if (S.mp && S.mp.sel && !luoghiVisibili().some(l => l.id === S.mp.sel)) S.mp.sel = null;
+    drawLuoghi(); vediTutti();
+  });
+  if (!S.luoghi.length) el.innerHTML = `<div class="empty">Ancora nessun posto sulla mappa.<br>Aggiungi il primo viaggio insieme 🌍</div>`;
+  else {
+    const gruppi = []; L.forEach(l => { const k = l.anno || 'Senza data', g = gruppi.find(x => x.k === k); if (g) g.L.push(l); else gruppi.push({ k, L: [l] }); });
+    el.innerHTML = gruppi.map(g => `<div class="mp-anno">${g.k}</div>${g.L.map(l => `<button class="mp-it${S.mp && S.mp.sel === l.id ? ' sel' : ''}" data-l="${esc(l.id)}">${eRoadTrip(l) ? `<span class="fl rt" style="--c:${coloreViaggio(l.id)}">${ICO_AUTO}</span>` : `<span class="fl">${bandiera(l.cc) || '📍'}</span>`}<span class="tx"><b>${esc(l.nome)}${eRoadTrip(l) ? ' ' + [...new Set(paesiDi(l))].map(bandiera).join('') : ''}</b><small>${(eRoadTrip(l) ? [l.mese ? cap(MESI[l.mese - 1]) : '', `Road trip · ${l.tappe.length} tappe${l.km ? ' · ' + l.km.toLocaleString('it-IT') + ' km' : ''}`] : [l.mese ? cap(MESI[l.mese - 1]) : '', l.paese]).filter(Boolean).map(esc).join(' · ') || '&nbsp;'}</small></span><span class="po-av">${l.chi.slice(0, 4).map(n => avatar(n, 'xs')).join('')}</span></button>`).join('')}`).join('');
+    el.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { $('#mp-box').scrollIntoView({ behavior: pocoMoto() ? 'auto' : 'smooth', block: 'center' }); selezionaLuogo(b.dataset.l); });
+  }
+  disegnaPuntine(); drawCard();
+}
+// ---- aggiungere un posto: cerca per nome, oppure col mirino sulla mappa ----
+async function cercaNomi(q, tutto) {
+  const ris = [], vicino = (a, b) => Math.abs(a.lat - b.lat) < .02 && Math.abs(a.lon - b.lon) < .02;
+  const om = fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=it&format=json`).then(r => r.json())
+    .then(d => (d.results || []).map(r => ({ nome: r.name, lat: r.latitude, lon: r.longitude, cc: (r.country_code || '').toUpperCase(), paese: r.country || '', dove: [r.admin1, r.country].filter(Boolean).join(' · ') }))).catch(() => []);
+  const osm = tutto ? fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=jsonv2&addressdetails=1&limit=5&accept-language=it`).then(r => r.json())
+    .then(d => (d || []).map(r => { const a = r.address || {}; return { nome: r.name || String(r.display_name || '').split(',')[0], lat: +r.lat, lon: +r.lon, cc: (a.country_code || '').toUpperCase(), paese: a.country || '', dove: String(r.display_name || '').split(',').slice(1, 4).join(',').trim() }; })).catch(() => []) : Promise.resolve([]);
+  const [a, b] = await Promise.all([om, osm]);
+  a.concat(b).forEach(r => { if (r.nome && isFinite(r.lat) && isFinite(r.lon) && !ris.some(x => vicino(x, r))) ris.push(r); });
+  return ris.map(r => Object.assign(r, { paese: nomePaese(r.cc, r.paese) }));
+}
+function cercaPosto() {
+  sheet(`<h3>📍 Aggiungi un posto</h3><p class="muto">Cerca una città o un posto, anche in italiano (“Parigi”, “Monaco di Baviera”, “Gardaland”).</p>
+    <form id="cp-f" class="row" novalidate><input id="cp-q" maxlength="80" autocomplete="off" enterkeyhint="search" placeholder="Dove siete stati?"><button class="btn sm" type="submit">Cerca</button></form>
+    <div class="cp-r" id="cp-r"></div>
+    <button class="btn ghost wide" id="cp-mappa" type="button">🎯 Non lo trovi? Scegli il punto sulla mappa</button>
+    <div class="row end"><button class="btn ghost" data-close>Annulla</button></div>`, (s, close) => {
+    const f = s.querySelector('#cp-f'), inp = s.querySelector('#cp-q'), box = s.querySelector('#cp-r'); let t, giro = 0;
+    setTimeout(() => inp.focus(), 250);
+    const cerca = async tutto => {
+      const q = inp.value.trim(), n = ++giro; if (q.length < 2) { box.innerHTML = ''; return; }
+      box.innerHTML = '<div class="loading">Cerco</div>';
+      const R = await cercaNomi(q, tutto); if (n !== giro) return;
+      box.innerHTML = R.length ? R.map((r, i) => `<button type="button" data-i="${i}"><span class="fl">${bandiera(r.cc) || '📍'}</span><span><b>${esc(r.nome)}</b><small>${esc(r.dove || r.paese)}</small></span></button>`).join('')
+        : `<p class="muto">${tutto ? 'Non trovato: prova con un altro nome, oppure scegli il punto sulla mappa.' : 'Premi “Cerca” per cercare anche vie e locali.'}</p>`;
+      box.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { close(); const r = R[+b.dataset.i]; anteprima(r); formLuogo(r); });
+    };
+    inp.oninput = () => { clearTimeout(t); t = setTimeout(() => cerca(false), 450); };
+    f.onsubmit = e => { e.preventDefault(); clearTimeout(t); inp.blur(); cerca(true); };
+    s.querySelector('#cp-mappa').onclick = () => {
+      close(); const mp = S.mp;
+      if (!mp || !mp.map || !mp.pronta) return toast('Aspetta che la mappa sia caricata', 'err');
+      chiudiCard(); mp.gira = false; clearTimeout(mp.tg);
+      $('#mp-mira').hidden = false; $('#mp-box').scrollIntoView({ behavior: pocoMoto() ? 'auto' : 'smooth', block: 'center' });
+      toast('Ingrandisci e sposta la mappa: poi “Metti qui”');
+    };
+  });
+}
+function anteprima(r) { const m = S.mp && S.mp.map; if (m && S.mp.pronta) { S.mp.gira = false; clearTimeout(S.mp.tg); m.flyTo({ center: [r.lon, r.lat], zoom: Math.max(m.getZoom(), 5), duration: 1200, essential: true }); } }
+async function mettiQui() {
+  const mp = S.mp; if (!mp || !mp.map) return;
+  const c = mp.map.getCenter(), b = $('#mp-mira-ok'); b.disabled = true;
+  let r = { nome: '', lat: +c.lat.toFixed(6), lon: +((c.lng + 540) % 360 - 180).toFixed(6), cc: '', paese: '' };
+  try {
+    const d = await (await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${r.lat}&lon=${r.lon}&format=jsonv2&zoom=${Math.min(18, Math.max(5, Math.round(mp.map.getZoom())))}&addressdetails=1&accept-language=it`)).json();
+    const a = d.address || {};
+    r.nome = d.name || a.city || a.town || a.village || a.county || a.state || ''; r.cc = (a.country_code || '').toUpperCase(); r.paese = nomePaese(r.cc, a.country);
+  } catch (e) {}
+  b.disabled = false; $('#mp-mira').hidden = true;
+  formLuogo(r);
+}
+function formLuogo(l) {
+  const nuovo = !l.id, anni = []; for (let y = new Date().getFullYear() + 1; y >= 1990; y--) anni.push(y);
+  const pers = []; const metti = n => { if (n && !pers.some(x => same(x, n))) pers.push(n); };
+  metti(S.me); (S.people || []).filter(p => !p.banned).map(p => p.name).sort((a, b) => a.localeCompare(b)).forEach(metti); (l.chi || []).forEach(metti);
+  let chi = nuovo ? [S.me] : l.chi.slice();
+  // road trip: le tappe in ordine (si parte dal posto scelto)
+  const eraRt = eRoadTrip(l), col = coloreViaggio(l.id || 'nuovo');
+  let tappe = eraRt ? l.tappe.map(t => Object.assign({}, t)) : (isFinite(l.lat) && isFinite(l.lon) ? [{ nome: l.nome || 'Partenza', lat: l.lat, lon: l.lon, cc: l.cc || '', paese: l.paese || '' }] : []);
+  sheet(`<form id="lf" novalidate><h3>${nuovo ? '📍 Nuovo posto' : '✏️ Modifica'}</h3>
+    ${l.paese && !eraRt ? `<p class="muto" style="margin-top:-4px">${bandiera(l.cc)} ${esc(l.paese)}</p>` : ''}
+    <label class="check lf-rt"><input type="checkbox" name="rt" ${eraRt ? 'checked' : ''}> 🚗 È un road trip (più tappe)</label>
+    <label><span id="lf-nl">${eraRt ? 'Nome del viaggio' : 'Nome del posto'}</span><input name="n" maxlength="80" autocomplete="off" placeholder="es. Barcellona" value="${esc(l.nome || '')}"></label>
+    <div id="lf-tappe" ${eraRt ? '' : 'hidden'}><div class="grp-k" style="margin-top:4px">Tappe in ordine</div><ol class="lf-t" id="lf-tl"></ol>
+      <div class="row lf-add"><input id="lf-q" maxlength="80" autocomplete="off" enterkeyhint="search" placeholder="Aggiungi una tappa (es. Catania)"><button type="button" class="btn ghost sm" id="lf-cerca">Cerca</button></div>
+      <div class="cp-r" id="lf-r"></div></div>
+    <div class="lf-q"><label>Mese<select name="m"><option value="">—</option>${MESI.map((x, i) => `<option value="${i + 1}" ${l.mese === i + 1 ? 'selected' : ''}>${cap(x)}</option>`).join('')}</select></label>
+      <label>Anno<select name="a"><option value="">—</option>${anni.map(y => `<option ${l.anno === y ? 'selected' : ''}>${y}</option>`).join('')}</select></label></div>
+    <p class="hint" style="margin:-4px 0 6px">Quando ci siete stati (se non lo ricordi lascia “—”).</p>
+    <div class="grp-k">Chi c'era</div><div class="lf-chi" id="lf-chi"></div>
+    ${nuovo ? '<label class="check"><input type="checkbox" name="ann" checked> Annuncialo nelle Novità</label>' : ''}
+    <p class="err" hidden></p>
+    <div class="row end"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn" type="submit">${nuovo ? 'Metti sulla mappa' : 'Salva'}</button></div></form>`, (s, close) => {
+    const f = s.querySelector('#lf'), e = f.querySelector('.err'), box = s.querySelector('#lf-chi'), b = f.querySelector('[type=submit]');
+    const tl = s.querySelector('#lf-tl'), tq = s.querySelector('#lf-q'), tr = s.querySelector('#lf-r'); let tt, giro = 0;
+    const disegnaTappe = () => {
+      tl.innerHTML = tappe.map((t, i) => `<li><span class="mp-n" style="--c:${col}">${i + 1}</span><span class="tn">${bandiera(t.cc)} ${esc(t.nome)}</span>${i ? `<button type="button" class="icon" data-su="${i}" aria-label="Più su">↑</button>` : ''}${i < tappe.length - 1 ? `<button type="button" class="icon" data-giu="${i}" aria-label="Più giù">↓</button>` : ''}<button type="button" class="icon" data-via="${i}" aria-label="Togli la tappa">✕</button></li>`).join('')
+        || '<li class="muto" style="justify-content:center">Cerca qui sotto la prima tappa</li>';
+      tl.querySelectorAll('[data-su]').forEach(x => x.onclick = () => { const i = +x.dataset.su; [tappe[i - 1], tappe[i]] = [tappe[i], tappe[i - 1]]; disegnaTappe(); });
+      tl.querySelectorAll('[data-giu]').forEach(x => x.onclick = () => { const i = +x.dataset.giu; [tappe[i + 1], tappe[i]] = [tappe[i], tappe[i + 1]]; disegnaTappe(); });
+      tl.querySelectorAll('[data-via]').forEach(x => x.onclick = () => { tappe.splice(+x.dataset.via, 1); disegnaTappe(); });
+    };
+    const cercaTappa = async tutto => {
+      const q = tq.value.trim(), n = ++giro; if (q.length < 2) { tr.innerHTML = ''; return; }
+      tr.innerHTML = '<div class="loading">Cerco</div>';
+      const R = await cercaNomi(q, tutto); if (n !== giro) return;
+      // prima le più vicine all'ultima tappa ("Amalfi" dopo Positano è quella in Campania, non quella in Colombia)
+      const ult = tappe[tappe.length - 1]; if (ult) R.sort((a, b) => kmDritti(ult, a) - kmDritti(ult, b));
+      tr.innerHTML = R.length ? R.map((r, i) => `<button type="button" data-i="${i}"><span class="fl">${bandiera(r.cc) || '📍'}</span><span><b>${esc(r.nome)}</b><small>${esc(r.dove || r.paese)}</small></span></button>`).join('') : '<p class="muto">Non trovato: prova con un altro nome.</p>';
+      tr.querySelectorAll('[data-i]').forEach(x => x.onclick = () => {
+        if (tappe.length >= 30) return toast(msg(err('TAPPE_NON_VALIDE')), 'err');
+        const r = R[+x.dataset.i]; tappe.push({ nome: r.nome, lat: r.lat, lon: r.lon, cc: r.cc, paese: r.paese }); tq.value = ''; tr.innerHTML = ''; disegnaTappe();
+      });
+    };
+    tq.oninput = () => { clearTimeout(tt); tt = setTimeout(() => cercaTappa(false), 450); };
+    tq.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); clearTimeout(tt); cercaTappa(true); } };
+    s.querySelector('#lf-cerca').onclick = () => { clearTimeout(tt); cercaTappa(true); };
+    f.rt.onchange = () => {
+      s.querySelector('#lf-tappe').hidden = !f.rt.checked; s.querySelector('#lf-nl').textContent = f.rt.checked ? 'Nome del viaggio' : 'Nome del posto';
+      if (f.rt.checked && tappe.length && f.n.value.trim() === tappe[0].nome) { f.n.value = ''; f.n.placeholder = 'es. Road trip in Sicilia'; setTimeout(() => f.n.focus(), 50); }
+      disegnaTappe();
+    };
+    disegnaTappe();
+    const disegna = () => {
+      box.innerHTML = pers.map((n, i) => `<button type="button" class="chip ${chi.some(x => same(x, n)) ? 'on' : ''}" data-i="${i}" aria-pressed="${chi.some(x => same(x, n))}">${avatar(n, 'xs')}${esc(n)}</button>`).join('');
+      box.querySelectorAll('[data-i]').forEach(c => c.onclick = () => { const n = pers[+c.dataset.i]; chi = chi.some(x => same(x, n)) ? chi.filter(x => !same(x, n)) : chi.concat(n); disegna(); });
+    };
+    disegna();
+    if (!l.nome) setTimeout(() => f.n.focus(), 250);
+    f.onsubmit = async ev => {
+      ev.preventDefault(); e.hidden = true;
+      const nome = f.n.value.trim(), mese = f.m.value ? +f.m.value : null, anno = f.a.value ? +f.a.value : null, rt = f.rt.checked, testo = b.textContent;
+      try {
+        if (!nome) throw err('NOME_VUOTO');
+        if (mese && !anno) throw err('MESE_SENZA_ANNO');
+        if (rt && tappe.length < 2) throw err('TAPPE_POCHE');
+        if (!rt && !isFinite(l.lat) && !eraRt) throw err('POSTO_NON_VALIDO');
+        b.disabled = true; let id = l.id, viaggio = { p_tappe: null, p_percorso: null, p_km: null };
+        if (rt) {
+          const uguali = eraRt && JSON.stringify(tappe.map(t => [t.lat, t.lon])) === JSON.stringify(l.tappe.map(t => [t.lat, t.lon]));
+          b.textContent = 'Calcolo il tragitto…';
+          const trag = uguali ? { percorso: l.percorso, km: l.km } : await calcolaTragitto(tappe);
+          viaggio = { p_tappe: tappe.map(t => ({ nome: t.nome, lat: t.lat, lon: t.lon, cc: t.cc || '', paese: t.paese || '' })), p_percorso: trag.percorso || null, p_km: trag.km == null ? null : trag.km };
+        }
+        if (nuovo) {
+          const t0 = rt ? tappe[0] : l;
+          id = await rpc('luogo_add', Object.assign({ p_author: S.me, p_nome: nome, p_lat: t0.lat, p_lon: t0.lon, p_paese: t0.paese || '', p_cc: t0.cc || '', p_anno: anno, p_mese: mese, p_chi: chi }, viaggio));
+          if (f.ann.checked) {
+            const q = quandoLuogo({ anno, mese });
+            annuncia(rt ? `🚗 Nuovo road trip sulla Mappa pippegosa: ${nome}${q ? ' (' + q + ')' : ''}: ${tappe.map(t => t.nome).join(' → ')}${viaggio.p_km ? ', ' + viaggio.p_km + ' km' : ''}${chi.length ? ' con ' + chi.join(', ') : ''} 👉 ${linkLuogo(id)} #mappa`
+              : `📍 Nuovo posto sulla Mappa pippegosa: ${nome}${bandiera(l.cc) ? ' ' + bandiera(l.cc) : ''}${q ? ' (' + q + ')' : ''}${chi.length ? ' con ' + chi.join(', ') : ''} 👉 ${linkLuogo(id)} #mappa`);
+          }
+          toast(rt ? 'Road trip sulla mappa 🚗' : 'Messo sulla mappa 📍');
+        } else { await rpc('luogo_edit', Object.assign({ p_id: l.id, p_author: S.me, p_nome: nome, p_anno: anno, p_mese: mese, p_chi: chi }, viaggio)); toast('Salvato'); }
+        close(); await loadLuoghi(); if (cur().sec === 'mappa') selezionaLuogo(id);
+      } catch (ex) { e.textContent = msg(ex); e.hidden = false; } finally { b.disabled = false; b.textContent = testo; }
+    };
   });
 }
 
@@ -3447,11 +3958,17 @@ function guardaStorie(tutte, gi, opz = {}) {
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], luoghi: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
   const desc = (a, b) => a.created_at < b.created_at ? 1 : -1;
+  const tappePulite = T => {
+    if (T == null) return null; if (!Array.isArray(T) || T.length < 2 || T.length > 30) throw err('TAPPE_NON_VALIDE');
+    return T.map(x => { const nome = clean(x && x.nome, 80); if (!nome || !isFinite(x.lat) || !isFinite(x.lon) || Math.abs(x.lat) > 90 || Math.abs(x.lon) > 180) throw err('TAPPE_NON_VALIDE');
+      return { nome, lat: +x.lat, lon: +x.lon, cc: /^[A-Z]{2}$/i.test(x.cc || '') ? x.cc.toUpperCase() : '', paese: clean(x.paese, 60) }; });
+  };
+  const chiPulito = L => { const o = []; (L || []).map(x => clean(x, 30)).filter(Boolean).forEach(n => { if (!o.some(x => same(x, n))) o.push(n); }); return o.slice(0, 60); };
   const cuoriCom = id => D.clikes.filter(l => l.c === id).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(l => l.name);   // ❤️ a un commento
   const alfa = (x, y) => x.toLowerCase() < y.toLowerCase() ? -1 : 1;
   const fotoFinta = (i, emo, scritta, W = 900, H = 675, nome = 'foto') => {
@@ -3480,6 +3997,13 @@ function creaDemo() {
     ['Anna', 'like_foto', 'Sabato al mare (prova)', '', '#foto', 60 * 26], ['Luca', 'cuore_risposta', 'Chi viene al mare sabato?', 'Ci sto, porto le racchette 🏓', '#novita', 60 * 3], ['Giulia', 'like', 'Chi viene al mare sabato?', '', '#novita', 60 * 30]]
     .map(([chi, tipo, cosa, testo, url, min], i) => ({ id: i + 1, chi, tipo, cosa, testo, url, created_at: t(min) }));
   D.attViste = {};
+  // mappa di prova: qualche viaggio
+  [['Giulia', 'Barcellona', 41.3888, 2.159, 'ES', 2023, 8, ['Giulia', 'Marco', 'Sara']], ['Marco', 'Amsterdam', 52.374, 4.8897, 'NL', 2024, 4, ['Marco', 'Luca']],
+    ['Sara', 'Gardaland', 45.4544, 10.7139, 'IT', 2022, 6, ['Sara', 'Giulia', 'Luca', 'Anna']], ['Luca', 'New York', 40.7143, -74.006, 'US', 2025, 12, ['Luca', 'Marco']],
+    ['Anna', 'Cinque Terre', 44.127, 9.708, 'IT', 2021, null, ['Anna', 'Giulia']]]
+    .forEach(([author, nome, lat, lon, cc, anno, mese, chi], i) => D.luoghi.push({ id: uid(), author, nome, lat, lon, cc, paese: nomePaese(cc), anno, mese, chi, tappe: null, percorso: null, km: null, created_at: t(60 * 24 * (i + 2)) }));
+  { const tp = [['Palermo', 38.1157, 13.3615], ['Cefalù', 38.0389, 14.0228], ['Taormina', 37.8516, 15.2853], ['Catania', 37.5079, 15.0873], ['Siracusa', 37.0755, 15.2866]].map(([nome, lat, lon]) => ({ nome, lat, lon, cc: 'IT', paese: 'Italia' }));
+    D.luoghi.push({ id: uid(), author: 'Sara', nome: 'Sicilia on the road', lat: tp[0].lat, lon: tp[0].lon, cc: 'IT', paese: 'Italia', anno: 2024, mese: 8, chi: ['Sara', 'Luca', 'Giulia'], tappe: tp, percorso: null, km: 410, created_at: t(60 * 24) }); }
   // avvento di prova: risultati finti della casella 1 (si vedono dal 1° dicembre)
   [['Marco', 52, 300], ['Giulia', 47, 280], ['Sara', 47, 200], ['Luca', 33, 150]].forEach(([name, punteggio, min]) => D.avv.push({ giorno: 1, name, punteggio, created_at: t(min) }));
   // --- contenuti di esempio ---
@@ -3918,6 +4442,32 @@ function creaDemo() {
       togli(e, X); if (e.status === 'drawn') lettere(e);
       logga(e, `${e.organizer} ha tolto ${X.name}` + (cambiati === 1 ? ": è cambiato l'abbinamento di 1 persona" : cambiati === 2 ? ": è cambiato l'abbinamento di 2 persone" : ''));
       return { ok: true, cambiati };
+    },
+    luoghi_list: a => { need(a); return D.luoghi.slice().sort((x, y) => (y.anno || 0) - (x.anno || 0) || (y.mese || 0) - (x.mese || 0) || (x.created_at < y.created_at ? 1 : -1)).map(l => Object.assign({}, l, { chi: l.chi.slice() })); },
+    luogo_add: a => {
+      need(a); const nome = clean(a.p_nome, 80); if (!nome) throw err('NOME_VUOTO');
+      if (a.p_mese && !a.p_anno) throw err('MESE_SENZA_ANNO'); if (a.p_mese && (a.p_mese < 1 || a.p_mese > 12)) throw err('DATA_NON_VALIDA');
+      if (!isFinite(a.p_lat) || !isFinite(a.p_lon) || Math.abs(a.p_lat) > 90 || Math.abs(a.p_lon) > 180) throw err('POSTO_NON_VALIDO');
+      const id = uid(), cc = /^[A-Z]{2}$/i.test(a.p_cc || '') ? a.p_cc.toUpperCase() : '';
+      const tp = tappePulite(a.p_tappe), t0 = tp ? tp[0] : null;
+      D.luoghi.push({ id, author: clean(a.p_author, 30), nome, lat: t0 ? t0.lat : +a.p_lat, lon: t0 ? t0.lon : +a.p_lon, paese: t0 ? t0.paese : clean(a.p_paese, 60), cc: t0 ? t0.cc : cc, anno: a.p_anno || null, mese: a.p_mese || null, chi: chiPulito(a.p_chi),
+        tappe: tp, percorso: tp && Array.isArray(a.p_percorso) ? a.p_percorso : null, km: tp && a.p_km != null ? +a.p_km : null, created_at: t(0) }); return id;
+    },
+    luogo_edit: a => {
+      need(a); const l = D.luoghi.find(x => x.id === a.p_id); if (!l) throw err('LUOGO_SPARITO'); if (!same(l.author, clean(a.p_author, 30))) throw err('NON_AUTORIZZATO');
+      const nome = clean(a.p_nome, 80); if (!nome) throw err('NOME_VUOTO'); if (a.p_mese && !a.p_anno) throw err('MESE_SENZA_ANNO');
+      const tp = tappePulite(a.p_tappe);
+      Object.assign(l, { nome, anno: a.p_anno || null, mese: a.p_mese || null, chi: chiPulito(a.p_chi), tappe: tp, percorso: tp && Array.isArray(a.p_percorso) ? a.p_percorso : null, km: tp && a.p_km != null ? +a.p_km : null });
+      if (tp) Object.assign(l, { lat: tp[0].lat, lon: tp[0].lon, cc: tp[0].cc, paese: tp[0].paese }); return { ok: true };
+    },
+    luogo_cero: a => {
+      need(a); const n = clean(a.p_name, 30), l = D.luoghi.find(x => x.id === a.p_id); if (!l) throw err('LUOGO_SPARITO');
+      l.chi = chiPulito(l.chi.filter(x => !same(x, n)).concat(a.p_si === false ? [] : [n])); return { chi: l.chi.slice() };
+    },
+    luogo_del: a => {
+      need(a); const l = D.luoghi.find(x => x.id === a.p_id); if (!l) return { ok: true };
+      if (!same(l.author, clean(a.p_author, 30))) { if (!a.p_admin) throw err('NON_AUTORIZZATO'); const x = admG(a.p_admin); if (x) return { err: x }; }
+      D.luoghi = D.luoghi.filter(x => x !== l); return { ok: true };
     },
     ss_admin_check: a => { need(a); const x = admE(evt(a.p_event), a.p_admin_pin); return x ? { err: x } : { ok: true }; },
     ss_org_pin: a => {

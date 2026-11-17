@@ -805,6 +805,76 @@ ok(await marco.locator('.lab-r').count() === 0, 'Marco che prova a entrare nel l
 await ricky.click('[data-tab=novita]'); await ricky.waitForSelector('#feed .tw'); await marco.click('[data-tab=novita]'); await marco.waitForSelector('#feed .tw')
 await ricky.click('#on-btn'); await ricky.waitForSelector('#gruppo [data-adm-lock]'); await ricky.click('#gruppo [data-adm-lock]'); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
 
+// ---------------- MAPPA PIPPEGOSA ----------------
+// la ricerca dei posti è finta (Open-Meteo e OpenStreetMap), la cartina invece è quella vera
+const GEO = { results: [{ name: 'Parigi', latitude: 48.85341, longitude: 2.3488, country_code: 'FR', country: 'Francia', admin1: 'Île-de-France' }, { name: 'Parigi', latitude: -7.7, longitude: 108.5, country_code: 'ID', country: 'Indonesia', admin1: 'Giava' }] }
+const LIONE = { results: [{ name: 'Lione', latitude: 45.74846, longitude: 4.84671, country_code: 'FR', country: 'Francia', admin1: 'Alvernia-Rodano-Alpi' }] }
+for (const pg of [ricky, marco]) {
+  await pg.route('https://geocoding-api.open-meteo.com/**', r => r.fulfill({ json: /name=Lione/.test(r.request().url()) ? LIONE : GEO }))
+  await pg.route('https://nominatim.openstreetmap.org/**', r => r.fulfill({ json: /reverse/.test(r.request().url()) ? { name: 'Amsterdam', address: { city: 'Amsterdam', country: 'Nederland', country_code: 'nl' } } : [] }))
+}
+await vai(ricky, 'mappa'); await ricky.waitForSelector('#mp-list .empty')
+ok((await ricky.textContent('#mp-list')).includes('Ancora nessun posto'), 'mappa: all\'inizio nessun posto')
+await ricky.waitForFunction(() => S.mp && S.mp.pronta, null, { timeout: 45000 })
+ok(await ricky.evaluate(() => S.mp.map.getProjection().type === 'globe') && await ricky.locator('.mp-ctl [data-v=globo].on').count() === 1, 'la mappa vera si carica: pallamondo')
+await ricky.click('#mp-add'); await ricky.fill('#cp-q', 'Parigi'); await ricky.waitForSelector('#cp-r [data-i]')
+ok((await ricky.textContent('#cp-r [data-i] >> nth=0')).includes('Francia'), 'cerca "Parigi": prima la Parigi in Francia')
+await ricky.click('#cp-r [data-i] >> nth=0'); await ricky.waitForSelector('#lf')
+ok(await ricky.inputValue('#lf [name=n]') === 'Parigi' && (await ricky.textContent('#lf')).includes('Francia') && await ricky.locator('#lf-chi .chip.on').count() === 1, 'modulo: nome già scritto, paese, "chi c\'era" con Ricky già scelto')
+await ricky.selectOption('#lf [name=m]', '5'); await ricky.click('#lf [type=submit]')
+ok((await ricky.textContent('#lf .err')).includes('anche l’anno'), 'mese senza anno: avviso')
+await ricky.selectOption('#lf [name=a]', '2019'); await ricky.click('#lf-chi .chip:has-text("Marco")'); await ricky.click('#lf [type=submit]')
+await ricky.waitForSelector('#mp-card:not([hidden])'); await ricky.waitForSelector('.mp-pin.sel')
+ok((await ricky.textContent('#mp-card h3')).includes('Parigi 🇫🇷') && (await ricky.textContent('#mp-card')).includes('Maggio 2019') && (await ricky.textContent('#mp-card .mp-cchi')).includes('Marco'), 'Parigi sulla mappa: puntina, scheda con data e chi c\'era (Ricky e Marco)')
+ok((await ricky.$$eval('#mp-stat span', L => L.map(x => x.textContent).join('|'))) === '1 posto|1 paese|🇫🇷' && (await ricky.textContent('#mp-list')).includes('2019'), 'in alto "1 posto · 1 paese" con la bandierina, sotto l\'elenco per anno')
+await ricky.waitForTimeout(1600); await shot(ricky, '46-mappa-parigi')
+// cartina piatta
+await ricky.click('.mp-ctl [data-v=piatta]'); await ricky.waitForSelector('.mp-ctl [data-v=piatta].on')
+ok(await ricky.evaluate(() => S.mp.map.getProjection().type === 'mercator' && store.get('mpvista') === 'piatta'), 'passa alla cartina piatta (e il telefono se lo ricorda)')
+// col mirino sulla mappa
+await ricky.click('#mp-add'); await ricky.waitForSelector('#cp-mappa'); await ricky.click('#cp-mappa'); await ricky.waitForSelector('#mp-mira:not([hidden])')
+await ricky.evaluate(() => S.mp.map.jumpTo({ center: [4.8897, 52.374], zoom: 9 })); await ricky.click('#mp-mira-ok'); await ricky.waitForSelector('#lf')
+ok(await ricky.inputValue('#lf [name=n]') === 'Amsterdam' && (await ricky.textContent('#lf')).includes('Paesi Bassi'), 'col mirino: "Metti qui" trova il nome del posto e il paese (Paesi Bassi)')
+await ricky.click('#lf [name=ann]'); await ricky.click('#lf [type=submit]'); await ricky.waitForFunction(() => document.querySelectorAll('.mp-pin').length === 2)
+ok((await ricky.$$eval('#mp-stat span', L => L.map(x => x.textContent).join('|'))).startsWith('2 posti|2 paesi|'), 'due posti, due paesi')
+// Marco dall'annuncio nelle Novità
+await marco.evaluate(() => loadFeed()); await marco.waitForSelector('#feed .tw.k-mappa')
+ok((await marco.textContent('#feed .tw.k-mappa')).includes('Parigi') && (await marco.locator('#feed .tw.k-mappa').count()) === 1, 'nelle Novità l\'annuncio arancione #mappa di Parigi (Amsterdam senza annuncio)')
+const parigi = await ricky.evaluate(() => S.luoghi.find(l => l.nome === 'Parigi').id)
+await marco.evaluate(id => { location.hash = '#mappa/' + id }, parigi); await marco.waitForSelector('#mp-card:not([hidden])', { timeout: 45000 })
+ok((await marco.textContent('#mp-card h3')).includes('Parigi') && await marco.locator('#mpc-menu').count() === 0, 'Marco apre Parigi dal link: si vede la scheda (ma non può modificarla)')
+await marco.click('#mpc-io'); await marco.waitForFunction(() => document.querySelector('#mpc-io').textContent.includes('anch'))
+await marco.waitForFunction(() => Object.values(S.vq).every(q => !q.n))
+ok(await ricky.evaluate(async () => !(await rpc('luoghi_list')).find(l => l.nome === 'Parigi').chi.includes('Marco')), 'Marco: "Non c\'ero" (tolto anche nel database)')
+await marco.click('#mpc-io'); await marco.waitForFunction(() => document.querySelector('#mpc-io').textContent.includes('Non'))
+await marco.waitForFunction(() => Object.values(S.vq).every(q => !q.n))
+// filtro per persona
+await ricky.evaluate(() => loadLuoghi()); await ricky.waitForSelector('#mp-chi [data-f="Marco"]')
+await ricky.click('#mp-chi [data-f="Marco"]'); await ricky.waitForFunction(() => document.querySelectorAll('.mp-pin').length === 1)
+ok((await ricky.textContent('#mp-stat')).includes('di Marco') && await ricky.locator('#mp-list [data-l]').count() === 1, 'filtro "Marco": solo i posti dove c\'era Marco')
+await ricky.click('#mp-chi [data-f=""]'); await ricky.waitForFunction(() => document.querySelectorAll('.mp-pin').length === 2)
+// elimina (chi l'ha messo)
+await ricky.locator('#mp-list [data-l]:has-text("Amsterdam")').evaluate(b => b.click()); await ricky.waitForSelector('#mpc-menu'); await ricky.click('#mpc-menu')
+await ricky.click('.sheet [data-a=del]'); await ricky.click('.sheet [data-ok]'); await ricky.waitForFunction(() => document.querySelectorAll('.mp-pin').length === 1)
+ok(await ricky.locator('#mp-list [data-l]').count() === 1, 'Ricky elimina Amsterdam')
+// road trip: casella, tappe in ordine colorate, tragitto lungo le strade (servizio dei percorsi finto)
+await ricky.route('https://router.project-osrm.org/**', r => r.fulfill({ json: { code: 'Ok', routes: [{ distance: 465300, geometry: { type: 'LineString', coordinates: [[2.3488, 48.8534], [3.1, 47.9], [4.0, 46.6], [4.8467, 45.7485]] } }] } }))
+await ricky.click('#mp-add'); await ricky.fill('#cp-q', 'Parigi'); await ricky.waitForSelector('#cp-r [data-i]'); await ricky.click('#cp-r [data-i] >> nth=0'); await ricky.waitForSelector('#lf')
+await ricky.check('#lf [name=rt]'); await ricky.waitForSelector('#lf-tappe:not([hidden])')
+ok(await ricky.inputValue('#lf [name=n]') === '' && await ricky.locator('#lf-tl li').count() === 1 && (await ricky.textContent('#lf-tl')).includes('Parigi'), 'casella "road trip": compaiono le tappe (la prima è Parigi) e si scrive il nome del viaggio')
+await ricky.fill('#lf [name=n]', 'Francia on the road'); await ricky.click('#lf [name=ann]'); await ricky.click('#lf [type=submit]')
+ok((await ricky.textContent('#lf .err')).includes('almeno 2 tappe'), 'road trip con una tappa sola: avviso')
+await ricky.fill('#lf-q', 'Lione'); await ricky.waitForSelector('#lf-r [data-i]'); await ricky.click('#lf-r [data-i] >> nth=0')
+await ricky.waitForFunction(() => document.querySelectorAll('#lf-tl li').length === 2)
+await ricky.click('#lf [type=submit]'); await ricky.waitForSelector('#mp-card .mp-ct')
+ok((await ricky.textContent('#mp-card')).includes('Road trip · 2 tappe · 465 km') && (await ricky.textContent('#mp-card .mp-ct')).replace(/\s+/g, ' ').includes('1Parigi') && (await ricky.textContent('#mp-card .mp-ct')).includes('2Lione'), 'road trip sulla mappa: scheda con le tappe numerate e i km lungo le strade')
+await ricky.waitForFunction(() => S.mp.map.getLayer('viaggi') && S.mp.map.queryRenderedFeatures({ layers: ['viaggi'] }).length > 0, null, { timeout: 15000 })
+ok(await ricky.locator('.mp-tappa').count() === 2 && await ricky.evaluate(() => S.luoghi.find(l => l.tappe).percorso.length === 4), 'sulla mappa: 2 tappe numerate colorate e il tragitto disegnato lungo le strade')
+ok((await ricky.textContent('#mp-list')).includes('Road trip · 2 tappe · 465 km') && (await ricky.$$eval('#mp-stat span', L => L.map(x => x.textContent).join('|'))).startsWith('2 posti|1 paese|'), 'nell\'elenco "Road trip · 2 tappe · 465 km"; la Francia conta una volta sola')
+await ricky.waitForTimeout(1500); await shot(ricky, '47-road-trip')
+await ricky.click('[data-tab=novita]'); await ricky.waitForSelector('#feed .tw'); await marco.click('[data-tab=novita]'); await marco.waitForSelector('#feed .tw')
+ok(await ricky.evaluate(() => S.mp === null), 'uscendo dalla mappa la cartina viene chiusa (non resta accesa in sottofondo)')
+
 // blocchi colorati nelle Novità: post azzurro, evento verde, Secret Santa rosso, sondaggio giallo, foto viola
 await ricky.evaluate(() => loadFeed()); await ricky.waitForSelector('#feed .tw.k-santa')
 const tipi = await ricky.evaluate(() => Object.fromEntries(['post', 'evento', 'santa', 'sondaggio', 'foto'].map(k => {

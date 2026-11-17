@@ -662,10 +662,62 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
   for (const t of ['avvento_punti','avvento_fuori']) { await db.exec('set role anon'); let no = false; try { await db.query(`select * from ${t}`) } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no, `tabella ${t} chiusa alla chiave pubblica`) }
 }
 
+// MAPPA PIPPEGOSA: i posti dove siamo stati insieme
+{
+  const add = (a, nome, lat, lon, paese, cc, anno, mese, chi) => one('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,null,null,null)',[PW,a,nome,lat,lon,paese,cc,anno,mese,chi])
+  const lista = () => one('select luoghi_list($1)',[PW])
+  const bcn = await add('Ricky','  Barcellona  ',41.3874,2.1686,'Spagna','es',2023,8,['Ricky','Marco','marco','',' Sara '])
+  const ams = await add('Marco','Amsterdam',52.37,4.89,'Paesi Bassi','NL',2024,null,['Marco'])
+  const gar = await add('Sara','Gardaland',45.455,10.713,'Italia','IT',null,null,[])
+  let L = await lista()
+  const b = L.find(x=>x.id===bcn)
+  ok(L.length===3 && b.nome==='Barcellona' && b.cc==='ES' && b.paese==='Spagna' && b.anno===2023 && b.mese===8,'tre posti sulla mappa (nome pulito, codice del paese in maiuscolo, agosto 2023)')
+  ok(JSON.stringify(b.chi)==='["Ricky","Marco","Sara"]','chi c\'era: senza doppioni né vuoti ("marco" = "Marco")')
+  ok(L.map(x=>x.nome).join()==='Amsterdam,Barcellona,Gardaland','in ordine: i più recenti prima, quelli senza data in fondo')
+  ok((await err('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,null,null,null)',[PW,'Ricky','  ',1,1,'','',null,null,[]]))==='NOME_VUOTO','senza nome: rifiutato')
+  ok((await err('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,null,null,null)',[PW,'Ricky','Polo',95,1,'','',null,null,[]]))==='POSTO_NON_VALIDO','punto fuori dal mondo: rifiutato')
+  ok((await err('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,null,null,null)',[PW,'Ricky','X',1,1,'','',null,5,[]]))==='MESE_SENZA_ANNO' && (await err('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,null,null,null)',[PW,'Ricky','X',1,1,'','',2023,13,[]]))==='DATA_NON_VALIDA','mese senza anno o mese 13: rifiutato')
+  ok((await one('select luoghi_list($1)',[PW])).find(x=>x.id===gar).cc==='IT' && !!(await add('Ricky','Boh',0,0,'','xyz',null,null,null)),'codice paese strano: lasciato vuoto, chi c\'era vuoto va bene')
+  // c'ero anch'io
+  ok(JSON.stringify((await one('select luogo_cero($1,$2,$3,$4)',[PW,ams,'Giulia',true])).chi)==='["Marco","Giulia"]','Giulia: "C\'ero anch\'io"')
+  await one('select luogo_cero($1,$2,$3,$4)',[PW,ams,'giulia',true])
+  ok(JSON.stringify((await one('select luogo_cero($1,$2,$3,$4)',[PW,ams,'GIULIA',false])).chi)==='["Marco"]','…e "Non c\'ero": tolta (una volta sola anche se l\'aveva detto due volte)')
+  // modifica: solo chi l'ha messo
+  ok((await err('select luogo_edit($1,$2,$3,$4,$5,$6,$7,null,null,null)',[PW,bcn,'Marco','Barça',2023,8,['Marco']]))==='NON_AUTORIZZATO','Marco non può modificare il posto di Ricky')
+  await one('select luogo_edit($1,$2,$3,$4,$5,$6,$7,null,null,null)',[PW,bcn,'ricky','Barcellona 🏖️',2022,null,['Ricky','Luca']])
+  const b2 = (await lista()).find(x=>x.id===bcn)
+  ok(b2.nome==='Barcellona 🏖️' && b2.anno===2022 && b2.mese===null && JSON.stringify(b2.chi)==='["Ricky","Luca"]' && b2.lat===41.3874,'Ricky modifica nome, data e chi c\'era (il punto resta)')
+  // elimina: chi l'ha messo o l'amministratore
+  ok((await err('select luogo_del($1,$2,$3,$4)',[PW,bcn,'Marco',null]))==='NON_AUTORIZZATO' && (await one('select luogo_del($1,$2,$3,$4)',[PW,bcn,'Marco','0000'])).err==='PIN_ADMIN_ERRATO','Marco non può eliminarlo (né col PIN amministratore sbagliato)')
+  ok((await one('select luogo_del($1,$2,$3,$4)',[PW,gar,'Marco','4321'])).ok===true && (await one('select luogo_del($1,$2,$3,$4)',[PW,ams,'Marco',null])).ok===true,'l\'amministratore elimina Gardaland, Marco il suo Amsterdam')
+  ok((await lista()).length===2 && (await err('select luogo_cero($1,$2,$3,$4)',[PW,ams,'Luca',true]))==='LUOGO_SPARITO','posto eliminato: sparisce ("posto sparito")')
+  ok((await err('select luoghi_list($1)',['x']))==='PASSWORD_ERRATA' && (await err('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,null,null,null)',['x','Ricky','X',1,1,'','',null,null,[]]))==='PASSWORD_ERRATA','mappa protetta dalla password')
+  // road trip: tappe in ordine, tragitto e chilometri
+  const T = [{ nome: ' Palermo ', lat: 38.1157, lon: 13.3615, cc: 'it', paese: 'Italia' }, { nome: 'Catania', lat: 37.5079, lon: 15.0873, cc: 'IT', paese: 'Italia' }, { nome: 'Siracusa', lat: 37.0755, lon: 15.2866, cc: 'IT', paese: 'Italia', x: 'boh' }]
+  const rt = (tappe, perc, km) => one('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',[PW,'Luca','Sicilia on the road',0,0,'','',2024,8,['Luca','Sara'],tappe === undefined ? null : JSON.stringify(tappe),perc ? JSON.stringify(perc) : null,km])
+  const sic = await rt(T, [[13.36,38.11],[14.2,37.9],[15.08,37.5],[15.28,37.07]], 275)
+  const s1 = (await lista()).find(x=>x.id===sic)
+  ok(s1.tappe.length===3 && s1.tappe[0].nome==='Palermo' && s1.tappe[0].cc==='IT' && !('x' in s1.tappe[2]) && s1.lat===38.1157 && s1.cc==='IT' && s1.km===275 && s1.percorso.length===4,
+    'road trip: 3 tappe in ordine (ripulite), il punto è la prima tappa, tragitto e 275 km')
+  ok((await err('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',[PW,'Luca','X',0,0,'','',null,null,[],JSON.stringify([T[0]]),null,null]))==='TAPPE_NON_VALIDE','road trip con una tappa sola: rifiutato')
+  ok((await err('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',[PW,'Luca','X',0,0,'','',null,null,[],JSON.stringify([T[0], { nome: 'Luna', lat: 120, lon: 0 }]),null,null]))==='TAPPE_NON_VALIDE','tappa fuori dal mondo: rifiutata')
+  ok((await err('select luogo_add($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',[PW,'Luca','X',0,0,'','',null,null,[],JSON.stringify(T),JSON.stringify([[1,2],['a',3]]),null]))==='PERCORSO_NON_VALIDO','tragitto con punti strani: rifiutato')
+  const senza = await rt(T, null, null); const s2 = (await lista()).find(x=>x.id===senza)
+  ok(s2.percorso===null && s2.km===null && s2.tappe.length===3,'road trip senza tragitto (il sito tira linee dritte)')
+  await one('select luogo_edit($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[PW,sic,'Luca','Sicilia 2',2024,8,['Luca'],JSON.stringify(T.slice(1).concat(T[0])),null,300])
+  const s3 = (await lista()).find(x=>x.id===sic)
+  ok(s3.nome==='Sicilia 2' && s3.tappe[0].nome==='Catania' && s3.lat===37.5079 && s3.km===300 && s3.percorso===null,'Luca cambia l\'ordine delle tappe: il punto diventa la nuova prima tappa')
+  await one('select luogo_edit($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[PW,sic,'Luca','Catania',null,null,[],null,null,null])
+  const s4 = (await lista()).find(x=>x.id===sic)
+  ok(s4.tappe===null && s4.km===null && s4.lat===37.5079,'…e lo trasforma in un posto singolo (resta su Catania)')
+  await db.exec('set role anon'); let no = false; try { await db.query('select * from luoghi') } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') }
+  ok(no,'tabella luoghi chiusa alla chiave pubblica')
+}
+
 // ACCESSO PERSONALE: ognuno entra col suo PIN, e il database controlla CHI fa ogni azione
 {
   // ogni funzione che agisce a nome di qualcuno controlla l'identità (controllo sul testo di schema.sql)
-  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like']
+  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like','luogo_add','luogo_edit','luogo_cero','luogo_del']
   const senzaIo = AZIONI.filter(f => { const m = SCHEMA.match(new RegExp('create or replace function ' + f + '\\([\\s\\S]*?end \\$\\$;')); return !m || !/perform _io\(p_(name|author|organizer)\)/.test(m[0]) })
   ok(senzaIo.length === 0, `tutte le ${AZIONI.length} funzioni che agiscono a nome di qualcuno controllano chi sei` + (senzaIo.length ? ': mancano ' + senzaIo : ''))
   await db.exec(IO_VERO)   // da qui il controllo è quello vero

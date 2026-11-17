@@ -11,6 +11,8 @@ const db = await PGlite.create({ extensions: { pgcrypto } })
 await db.exec(`create role anon; create role authenticated;`)
 await db.exec(fs.readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'))
 await db.exec(`insert into app_config(k,v) values ('pw', extensions.crypt('x', extensions.gen_salt('bf')))`)
+// qui si prova solo la matematica del sorteggio: il controllo del PIN personale (_io) ha i suoi test in test-database.mjs
+await db.exec(`create or replace function _io(p_name text) returns void language sql as $$ select $$`)
 const one = async (sql, p = []) => Object.values((await db.query(sql, p)).rows[0])[0]
 let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log('❌', m) } else console.log('✅', m) }
 
