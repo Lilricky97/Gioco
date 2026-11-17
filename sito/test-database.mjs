@@ -563,6 +563,48 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
   for (const t of ['attivita','attivita_lette']) { await db.exec('set role anon'); let no = false; try { await db.query(`select * from ${t}`) } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no, `tabella ${t} chiusa alla chiave pubblica`) }
 }
 
+// CALENDARIO DELL'AVVENTO: un tentativo per casella, 5-4-3-2-1 punti, pari merito = chi ha iniziato prima
+{
+  const oggi = d => q(`create or replace function _avvento_oggi() returns date language sql stable as $$ select '${d}'::date $$`)
+  const inizia = (g, n) => one('select avvento_inizia($1,$2,$3)',[PW,g,n])
+  const gioca = (g, n, p) => one('select avvento_gioca($1,$2,$3,$4)',[PW,g,n,p])
+  const classifica = () => one('select avvento_classifica($1)',[PW])
+  await oggi('2026-11-20')
+  ok((await inizia(1,'Giulia')).err==='CASELLA_CHIUSA','il 20 novembre la casella 1 è chiusa anche per il database')
+  await oggi('2026-12-03')
+  ok((await inizia(4,'Giulia')).err==='CASELLA_CHIUSA' && (await inizia(3,'Giulia')).ok===true,'il 3 dicembre: la 4 è chiusa, la 3 si gioca')
+  await q('delete from avvento_punti where true')
+  ok((await inizia(1,'Giulia')).ok===true && (await inizia(1,'giulia')).err==='GIA_GIOCATO','un solo tentativo per casella (anche scrivendo il nome diverso)')
+  ok((await err('select avvento_gioca($1,$2,$3,$4)',[PW,1,'Giulia',151]))==='PUNTEGGIO_NON_VALIDO','risultato impossibile (più di 15 scatti al secondo) rifiutato')
+  ok((await gioca(1,'Giulia',40)).ok===true && (await gioca(1,'Giulia',45)).err==='GIA_GIOCATO','risultato salvato una volta sola')
+  ok((await gioca(1,'Paolo',30)).err==='TEMPO_SCADUTO','risultato senza aver iniziato: rifiutato')
+  for (const [n, p] of [['Marco',52],['Sara',40],['Luca',30],['Anna',25],['Paolo',20],['Fede',0]]) { await inizia(1,n); await gioca(1,n,p) }
+  await inizia(1,'Elena')   // inizia e chiude a metà
+  await q(`update avvento_punti set created_at = now() - interval '1 hour' where name = 'Giulia'`)
+  let c = await classifica(), g1 = c.giorni.filter(x=>x.giorno===1)
+  ok(g1.map(x=>`${x.name}:${x.punteggio}:${x.punti}`).join()==='Marco:52:5,Giulia:40:4,Sara:40:3,Luca:30:2,Anna:25:1,Paolo:20:0',
+    'casella 1: Marco 5 punti, Giulia 4 (pari con Sara ma ha giocato prima), Sara 3, Luca 2, Anna 1, Paolo 0; chi ha fatto 0 o non ha finito non è in classifica')
+  ok((await inizia(1,'Elena')).err==='GIA_GIOCATO','Elena aveva chiuso a metà: non può riprovare')
+  await inizia(2,'Luca'); await q(`update avvento_punti set created_at = now() - interval '5 minutes' where giorno = 2`)
+  ok((await gioca(2,'Luca',10)).err==='TEMPO_SCADUTO','risultato arrivato troppo tardi (più di 3 minuti): rifiutato')
+  await inizia(2,'Sara'); await gioca(2,'Sara',9)
+  c = await classifica()
+  ok(c.totale.find(x=>x.name==='Sara').punti===8 && c.totale.find(x=>x.name==='Sara').giochi===2,
+    'totale dei punti su più caselle (Sara: 3 + 5 = 8)')
+  ok(c.totale.map(x=>x.name+':'+x.punti).join()==='Sara:8,Marco:5,Giulia:4,Luca:2,Anna:1,Paolo:0','classifica generale ordinata per punti')
+  // l'amministratore non partecipa
+  await inizia(1,'Ricky'); await gioca(1,'Ricky',99)
+  ok((await classifica()).giorni.some(x=>x.name==='Ricky'),'(prima dell\'esclusione Ricky risultava primo)')
+  ok((await one('select avvento_fuori($1,$2,$3)',[PW,'4321','Ricky'])).ok===true,'l\'amministratore col suo PIN si toglie dalla classifica')
+  c = await classifica()
+  ok(!c.giorni.some(x=>x.name==='Ricky') && !c.totale.some(x=>x.name==='Ricky') && c.giorni.find(x=>x.giorno===1&&x.pos===1).name==='Marco','Ricky sparisce dalla classifica, Marco torna primo')
+  ok((await inizia(3,'RICKY')).err==='FUORI_CLASSIFICA','Ricky non può più giocare per la classifica (solo in prova)')
+  await oggi('2026-12-20')
+  ok((await inizia(5,'Anna')).err==='AVVENTO_FINITO','dopo il 19 dicembre non si gioca più')
+  ok((await err('select avvento_classifica($1)',['x']))==='PASSWORD_ERRATA' && (await err('select avvento_inizia($1,$2,$3)',['x',1,'Anna']))==='PASSWORD_ERRATA','avvento protetto dalla password')
+  for (const t of ['avvento_punti','avvento_fuori']) { await db.exec('set role anon'); let no = false; try { await db.query(`select * from ${t}`) } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no, `tabella ${t} chiusa alla chiave pubblica`) }
+}
+
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)
 for(let i=0;i<5;i++) await err('select member_kick($1,$2,$3,$4)',[PW,'0000','Luca',true])
 ok((await err('select member_kick($1,$2,$3,$4)',[PW,'4321','Luca',true]))==='PIN_BLOCCATO','5 PIN amministratore sbagliati: blocco di 15 minuti')

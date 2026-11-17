@@ -147,6 +147,13 @@ http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': f.type, 'Content-Length': f.buf.length }); return res.end(f.buf)
     }
 
+    // solo per i test: fa finta che oggi sia un altro giorno per il calendario dell'avvento ({giorno: "2026-12-01"}, vuoto = oggi vero)
+    if (p === '/__prova/oggi' && req.method === 'POST') {
+      const { giorno } = JSON.parse((await readBody(req)).toString() || '{}')
+      const d = /^\d{4}-\d{2}-\d{2}$/.test(giorno || '') ? `'${giorno}'::date` : `(now() at time zone 'Europe/Rome')::date`
+      await db.exec(`create or replace function _avvento_oggi() returns date language sql stable as $$ select ${d} $$`)
+      return send(res, 200, '{}')
+    }
     // statistiche per i test automatici
     if (p === '/__prova/stato') return send(res, 200, JSON.stringify({ files: [...files.keys()],
       push: (await db.query('select name, endpoint, kinds from push_subs order by name')).rows,

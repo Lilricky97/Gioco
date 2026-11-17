@@ -1887,6 +1887,106 @@ begin
   return vapid_get();
 end $$;
 
+-- ---------- CALENDARIO DELL'AVVENTO: giochini e classifica ----------
+-- La casella N si apre il N dicembre 2026 (ora italiana) e si gioca fino al 19 dicembre compreso.
+-- Un solo tentativo per persona e casella: "avvento_inizia" lo segna appena parte il gioco (chiudere a metà non
+-- permette di riprovare), "avvento_gioca" scrive il risultato. Per ogni casella: 5-4-3-2-1 punti ai primi 5,
+-- a pari risultato vince chi ha iniziato prima. L'amministratore non partecipa (tabella avvento_fuori).
+create table if not exists avvento_punti (
+  giorno int not null check (giorno between 1 and 19),
+  name text not null,
+  punteggio int,                                  -- risultato del giochino (es. foto scattate); null = iniziato e mai finito
+  created_at timestamptz not null default now(),  -- quando ha iniziato (serve per i pari merito)
+  finito_at timestamptz,
+  primary key (giorno, name)
+);
+create unique index if not exists avvento_punti_nome on avvento_punti(giorno, _nome_chiave(name));
+create table if not exists avvento_fuori (        -- chi non partecipa alla classifica (l'amministratore)
+  chiave text primary key                         -- nome di confronto (_nome_chiave)
+);
+alter table avvento_punti enable row level security;
+alter table avvento_fuori enable row level security;
+
+create or replace function _avvento_oggi() returns date
+language sql stable set search_path = public, extensions as $$ select (now() at time zone 'Europe/Rome')::date $$;
+
+-- tetto di ogni giochino, contro i risultati impossibili (casella 1: 15 scatti al secondo per 10 secondi)
+create or replace function _avvento_max(p_giorno int) returns int
+language sql immutable as $$ select case p_giorno when 1 then 150 else 100000 end $$;
+
+create or replace function _avvento_aperta(p_giorno int, p_name text) returns text
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  if p_giorno is null or p_giorno not between 1 and 19 then return 'CASELLA_NON_VALIDA'; end if;
+  if _avvento_oggi() < make_date(2026, 12, p_giorno) then return 'CASELLA_CHIUSA'; end if;
+  if _avvento_oggi() > make_date(2026, 12, 19) then return 'AVVENTO_FINITO'; end if;
+  if exists (select 1 from avvento_fuori where chiave = _nome_chiave(p_name)) then return 'FUORI_CLASSIFICA'; end if;
+  return null;
+end $$;
+
+create or replace function avvento_inizia(p_pw text, p_giorno int, p_name text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); x text;
+begin
+  perform _need(p_pw);
+  if n = '' or _nome_chiave(n) = '' then raise exception 'NOME_VUOTO'; end if;
+  x := _avvento_aperta(p_giorno, n);
+  if x is not null then return json_build_object('err', x); end if;
+  insert into avvento_punti(giorno, name) values (p_giorno, n) on conflict do nothing;
+  if not found then return json_build_object('err', 'GIA_GIOCATO'); end if;
+  return json_build_object('ok', true);
+end $$;
+
+create or replace function avvento_gioca(p_pw text, p_giorno int, p_name text, p_punteggio int) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30);
+begin
+  perform _need(p_pw);
+  if p_punteggio is null or p_punteggio < 0 or p_punteggio > _avvento_max(p_giorno) then raise exception 'PUNTEGGIO_NON_VALIDO'; end if;
+  update avvento_punti set punteggio = p_punteggio, finito_at = now()
+  where giorno = p_giorno and _nome_chiave(name) = _nome_chiave(n) and punteggio is null and created_at > now() - interval '3 minutes';
+  if not found then
+    if exists (select 1 from avvento_punti where giorno = p_giorno and _nome_chiave(name) = _nome_chiave(n) and punteggio is not null) then
+      return json_build_object('err', 'GIA_GIOCATO');
+    end if;
+    return json_build_object('err', 'TEMPO_SCADUTO');
+  end if;
+  return json_build_object('ok', true);
+end $$;
+
+-- classifica: per ogni casella la graduatoria (solo i risultati finiti e più di 0), e il totale dei punti
+create or replace function avvento_classifica(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return (with r as (
+      select p.giorno, p.name, p.punteggio, p.created_at,
+        row_number() over (partition by p.giorno order by p.punteggio desc, p.created_at, p.name) as pos
+      from avvento_punti p
+      where p.punteggio > 0 and not exists (select 1 from avvento_fuori f where f.chiave = _nome_chiave(p.name))),
+    pt as (select r.*, case when pos <= 5 then 6 - pos else 0 end as punti from r),
+    tot as (select min(name) as name, sum(punti)::int as punti, count(*)::int as giochi,
+              count(*) filter (where pos = 1)::int as primi, min(created_at) as primo
+            from pt group by _nome_chiave(name))
+    select json_build_object('oggi', _avvento_oggi(),
+      'giorni', coalesce((select json_agg(json_build_object('giorno', giorno, 'name', name, 'punteggio', punteggio, 'pos', pos, 'punti', punti, 'at', created_at) order by giorno, pos) from pt), '[]'::json),
+      'totale', coalesce((select json_agg(json_build_object('name', name, 'punti', punti, 'giochi', giochi, 'primi', primi) order by punti desc, primi desc, primo) from tot), '[]'::json),
+      'giocati', coalesce((select json_agg(json_build_object('giorno', giorno, 'name', name, 'finito', punteggio is not null)) from avvento_punti), '[]'::json)));
+end $$;
+
+-- l'amministratore (col suo PIN) si toglie dalla classifica: i suoi eventuali risultati non contano
+create or replace function avvento_fuori(p_pw text, p_admin text, p_name text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text; k text := _nome_chiave(p_name);
+begin
+  perform _need(p_pw);
+  x := _admin_try(p_admin);
+  if x is not null then return json_build_object('err', x); end if;
+  if k = '' then raise exception 'NOME_VUOTO'; end if;
+  insert into avvento_fuori(chiave) values (k) on conflict do nothing;
+  return json_build_object('ok', true);
+end $$;
+
 -- ---------- CAMPANELLA: le interazioni degli altri con le tue cose ----------
 -- Le riempiono i trigger qui sotto. Ognuno vede solo le sue (dest). Dopo 7 giorni si cancellano da sole.
 -- Se la cosa viene annullata (mi piace tolto, commento cancellato, post eliminato) l'attività sparisce.
@@ -2077,16 +2177,17 @@ grant execute on function check_pw, members_list, member_add, presenza, avatars_
   ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin,
   ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer,
   events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
-  event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste to anon, authenticated;
+  event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste,
+  avvento_inizia, avvento_gioca, avvento_classifica, avvento_fuori to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto from anon, authenticated;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _avvento_oggi, _avvento_max, _avvento_aperta from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto from public;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _avvento_oggi, _avvento_max, _avvento_aperta from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin

@@ -389,6 +389,26 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .att-dot{flex:none;width:9px;height:9px;margin-top:7px;border-radius:50%;background:var(--giallo);box-shadow:0 0 8px var(--giallo)}
 @media (prefers-reduced-motion:reduce){.bell.dlin .ico{animation:none}}
 .on-btn span{font-weight:500;color:var(--muto)}
+.on-btn{padding:7px 10px}
+.mini-cal{position:relative;flex:none;width:34px;height:36px;border-radius:7px;border:1.5px solid rgba(70,245,192,.55);background:rgba(70,245,192,.05);color:var(--testo);cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:center;overflow:hidden;box-shadow:0 0 10px -4px var(--menta-g)}
+.mc-m{display:block;width:100%;background:var(--rosa);color:#fff;font:800 8.5px/12px Archivo,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.mc-d{font:400 19px/22px "Bebas Neue",sans-serif;color:var(--menta)}
+.mc-dot{position:absolute;right:-1px;top:9px;width:9px;height:9px;border-radius:50%;background:var(--giallo);box-shadow:0 0 8px var(--giallo);border:1.5px solid var(--notte2)}
+.mc-dot[hidden]{display:none}
+.pross h3{margin-top:0}
+#pross-l{max-height:60vh;overflow:auto;margin:6px -4px 0;padding:0 4px}
+.pr-e{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0 0 8px;color:var(--testo);cursor:pointer;font:inherit}
+.pr-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.3}
+.pr-b>b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-b>small{color:var(--muto);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-cd{display:flex;align-items:baseline;gap:3px;flex-wrap:wrap;margin-top:2px}
+.pr-cd b{font:400 22px/1 "Bebas Neue",sans-serif;color:var(--menta);text-shadow:0 0 8px var(--menta-g);font-variant-numeric:tabular-nums}
+.pr-cd i{font-style:normal;color:var(--muto);font-size:12px;margin-right:4px}
+.pr-cd .cd-t{color:var(--muto);font-size:12.5px;margin-right:2px}
+.pr-cd .cd-ora{font:800 15px Archivo,sans-serif;color:var(--giallo);text-shadow:none}
+.pr-v{display:flex;flex-direction:column;align-items:flex-start;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.pr-v .link{padding:6px 0;color:var(--testo);text-decoration:none}
+.avv-chiudi[hidden]{display:none}
 @media (max-width:419px){.on-btn span{display:none}.me b{display:none}.me{padding:3px}}
 .grp-k{display:flex;align-items:center;gap:8px;margin:16px 0 4px;font-weight:700;color:var(--muto);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
 .prs{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(39,51,104,.5)}
@@ -480,6 +500,11 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .mz-not{margin-top:8px;background:rgba(255,216,107,.05);border-color:rgba(255,216,107,.3)}
 .mz-not svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--giallo);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mz-not b{color:var(--giallo)}
+.mz-adm{margin-top:8px;background:rgba(255,62,165,.05);border-color:rgba(255,62,165,.3)}
+.mz-adm svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--rosa);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mz-adm b{color:var(--rosa)}
+.pin-adm{display:block;margin:-6px 0 14px;padding:6px 0;text-align:left}
+.pin-come{margin:-6px 0 14px}
 .notif-k{display:flex;flex-direction:column;gap:2px;margin:6px 0 4px}
 .notif-k .check{margin-top:10px}
 .mz-rel{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;background:none;border:0;padding:12px;color:var(--muto);font:600 14px Archivo,sans-serif;cursor:pointer}
@@ -636,6 +661,50 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .avv-test{margin:0 0 12px;padding:6px 10px;border-radius:6px;background:repeating-linear-gradient(-45deg,rgba(255,216,107,.18) 0 10px,rgba(255,216,107,.07) 10px 20px);border:1px solid rgba(255,216,107,.5);color:var(--giallo);font:800 11.5px/1.4 Archivo,sans-serif;letter-spacing:.06em}
 .lab-in{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;cursor:pointer;color:var(--testo);border-color:rgba(255,216,107,.45);background:linear-gradient(100deg,rgba(255,216,107,.1),transparent 70%),var(--card)}
 .lab-in span{font-size:22px}.lab-in b{font-size:17px;color:var(--giallo)}.lab-in small{color:var(--muto)}
+.lab-link{display:block;margin:4px auto 20px;background:none;border:0;color:var(--muto2);font:600 13.5px Archivo,sans-serif;cursor:pointer;padding:10px}
+.lab-pin input{margin:4px 0 0}.lab-pin .btn{margin-top:14px}
+.lab-r.pronto{border-color:rgba(70,245,192,.45)}
+.avv-c.fatta .avv-o::after{content:" ✓"}
+.avv-reg{font-size:16px;line-height:1.45;margin:4px 0 6px}
+.avv-ris{display:flex;flex-direction:column;align-items:center;gap:2px;margin:6px 0 14px;padding:14px;border-radius:8px;border:1px solid rgba(70,245,192,.45);background:rgba(70,245,192,.06)}
+.avv-ris span{color:var(--muto);font-size:13px;text-transform:uppercase;letter-spacing:.1em}
+.avv-ris b{font:400 44px/1 "Bebas Neue",sans-serif;color:#effff9;text-shadow:0 0 12px var(--menta)}
+.avv-ris small{color:var(--muto);font-size:14px}.avv-ris small b{font:inherit;color:var(--menta);text-shadow:none}
+.avv-gr{text-align:left}.avv-gr h4{margin:4px 0 6px;font-size:15px}
+.avv-gr-r{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line)}
+.avv-gr-r:last-of-type{border-bottom:0}
+.avv-gr-r.io{background:rgba(255,216,107,.08);border-radius:6px}
+.avv-gr-r .pos{flex:none;width:30px;text-align:center;font:400 20px/1 "Bebas Neue",sans-serif;color:var(--giallo)}
+.avv-gr-r .nm{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;flex-direction:column;line-height:1.25}
+.avv-gr-r .nm small{font-weight:500;color:var(--muto2);font-size:12px}
+.avv-gr-r .ris{color:var(--muto);font-size:14px;white-space:nowrap}
+.avv-gr-r .pt{flex:none;min-width:44px;text-align:right;color:var(--menta);white-space:nowrap}
+/* fotocamera (casella 1) */
+.fotocam{display:flex;flex-direction:column;align-items:center;gap:12px;user-select:none;-webkit-user-select:none}
+.avv-s.in-gioco .avv-s-n{display:none}.avv-s.in-gioco h3{margin:0 0 8px}
+.cam-vf{position:relative;width:100%;max-width:340px;aspect-ratio:4/5;max-height:min(46vh,calc(88dvh - 300px));border-radius:12px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#2b3566,#0a0f24 75%);box-shadow:0 0 0 2px #000,0 0 0 4px #333}
+.cam-sogg{position:absolute;left:50%;top:50%;width:52%;aspect-ratio:1;margin:-26% 0 0 -26%;display:flex;flex-direction:column;align-items:center;transition:transform .12s ease-out}
+.cam-sogg img{width:100%;height:100%;object-fit:cover;border-radius:50%;box-shadow:0 0 0 3px #fff,0 0 24px rgba(255,62,165,.6)}
+.cam-sil{font-size:clamp(70px,22vw,110px);line-height:1}
+.cam-sogg b{margin-top:6px;font:400 22px/1 "Bebas Neue",sans-serif;letter-spacing:.12em;color:#fff;text-shadow:0 0 8px var(--rosa)}
+.cam-ang{position:absolute;inset:12px;pointer-events:none;background:
+  linear-gradient(#fff,#fff) top left/22px 2px,linear-gradient(#fff,#fff) top left/2px 22px,linear-gradient(#fff,#fff) top right/22px 2px,linear-gradient(#fff,#fff) top right/2px 22px,
+  linear-gradient(#fff,#fff) bottom left/22px 2px,linear-gradient(#fff,#fff) bottom left/2px 22px,linear-gradient(#fff,#fff) bottom right/22px 2px,linear-gradient(#fff,#fff) bottom right/2px 22px;background-repeat:no-repeat;opacity:.85}
+.cam-chi{position:absolute;left:18px;bottom:16px;font:700 13px Archivo,sans-serif;color:#fff;opacity:.9}
+.cam-rec{position:absolute;left:18px;top:16px;font:700 13px Archivo,sans-serif;color:#ff4d5e}
+.cam-rec b{color:#fff;margin-left:4px}
+.cam-n{position:absolute;right:18px;top:12px;font:400 34px/1 "Bebas Neue",sans-serif;color:var(--giallo);text-shadow:0 0 10px rgba(255,216,107,.7)}
+.cam-cd{position:absolute;inset:0;display:none;place-items:center;font:400 96px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 22px var(--rosa);background:rgba(0,0,0,.35)}
+.cam-cd.on{display:grid}
+.cam-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.cam-flash.on{animation:flash .22s ease-out}
+@keyframes flash{0%{opacity:.85}100%{opacity:0}}
+.cam-vf.fine .cam-sogg{filter:grayscale(.6)}
+.cam-bar{width:100%;max-width:340px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.cam-bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--rosa),var(--giallo));box-shadow:0 0 8px var(--rosa)}
+.cam-scatta{width:84px;height:84px;border-radius:50%;border:5px solid #fff;background:radial-gradient(circle,#fff 0 52%,transparent 54%),#ff3ea5;box-shadow:0 0 0 3px #ff3ea5,0 0 26px var(--rosa-g);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.cam-scatta:active{transform:scale(.93)}
+.cam-scatta[disabled]{opacity:.4}
 .lab{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .lab-r{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .lab-n{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:6px;font:400 26px/1 "Bebas Neue",sans-serif;color:#fff;
@@ -698,11 +767,19 @@ const MSG = {
   ADMIN_NON_IMPOSTATO: 'Il PIN amministratore non è ancora stato impostato (lo fa Ricky da Supabase).',
   PASSWORD_PROVA: 'Il sito è ancora in modalità prova, quindi per ora la password è "prova". La password vera del gruppo funzionerà appena il sito è collegato al database.',
   NOME_VUOTO: 'Scrivi un nome.',
+  CASELLA_CHIUSA: 'Questa casella non è ancora aperta.',
+  CASELLA_NON_VALIDA: 'Casella non valida.',
+  AVVENTO_FINITO: 'Il calendario dell\'avvento è finito: non si gioca più.',
+  FUORI_CLASSIFICA: 'Sei l\'amministratore: non partecipi alla classifica. I giochini li provi dal Laboratorio.',
+  GIA_GIOCATO: 'Hai già giocato questa casella: c\'è un solo tentativo.',
+  TEMPO_SCADUTO: 'Il risultato è arrivato troppo tardi e non è stato salvato.',
+  PUNTEGGIO_NON_VALIDO: 'Risultato non valido.',
   POST_VUOTO: 'Scrivi qualcosa o aggiungi una foto 🙂',
   ALBUM_NON_VUOTO: 'La cartella ha ancora delle foto: prima eliminale.',
   PIN_NON_VALIDO: 'Il PIN deve avere da 4 a 8 cifre (solo numeri).',
   PIN_DIVERSI: 'I due PIN non coincidono.',
   PIN_ERRATO: 'PIN sbagliato.',
+  ADMIN_BLOCCATO: 'Troppi PIN amministratore sbagliati: è bloccato per 15 minuti, poi riprova.',
   PIN_BLOCCATO: 'Troppi PIN sbagliati: per sicurezza è bloccato per 15 minuti. Se l\'hai dimenticato chiedi un nuovo PIN all\'organizzatore.',
   CHIEDI_ORGANIZZATORE: 'Il sorteggio è già fatto: per uscire chiedi all\'organizzatore di toglierti.',
   RITARDATARIO_IMPOSSIBILE: 'Con le coppie e le esclusioni attuali non si riesce a farlo entrare senza rifare il sorteggio.',
@@ -1086,12 +1163,13 @@ const ICO_RICARICA = svg('<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"
 const ICO_CAMPANA = svg('<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>');
 function start() {
   $('#app').innerHTML = `<header class="top"><div class="top-l"><button class="menu-btn" id="menu-btn" aria-label="Zone del sito">${ICO_MENU}</button><button class="logo" data-go="#novita">${insegna()}</button></div>
-    <div class="top-r"><button class="bell" id="bell-btn" hidden aria-label="Attività"><span class="ico">${ICO_CAMPANA}</span><b class="bell-n" hidden></b></button><button class="on-btn" id="on-btn" hidden aria-label="Chi è online"><i class="dot"></i><b>0</b><span>online</span></button></div></header>
+    <div class="top-r"><button class="mini-cal" id="cal-btn" aria-label="Prossimi eventi"><span class="mc-m"></span><b class="mc-d"></b><i class="mc-dot" hidden></i></button><button class="bell" id="bell-btn" hidden aria-label="Attività"><span class="ico">${ICO_CAMPANA}</span><b class="bell-n" hidden></b></button><button class="on-btn" id="on-btn" hidden aria-label="Chi è online"><i class="dot"></i><b>0</b></button></div></header>
     ${DEMO ? '<div class="demo-bar">🧪 MODALITÀ PROVA · dati finti, si azzerano se ricarichi</div>' : ''}
     <main class="view" id="view"></main>
     <nav class="tabs">${BARRA.map(id => zona(id)).map(t => `<button data-go="#${t.id}" data-tab="${t.id}" aria-label="${t.t}" title="${t.t}"><span class="ico">${t.ico}</span></button>`).join('')}</nav>`;
   $('#on-btn').onclick = apriGruppo;
   $('#bell-btn').onclick = apriAttivita;
+  $('#cal-btn').onclick = apriProssimi; drawMiniCal();
   $('#menu-btn').onclick = apriMenu;
   clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); if ($('#st-hub')) loadStorie(); } }, 45000);
   route(); ping(); rinnovaNotifiche(); puliziaFoto();
@@ -1118,6 +1196,7 @@ function apriMenu() {
     <div class="mz-grid">${ZONE.filter(z => z.menu !== false).map(z => `<button class="mz-z ${z.id === attiva ? 'on' : ''}" data-zona="${z.id}"><span class="ico">${z.ico}</span><b>${esc(z.t)}</b><small>${esc(z.d)}</small></button>`).join('')}</div>
     <button class="mz-grp" data-a="gruppo"><i class="dot"></i><span>Chi c'è nel gruppo</span>${S.people ? `<b>${on} online</b>` : ''}</button>
     <button class="mz-grp mz-not" data-a="notifiche">${ICO_CAMPANA}<span>Notifiche</span><b>${notifAttive() ? 'attive' : 'spente'}</b></button>
+    <button class="mz-grp mz-adm" data-a="admin">${ICO_CHIAVE}<span>Amministratore</span><b>${adminPin() ? 'sbloccato' : 'bloccato'}</b></button>
     <button class="mz-rel" data-a="ricarica">${ICO_RICARICA}<span>Ricarica il sito</span></button>
   </nav>`;
   document.body.appendChild(ov); document.body.classList.add('noscroll');
@@ -1131,6 +1210,7 @@ function apriMenu() {
   ov.querySelector('[data-a=foto]').onclick = () => { chiudi(); setTimeout(apriFoto, 220); };
   ov.querySelector('[data-a=ricarica]').onclick = () => location.reload();
   ov.querySelector('[data-a=notifiche]').onclick = () => { chiudi(); setTimeout(apriNotifiche, 220); };
+  ov.querySelector('[data-a=admin]').onclick = () => { chiudi(); setTimeout(() => adminPin() ? apriAdminAttivo() : chiediAdmin(route), 220); };
   ov.querySelector('[data-a=esci]').onclick = () => { chiudi(); logout(); };
 }
 function route() {
@@ -1377,7 +1457,10 @@ function drawFeed() {
 function viewPin() {
   S.lastFeed = '#pin';
   $('#view').innerHTML = `<h1 class="neon">In evidenza</h1><p class="pin-intro">I post più importanti del gruppo (al massimo 5).</p>
+    ${adminPin() ? '<p class="hint pin-come">🔑 Sei l\'amministratore: per <b>metterne</b> uno tocca la puntina sotto il post nelle Novità; per <b>toglierlo</b> tocca la puntina qui sotto.</p>'
+      : '<button class="link pin-adm" id="pin-adm">🔑 Sei l\'amministratore? Sblocca per mettere o togliere i post in evidenza</button>'}
     <section class="card xfeed kfeed" id="pinfeed"><div class="loading">Carico</div></section>`;
+  const pa = $('#pin-adm'); if (pa) pa.onclick = () => chiediAdmin(viewPin);
   if (S.feed) drawPin();
   S.refresh = loadFeed; loadFeed();
 }
@@ -1388,6 +1471,33 @@ function drawPin() {
   el.innerHTML = L.length ? L.map(p => tweetHTML(p)).join('')
     : `<div class="empty">Ancora nessun post in evidenza.<br><span class="muto">Li sceglie l'amministratore con la puntina sotto i post.</span></div>`;
   wireTweets(el);
+}
+// ---------- amministratore: si sblocca col PIN (dal menu ☰ → Amministratore, dalla puntina, dal Laboratorio o da "Chi c'è nel gruppo") ----------
+const ICO_CHIAVE = svg('<circle cx="8" cy="15.5" r="4"/><path d="M11 12.5 19.5 4M16.2 7.3l2.6 2.6M13.8 9.7l2 2"/>');
+async function sbloccaAdmin(pin) {
+  let r;
+  try { r = await rpc('admin_check', { p_admin: pin }); }
+  catch (e) { throw err(e.message === 'PIN_BLOCCATO' ? 'ADMIN_BLOCCATO' : e.message); }
+  if (!r.set) throw err('ADMIN_NON_IMPOSTATO'); if (!r.ok) throw err('PIN_ADMIN_ERRATO');
+  store.set('admin', pin);
+}
+function chiediAdmin(dopo) {
+  sheet(`<h3>🔑 Amministratore</h3><p class="muto">Scrivi il tuo PIN amministratore: potrai mettere i post in evidenza, entrare nel Laboratorio dei giochi e gestire il gruppo.</p>
+    <form id="adm-q" novalidate><input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN amministratore"><p class="err" hidden></p>
+    <div class="row end" style="margin-top:14px"><button class="btn ghost" type="button" data-close>Annulla</button><button class="btn" type="submit">Sblocca</button></div></form>`, (s, close) => {
+    const f = s.querySelector('#adm-q'); setTimeout(() => f.p.focus(), 250);
+    f.onsubmit = async e => {
+      e.preventDefault(); const er = f.querySelector('.err'); er.hidden = true;
+      try { await sbloccaAdmin(f.p.value.trim()); close(); toast('Amministratore sbloccato 🔑'); if (dopo) dopo(); }
+      catch (ex) { er.textContent = msg(ex); er.hidden = false; }
+    };
+  });
+}
+function apriAdminAttivo() {
+  sheet(`<h3>🔑 Amministratore sbloccato</h3><p class="muto">Su questo telefono puoi mettere e togliere i post in evidenza (la puntina sotto i post), entrare nel Laboratorio dei giochi e gestire il gruppo.</p>
+    <div class="row end"><button class="btn ghost rosso" id="adm-blocca">Blocca</button><button class="btn" data-close>Ok</button></div>`, (s, close) => {
+    s.querySelector('#adm-blocca').onclick = () => { store.del('admin'); close(); toast('Amministratore bloccato'); route(); };
+  });
 }
 // mette o toglie un post da "In evidenza": solo l'amministratore (PIN)
 async function fissaPost(id) {
@@ -1801,12 +1911,15 @@ function newSS(prev) {
     } });
 }
 // chi sono io in questo evento (nome + PIN salvati su questo telefono)
+// il PIN ricordato sul telefono vale SOLO per chi è entrato nel sito con lo stesso nome: se sul telefono qualcuno
+// entra con un altro nome ("Cambia nome"), per vedere il sorteggio deve rimettere il PIN
 function getMine(ev) {
   const m = S.mine[ev.id] || store.get('ssme_' + ev.id); if (!m) return null;
+  if (!stessaPersona(m.sito || m.name, S.me) && !stessaPersona(m.name, S.me)) return null;
   const att = ev.pending || [], n = ev.people.find(x => same(x, m.name)) || att.find(x => same(x, m.name));
   return n ? Object.assign({}, m, { name: n, pending: !ev.people.some(x => same(x, m.name)) }) : null;
 }
-function setMine(id, m, ricorda) { S.mine[id] = m; if (ricorda) store.set('ssme_' + id, m); else store.del('ssme_' + id); }
+function setMine(id, m, ricorda) { m = Object.assign({ sito: S.me }, m); S.mine[id] = m; if (ricorda) store.set('ssme_' + id, m); else store.del('ssme_' + id); }
 function forgetMine(id) { delete S.mine[id]; store.del('ssme_' + id); delete S.ui.rev[id]; delete S.ui.me[id]; delete S.ui.qa[id]; }
 async function caricaMe(id, mine) {
   if (S.ui.meLoad[id]) return; S.ui.meLoad[id] = true;
@@ -2203,6 +2316,7 @@ async function loadEventi() {
     const c = cur();
     if (c.sec === 'calendario' && !c.arg) { drawCal(); drawEvList(); }
     if (c.sec === 'novita') drawOggi();
+    drawMiniCal();
   } catch (e) {
     if (e.message === 'NO_DB') S.noEv = true;
     const el = $('#ev-list'); if (el && !S.ev) el.innerHTML = errBox(e);
@@ -2254,6 +2368,43 @@ function drawEvList() {
   const ps = $('#ev-pass'); if (ps) ps.onclick = () => { st.passati = !st.passati; drawEvList(); };
 }
 // striscia "Oggi / Domani" in cima alle Novità
+// ---------- in alto a destra: mini calendario (giorno di oggi) → tutti gli eventi in arrivo con il conto alla rovescia ----------
+function drawMiniCal() {
+  const b = $('#cal-btn'); if (!b) return;
+  const d = new Date(), o = oggiIso(), dom = piuGiorni(o, 1);
+  b.querySelector('.mc-m').textContent = MESI[d.getMonth()].slice(0, 3); b.querySelector('.mc-d').textContent = d.getDate();
+  b.querySelector('.mc-dot').hidden = !(S.ev || []).some(e => e.day === o || e.day === dom);   // pallino: c'è un evento oggi o domani
+}
+const quandoEvento = e => { const d = daIso(e.day), [h, m] = (e.ora || '').split(':').map(Number); if (e.ora) d.setHours(h, m || 0, 0, 0); return d; };
+function contoRovescia(e) {
+  const ms = quandoEvento(e) - Date.now();
+  if (ms <= 0) return e.day === oggiIso() ? '<b class="cd-ora">È oggi! 🎉</b>' : '<b class="cd-ora">Ci siamo! 🎉</b>';
+  const g = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, mi = Math.floor(ms / 6e4) % 60, se = Math.floor(ms / 1e3) % 60, z = n => String(n).padStart(2, '0');
+  return `<span class="cd-t">tra</span>${g ? `<b>${g}</b><i>${g === 1 ? 'giorno' : 'giorni'}</i>` : ''}<b>${z(h)}</b><i>h</i><b>${z(mi)}</b><i>m</i><b>${z(se)}</b><i>s</i>`;
+}
+function apriProssimi() {
+  sheet(`<div class="pross"><h3>⏳ In arrivo</h3><p class="hint">Tutti gli eventi del calendario che devono ancora arrivare.</p><div id="pross-l"><div class="loading">Carico</div></div>
+    <div class="row end"><button class="btn ghost" data-go="#calendario">Apri il calendario</button><button class="btn" data-close>Ok</button></div></div>`, (s, close) => {
+    const el = s.querySelector('#pross-l');
+    s.querySelector('[data-go="#calendario"]').addEventListener('click', close);
+    const disegna = () => {
+      if (S.noEv) { el.innerHTML = `<p class="muto">${esc(MSG.NO_DB)}</p>`; return; }
+      if (!S.ev) return;
+      const o = oggiIso(), L = S.ev.filter(e => e.day && e.day >= o && (quandoEvento(e) > Date.now() || e.day === o)).sort((a, b) => quandoEvento(a) - quandoEvento(b)), V = S.ev.filter(e => !e.day);
+      el.innerHTML = (L.length ? L.map(e => { const d = daIso(e.day); return `<button class="pr-e" data-go="#calendario/${esc(e.id)}"><span class="evc-d"><b>${d.getDate()}</b><small>${MESI[d.getMonth()].slice(0, 3)}</small></span>
+          <span class="pr-b"><b>${esc(e.title)}</b><small>${esc(cap(GIORNI[d.getDay()]))}${e.ora ? ' · ore ' + esc(e.ora) : ''}${e.place ? ' · ' + esc(e.place) : ''}</small><span class="pr-cd" data-cd="${esc(e.id)}">${contoRovescia(e)}</span></span></button>`; }).join('')
+        : '<p class="muto">Nessun evento in arrivo. Creane uno dal Calendario! 📅</p>')
+        + (V.length ? `<div class="pr-v"><b>🗳️ Data ancora da decidere</b>${V.map(e => `<button class="link" data-go="#calendario/${esc(e.id)}">${esc(e.title)}</button>`).join('')}</div>` : '');
+      el.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', close));
+    };
+    disegna();
+    if (!S.ev || Date.now() - (S.evAt || 0) > 60000) loadEventi().then(disegna);
+    const tic = setInterval(() => {   // il conto alla rovescia va avanti finché il foglio è aperto
+      if (!el.isConnected) return clearInterval(tic);
+      el.querySelectorAll('[data-cd]').forEach(x => { const e = (S.ev || []).find(y => y.id === x.dataset.cd); if (e) x.innerHTML = contoRovescia(e); });
+    }, 1000);
+  });
+}
 function drawOggi() {
   const el = $('#ev-oggi'); if (!el) return;
   const o = oggiIso(), dom = piuGiorni(o, 1);
@@ -2485,7 +2636,7 @@ function gcalLink(e) {
 }
 
 // ===================== CALENDARIO DELL'AVVENTO =====================
-// 19 caselle: la casella N si apre il N dicembre (data del telefono). Giochini e classifica: in arrivo.
+// 19 caselle: la casella N si apre il N dicembre (data del telefono; il database controlla con l'ora italiana). Un giochino per casella + classifica.
 // Ordine sparso come nei calendari veri; 1, 12 e 19 sono i pacchetti grandi
 const AVV_ANNO = 2026, AVV_ORDINE = [7, 1, 15, 4, 11, 18, 2, 9, 12, 16, 5, 13, 3, 8, 19, 6, 14, 10, 17], AVV_GRANDI = [1, 12, 19];
 const AVV_COL = ['#e8384f', '#1fa463', '#e0b43a', '#ff3ea5', '#3fa9ff'];
@@ -2497,23 +2648,117 @@ function giornoAvvento() {
 }
 const ICO_LUCCHETTO = svg('<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>');
 // I GIOCHINI: uno per casella, si aggiungono qui man mano (anche prima del loro giorno: gli altri li vedono solo dal giorno giusto).
-// Forma: GIOCHI_AVVENTO[5] = { nome: 'Indovina chi', gioca(box, { test, fine }) { ...disegna il gioco in box...; fine(punti) } }
-// In prova (laboratorio dell'amministratore) test = true: i punti non vengono salvati e l'amministratore non è in classifica.
+// Forma: GIOCHI_AVVENTO[n] = { nome, regole (html), unita: ['singolare', 'plurale'], gioca(box, fine) } → fine(risultato) a gioco finito.
+// Classifica di ogni casella (la calcola il database): 5-4-3-2-1 punti ai primi 5, a pari risultato vince chi ha iniziato prima.
+// Un solo tentativo: appena si preme "Gioca" il database lo segna (avvento_inizia), alla fine salva il risultato (avvento_gioca).
+// Il laboratorio dell'amministratore li prova in qualsiasi momento: i risultati in prova non vengono salvati.
 const GIOCHI_AVVENTO = {};
+
+// ---- casella 1: "Ema fotografa la Fra" — 10 secondi per scattare più foto possibile ----
+GIOCHI_AVVENTO[1] = {
+  nome: 'Ema fotografa la Fra 📸',
+  regole: 'Ema deve fare più foto possibile alla Fra! Hai <b>10 secondi</b>: tocca il pulsante di scatto più veloce che puoi.',
+  unita: ['foto', 'foto'],
+  gioca(box, fine) {
+    const k = Object.keys(S.av || {}).find(x => chiaveNome(x) === 'fra'), foto = k && okPath(S.av[k]) ? S.av[k] : null;
+    box.innerHTML = `<div class="fotocam"><div class="cam-vf">
+        <div class="cam-sogg">${foto ? `<img src="${esc(pub(foto))}" alt="">` : '<span class="cam-sil">💁‍♀️</span>'}<b>FRA</b></div>
+        <i class="cam-ang"></i><span class="cam-chi">📷 Ema</span><span class="cam-rec">● REC <b>10.0</b></span><span class="cam-n">0</span>
+        <div class="cam-cd"></div><div class="cam-flash"></div></div>
+      <div class="cam-bar"><i></i></div><button class="cam-scatta" aria-label="Scatta" disabled></button></div>`;
+    const $$ = c => box.querySelector(c), vf = $$('.cam-vf'), sogg = $$('.cam-sogg'), btn = $$('.cam-scatta'), nEl = $$('.cam-n'), rec = $$('.cam-rec b'), bar = $$('.cam-bar i'), cd = $$('.cam-cd'), flash = $$('.cam-flash');
+    let n = 0, t0 = 0, finito = false, ac = null;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const clic = () => {   // rumore dell'otturatore
+      if (!ac) return;
+      try {
+        if (ac.state === 'suspended') ac.resume();
+        const b = ac.createBuffer(1, Math.floor(ac.sampleRate * .045), ac.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+        const s = ac.createBufferSource(), g = ac.createGain(); g.gain.value = .3; s.buffer = b; s.connect(g); g.connect(ac.destination); s.start();
+      } catch (e) {}
+    };
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault(); if (!t0 || finito) return;
+      n++; nEl.textContent = n; clic();
+      flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on');
+      sogg.style.transform = `translate(${Math.round(Math.random() * 30 - 15)}%, ${Math.round(Math.random() * 14 - 7)}%) rotate(${Math.round(Math.random() * 16 - 8)}deg)`;   // la Fra si muove
+      if (navigator.vibrate) navigator.vibrate(8);
+    });
+    const giro = now => {
+      if (!box.isConnected) return;
+      const resto = Math.max(0, 10000 - (now - t0));
+      rec.textContent = (resto / 1000).toFixed(1); bar.style.width = resto / 100 + '%';
+      if (resto > 0) return requestAnimationFrame(giro);
+      finito = true; btn.disabled = true; vf.classList.add('fine'); cd.textContent = 'STOP!'; cd.classList.add('on');
+      setTimeout(() => fine(n), 900);
+    };
+    requestAnimationFrame(() => btn.scrollIntoView({ block: 'nearest' }));
+    let c = 3; cd.textContent = c; cd.classList.add('on');   // 3, 2, 1… via!
+    const conta = setInterval(() => {
+      if (!box.isConnected) return clearInterval(conta);
+      if (--c > 0) { cd.textContent = c; return; }
+      clearInterval(conta); cd.classList.remove('on'); btn.disabled = false; t0 = performance.now(); requestAnimationFrame(giro);
+    }, 800);
+  }
+};
+
+const unitaAvv = (g, r) => `${r} ${r === 1 ? g.unita[0] : g.unita[1]}`;
+async function caricaAvvento() { S.avv = await rpc('avvento_classifica'); return S.avv; }
+function risultatoAvvHTML(C, n, g) {
+  const L = C.giorni.filter(x => x.giorno === n), mio = L.find(x => stessaPersona(x.name, S.me));
+  const fatto = (C.giocati || []).find(x => x.giorno === n && stessaPersona(x.name, S.me));
+  return `${mio ? `<div class="avv-ris"><span>Il tuo risultato</span><b>${esc(unitaAvv(g, mio.punteggio))}</b><small>${mio.pos}° posto${mio.punti ? ` · <b>+${mio.punti} punti</b>` : ' · niente punti'}</small></div>`
+      : fatto ? `<div class="avv-ris"><span>Hai già giocato</span><small>${fatto.finito ? 'Risultato 0: niente punti' : 'Il gioco si era interrotto: il tentativo è andato'}</small></div>` : ''}
+    <div class="avv-gr"><h4>Classifica della casella ${n}</h4>${L.length ? L.map(x => `<div class="avv-gr-r${x === mio ? ' io' : ''}"><span class="pos">${x.pos}°</span>${avatar(x.name, 's')}<span class="nm">${esc(x.name)}</span><span class="ris">${esc(unitaAvv(g, x.punteggio))}</span><b class="pt">${x.punti ? '+' + x.punti : ''}</b></div>`).join('') : '<p class="muto">Nessuno ha ancora finito questo giochino.</p>'}
+    <p class="hint">5, 4, 3, 2 e 1 punti ai primi cinque. A pari risultato vince chi ha giocato prima.</p></div>`;
+}
 function apriCasella(n, test) {
   const g = GIOCHI_AVVENTO[n], k = AVV_COL[AVV_ORDINE.indexOf(n) % AVV_COL.length];
   sheet(`<div class="avv-s">${test ? '<div class="avv-test">🔧 PROVA · solo tu la vedi · i punti non contano</div>' : ''}
     <div class="avv-s-n" style="--k:${k}">${n}</div><h3>${g ? esc(g.nome) : `Casella del ${n} dicembre`}</h3>
-    <div class="avv-gioco">${g ? '' : `<p class="muto">${test ? 'Questo giochino non è ancora stato creato: quando lo carichiamo lo provi da qui.' : 'Il giochino di questa casella è in arrivo: stiamo preparando i 19 giochi e la classifica. 🎄'}</p>`}</div>
-    <div class="row end"><button class="btn" data-close>${g ? 'Chiudi' : 'Ok'}</button></div></div>`, (s, close) => {
-    if (g) g.gioca(s.querySelector('.avv-gioco'), { test: !!test, fine: punti => { if (test) toast(`Prova finita: ${punti} punti (non salvati)`); close(); } });
+    <div class="avv-gioco"><div class="loading">Un attimo</div></div><div class="row avv-chiudi"><button class="btn ghost" data-close>Chiudi</button></div></div>`, (s, close) => {
+    const box = s.querySelector('.avv-gioco'), chiudi = s.querySelector('.avv-chiudi');
+    if (!g) { box.innerHTML = `<p class="muto">${test ? 'Questo giochino non è ancora stato creato: quando lo carichiamo lo provi da qui.' : 'Il giochino di questa casella è in arrivo. 🎄'}</p>`; return; }
+    const mostra = C => { box.innerHTML = risultatoAvvHTML(C, n, g); chiudi.hidden = false; aggiornaCaselle(); };
+    const intro = () => {
+      chiudi.hidden = false;
+      box.innerHTML = `<p class="avv-reg">${g.regole}</p>${test ? '' : '<p class="hint">Hai <b>un solo tentativo</b>: premi Gioca solo quando sei pronto.</p>'}<button class="btn big wide" id="avv-via">${test ? '▶ Prova' : '▶ Gioca'}</button>`;
+      box.querySelector('#avv-via').onclick = async e => {
+        e.target.disabled = true;
+        if (!test) {
+          try { await rpc('avvento_inizia', { p_giorno: n, p_name: S.me }); }
+          catch (ex) { box.innerHTML = `<div class="empty">${esc(msg(ex))}</div>`; return; }
+        }
+        chiudi.hidden = true;   // durante il gioco niente "Chiudi" (chiudere a metà fa perdere il tentativo)
+        const av = s.querySelector('.avv-s'); av.classList.add('in-gioco'); s.scrollTop = 0;   // il gioco deve stare tutto nello schermo
+        g.gioca(box, async ris => {
+          av.classList.remove('in-gioco');
+          if (test) {
+            box.innerHTML = `<div class="avv-ris"><span>Prova finita</span><b>${esc(unitaAvv(g, ris))}</b><small>non salvate, non contano</small></div><button class="btn wide" id="avv-ri">Riprova</button>`;
+            chiudi.hidden = false; box.querySelector('#avv-ri').onclick = intro; return;
+          }
+          box.innerHTML = '<div class="loading">Salvo il risultato</div>';
+          let ultimo = null;
+          for (let t = 1; t <= 4; t++) {   // con internet lento riprova (il database aspetta fino a 3 minuti)
+            try { await rpc('avvento_gioca', { p_giorno: n, p_name: S.me, p_punteggio: ris }); ultimo = null; break; }
+            catch (ex) { ultimo = ex; if (ex.message !== 'RETE') break; await new Promise(z => setTimeout(z, 1500 * t)); }
+          }
+          try { mostra(await caricaAvvento()); if (ultimo) toast(msg(ultimo), 'err'); drawClassificaAvv(); }
+          catch (ex) { box.innerHTML = `<div class="empty">${esc(msg(ultimo || ex))}</div>`; chiudi.hidden = false; }
+        });
+      };
+    };
+    if (test) return intro();
+    caricaAvvento().then(C => (C.giocati || []).some(x => x.giorno === n && stessaPersona(x.name, S.me)) ? mostra(C) : intro())
+      .catch(ex => { box.innerHTML = `<div class="empty">${esc(msg(ex))}</div>`; });
   });
 }
 function viewAvvento(arg) {
   if (arg === 'lab') return viewLab();
   const oggi = giornoAvvento(), manca = Math.ceil((new Date(AVV_ANNO, 11, 1) - Date.now()) / 864e5);
   const stato = oggi === 0 ? `⏳ La prima casella si apre il <b>1° dicembre</b>: ${manca === 1 ? 'manca <b>1 giorno</b>' : `mancano <b>${manca} giorni</b>`}`
-    : oggi <= 19 ? `🎁 Oggi si apre la casella <b>${oggi}</b>` : '🎄 Tutte le caselle sono aperte';
+    : oggi <= 19 ? `🎁 Oggi si apre la casella <b>${oggi}</b>` : '🎄 Il calendario è finito: ecco la classifica finale';
   $('#view').innerHTML = `<div class="avv-neve" aria-hidden="true"></div><h1 class="neon">Calendario dell'avvento</h1>
     <p class="intro">Dal 1° al 19 dicembre si apre una casella al giorno, con un giochino. Chi fa più punti vince! 🏆</p>
     <div class="avv-stato">${stato}</div>
@@ -2522,8 +2767,9 @@ function viewAvvento(arg) {
       return `<button class="avv-c ${s}${AVV_GRANDI.includes(n) ? ' grande' : ''}" data-n="${n}" style="--k:${AVV_COL[i % AVV_COL.length]}" aria-label="Casella ${n}${s === 'chiusa' ? ', chiusa' : ''}">
         <span class="avv-n">${n}</span>${s === 'chiusa' ? `<span class="avv-l">${ICO_LUCCHETTO}</span>` : s === 'oggi' ? '<span class="avv-o">Oggi</span>' : '<span class="avv-v">✓</span>'}</button>`;
     }).join('')}</div>
-    <section class="card avv-cl"><h3>🏆 Classifica</h3><p class="muto">In arrivo: qui vedrete chi fa più punti con i giochini.</p></section>
-    ${adminPin() ? `<button class="card lab-in" data-go="#avvento/lab"><span>🔧</span><b>Laboratorio dei giochi</b><small>Solo per te (amministratore): prova tutti i giochini prima che escano</small></button>` : ''}`;
+    <section class="card avv-cl"><h3>🏆 Classifica</h3><div id="avv-cl"><div class="loading">Carico</div></div></section>
+    ${adminPin() ? `<button class="card lab-in" data-go="#avvento/lab"><span>🔧</span><b>Laboratorio dei giochi</b><small>Solo per te (amministratore): prova tutti i giochini prima che escano</small></button>`
+      : '<button class="lab-link" data-go="#avvento/lab">🔒 Laboratorio · solo amministratore</button>'}`;
   $('#view').querySelectorAll('.avv-c').forEach(b => b.onclick = () => {
     const n = +b.dataset.n;
     if (b.classList.contains('chiusa')) {
@@ -2532,21 +2778,46 @@ function viewAvvento(arg) {
     }
     apriCasella(n, false);
   });
+  if (S.avv) drawClassificaAvv();
+  S.refresh = () => caricaAvvento().then(drawClassificaAvv).catch(e => { S.avvErr = e; drawClassificaAvv(); });
+  S.refresh();
 }
-// laboratorio: solo con l'Area amministratore sbloccata. Tutte le caselle si provano subito, i punti non contano
+// le caselle già giocate da me: "✓ fatto"
+function aggiornaCaselle() {
+  const C = S.avv; if (!C) return;
+  document.querySelectorAll('.avv-c').forEach(b => b.classList.toggle('fatta', (C.giocati || []).some(x => x.giorno === +b.dataset.n && stessaPersona(x.name, S.me))));
+}
+function drawClassificaAvv() {
+  const el = $('#avv-cl'); if (!el) return;
+  if (!S.avv) { if (S.avvErr) el.innerHTML = `<p class="muto">${S.avvErr.message === 'NO_DB' ? 'La classifica arriva con il prossimo aggiornamento del database.' : esc(msg(S.avvErr))}</p>`; return; }
+  aggiornaCaselle();
+  const T = S.avv.totale || [], med = ['🥇', '🥈', '🥉'];
+  el.innerHTML = T.length ? T.map((x, i) => `<div class="avv-gr-r${stessaPersona(x.name, S.me) ? ' io' : ''}"><span class="pos">${med[i] || (i + 1) + '°'}</span>${avatar(x.name, 's')}<span class="nm">${esc(x.name)}<small>${x.giochi} ${x.giochi === 1 ? 'giochino' : 'giochini'}</small></span><b class="pt">${x.punti} pt</b></div>`).join('')
+    : `<p class="muto">${giornoAvvento() === 0 ? 'Si parte il 1° dicembre: qui vedrete chi fa più punti con i giochini.' : 'Ancora nessun punto: gioca la casella di oggi!'}</p>`;
+}
+// laboratorio: solo per l'amministratore (chiede il PIN amministratore). Tutte le caselle si provano subito, i punti non contano
 function viewLab() {
   if (!adminPin()) {
-    $('#view').innerHTML = `<button class="back" data-go="#avvento">‹ Avvento</button><div class="empty" style="margin-top:20px">🔒 Il laboratorio è solo per l'amministratore.<br><span class="muto">Sblocca l'Area amministratore (bottone verde "online" → Area amministratore) e torna qui.</span></div>`;
+    $('#view').innerHTML = `<button class="back" data-go="#avvento">‹ Avvento</button><h1 class="neon m">Laboratorio</h1>
+      <form class="card lab-pin" id="lab-pin" novalidate><p class="muto" style="margin-top:0">🔒 Solo per l'amministratore: scrivi il tuo PIN amministratore.</p>
+        <input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN amministratore"><p class="err" hidden></p>
+        <button class="btn wide" type="submit">Entra nel laboratorio</button></form>`;
+    $('#lab-pin').onsubmit = async e => {
+      e.preventDefault(); const f = e.target, er = f.querySelector('.err'), pin = f.p.value.trim(); er.hidden = true;
+      try { await sbloccaAdmin(pin); viewLab(); } catch (ex) { er.textContent = msg(ex); er.hidden = false; }
+    };
     return;
   }
+  // l'amministratore non partecipa alla classifica (lo segna il database, una volta per telefono)
+  if (store.get('avvfuori') !== S.me) rpc('avvento_fuori', { p_admin: adminPin(), p_name: S.me }).then(() => store.set('avvfuori', S.me)).catch(() => {});
   const oggi = giornoAvvento(), fatti = Object.keys(GIOCHI_AVVENTO).length;
   $('#view').innerHTML = `<button class="back" data-go="#avvento">‹ Avvento</button><h1 class="neon m">Laboratorio</h1>
-    <p class="intro">Solo tu lo vedi. Qui provi ogni giochino anche prima del suo giorno: gli altri vedono la casella chiusa fino al giorno giusto. I punti fatti qui non vengono salvati e tu non sei in classifica.</p>
+    <p class="intro">Solo tu lo vedi. Qui provi ogni giochino anche prima del suo giorno: gli altri vedono la casella chiusa fino al giorno giusto. I risultati fatti qui non vengono salvati e tu non sei in classifica.</p>
     <div class="avv-stato">🧩 Giochini pronti: <b>${fatti} su 19</b></div>
     <div class="lab">${Array.from({ length: 19 }, (_, i) => i + 1).map(n => {
       const g = GIOCHI_AVVENTO[n], k = AVV_COL[AVV_ORDINE.indexOf(n) % AVV_COL.length];
       const stato = n < oggi || oggi === 99 ? 'già aperta per tutti' : n === oggi ? 'si apre oggi per tutti' : `gli altri la vedono dal ${n} dicembre`;
-      return `<div class="lab-r"><span class="lab-n" style="--k:${k}">${n}</span><span class="lab-t"><b>${g ? esc(g.nome) : 'Giochino da creare'}</b><small>${stato}</small></span>
+      return `<div class="lab-r${g ? ' pronto' : ''}"><span class="lab-n" style="--k:${k}">${n}</span><span class="lab-t"><b>${g ? esc(g.nome) : 'Giochino da creare'}</b><small>${stato}</small></span>
         <button class="btn ghost xs" data-prova="${n}">▶ Prova</button></div>`;
     }).join('')}</div>`;
   $('#view').querySelectorAll('[data-prova]').forEach(b => b.onclick = () => apriCasella(+b.dataset.prova, true));
@@ -3025,7 +3296,7 @@ function guardaStorie(tutte, gi, opz = {}) {
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
@@ -3056,6 +3327,8 @@ function creaDemo() {
     ['Anna', 'like_foto', 'Sabato al mare (prova)', '', '#foto', 60 * 26], ['Giulia', 'like', 'Chi viene al mare sabato?', '', '#novita', 60 * 30]]
     .map(([chi, tipo, cosa, testo, url, min], i) => ({ id: i + 1, chi, tipo, cosa, testo, url, created_at: t(min) }));
   D.attViste = {};
+  // avvento di prova: risultati finti della casella 1 (si vedono dal 1° dicembre)
+  [['Marco', 52, 300], ['Giulia', 47, 280], ['Sara', 47, 200], ['Luca', 33, 150]].forEach(([name, punteggio, min]) => D.avv.push({ giorno: 1, name, punteggio, created_at: t(min) }));
   // --- contenuti di esempio ---
   const al = uid(); D.albums.push({ id: al, name: 'Sabato al mare (prova)', created_by: 'Giulia', created_at: t(60 * 30) });
   const fs = [['🏖️', 'Spiaggia'], ['🍕', 'Pizzata'], ['🌅', 'Tramonto'], ['🍹', 'Aperitivo'], ['🎉', 'Festa']].map(([e, s], i) => fotoFinta(i, e, s));
@@ -3170,6 +3443,12 @@ function creaDemo() {
     e.log.push({ at: t(60 * 5), msg: 'Creato da Marco' });
     post('Marco', `🎅 Nuovo Secret Santa «Natale 2026 (prova)» (budget 30 €): iscrivetevi! 👉 ${location.href.split('#')[0]}#santa/${e.id} #SecretSanta`, 60 * 5 - 1);
   }
+  const demoAvvAperta = (g, n) => {
+    const o = new Date(), oggi = o.getFullYear() * 10000 + (o.getMonth() + 1) * 100 + o.getDate();
+    if (!(g >= 1 && g <= 19)) return 'CASELLA_NON_VALIDA';
+    if (oggi < 20261200 + g) return 'CASELLA_CHIUSA'; if (oggi > 20261219) return 'AVVENTO_FINITO';
+    if (D.avvFuori.has(chiaveNome(n))) return 'FUORI_CLASSIFICA'; return null;
+  };
   const F = {
     check_pw: a => pwOk(a.p_pw),
     members_list: a => { need(a); return D.members.filter(m => !m.banned).map(m => m.name).sort(alfa); },
@@ -3203,6 +3482,30 @@ function creaDemo() {
             liked: L.some(l => same(l.name, a.p_name || '')), vista: D.views.some(v => v.story === s.id && same(v.name, a.p_name || '')) };
         });
     },
+    // calendario dell'avvento (stesse regole del database: avvento_* in schema.sql)
+    avvento_inizia: a => {
+      need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO');
+      const x = demoAvvAperta(a.p_giorno, n); if (x) return { err: x };
+      if (D.avv.some(p => p.giorno === a.p_giorno && stessaPersona(p.name, n))) return { err: 'GIA_GIOCATO' };
+      D.avv.push({ giorno: a.p_giorno, name: n, punteggio: null, created_at: t(0) }); return { ok: true };
+    },
+    avvento_gioca: a => {
+      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > (a.p_giorno === 1 ? 150 : 100000)) throw err('PUNTEGGIO_NON_VALIDO');
+      const p = D.avv.find(y => y.giorno === a.p_giorno && stessaPersona(y.name, clean(a.p_name, 30)));
+      if (!p) return { err: 'TEMPO_SCADUTO' }; if (p.punteggio != null) return { err: 'GIA_GIOCATO' };
+      p.punteggio = a.p_punteggio; return { ok: true };
+    },
+    avvento_classifica: a => {
+      need(a); const fuori = n => D.avvFuori.has(chiaveNome(n)), giorni = [];
+      for (let g = 1; g <= 19; g++) D.avv.filter(p => p.giorno === g && p.punteggio > 0 && !fuori(p.name))
+        .sort((x, y) => y.punteggio - x.punteggio || (x.created_at < y.created_at ? -1 : x.created_at > y.created_at ? 1 : alfa(x.name, y.name)))
+        .forEach((p, i) => giorni.push({ giorno: g, name: p.name, punteggio: p.punteggio, pos: i + 1, punti: i < 5 ? 5 - i : 0, at: p.created_at }));
+      const tot = new Map();
+      for (const x of giorni) { const k = chiaveNome(x.name), v = tot.get(k) || { name: x.name, punti: 0, giochi: 0, primi: 0, primo: x.at }; v.punti += x.punti; v.giochi++; if (x.pos === 1) v.primi++; if (x.at < v.primo) v.primo = x.at; tot.set(k, v); }
+      const totale = [...tot.values()].sort((x, y) => y.punti - x.punti || y.primi - x.primi || (x.primo < y.primo ? -1 : 1)).map(({ primo, ...v }) => v);
+      return { oggi: null, giorni, totale, giocati: D.avv.map(p => ({ giorno: p.giorno, name: p.name, finito: p.punteggio != null })) };
+    },
+    avvento_fuori: a => { need(a); const x = admG(a.p_admin); if (x) return { err: x }; D.avvFuori.add(chiaveNome(a.p_name)); return { ok: true }; },
     attivita_list: a => { need(a); return { viste: D.attViste[String(a.p_name).toLowerCase()] || null, items: D.att.slice().sort(desc) }; },
     attivita_nuove: a => { need(a); const v = D.attViste[String(a.p_name).toLowerCase()]; return D.att.filter(x => !v || x.created_at > v).length; },
     attivita_viste: a => { need(a); const k = String(a.p_name).toLowerCase(), f = a.p_fino || t(0); if (!D.attViste[k] || f > D.attViste[k]) D.attViste[k] = f; return { ok: true }; },
