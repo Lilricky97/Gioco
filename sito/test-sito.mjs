@@ -265,7 +265,7 @@ ok(true, 'sondaggio eliminato')
 const giornoT = k => { const d = new Date(); d.setDate(d.getDate() + k); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 const codaVuota = page => page.waitForFunction(() => Object.values(S.vq).every(q => !q.n))
 await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in [data-zona]')
-ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=novita]').count() === 0 && await ricky.locator('.mz [data-zona=foto]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1, 'menu ☰: niente Novità, Storie e Foto, c\'è il Calendario')
+ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=novita]').count() === 0 && await ricky.locator('.mz [data-zona=foto]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1 && await ricky.locator('.mz [data-zona=avvento]').count() === 1, 'menu ☰: niente Novità, Storie e Foto; ci sono il Calendario e l\'Avvento')
 ok(await ricky.evaluate(() => { const B = [...document.querySelectorAll('.tabs button')]; return B.map(b => b.dataset.tab + ':' + b.getAttribute('aria-label')).join() === 'novita:Novità,pin:In evidenza' && B.every(b => { const s = b.querySelector('svg').getBoundingClientRect(); return b.textContent.trim() === '' && s.width >= 28 && s.height >= 28 }) }), 'barra in basso: solo la casetta e la puntina disegnate (niente scritte), belle grandi')
 ok(await ricky.locator('.mz [data-zona=pin]').count() === 0, 'menu ☰: "In evidenza" non c\'è (è la puntina in basso)')
 if (await ricky.evaluate(() => NATALE)) ok(await ricky.evaluate(() => document.querySelectorAll('.logo .luci i').length === 15 && getComputedStyle(document.querySelector('.logo .rotto')).animationName === 'none'
@@ -904,7 +904,7 @@ const dTo = (await pr.textContent('.rv-name')).trim()
 ok(['Marco', 'Giulia', 'Sara', 'Luca'].includes(dTo), 'prova: sorteggio fatto, Ricky fa il regalo a ' + dTo)
 await pr.click('#ver-open'); await pr.waitForSelector('.ver-ok'); ok((await pr.textContent('.ver-ok')).includes('regolare') && await pr.locator('.ver-r').count() === 5, 'prova: verifica con 5 lettere, sorteggio regolare')
 await pr.setViewportSize({ width: 320, height: 640 })
-for (const [tab, dopo] of [['novita'], ['pin'], ['calendario'], ['calendario', '.evc:has-text("Cena")'], ['calendario', '.evc:has-text("Pizzata")'], ['sondaggi'], ['foto', '#albums .album'], ['gioco'], ['santa', '.ss-item'], ['fanta']]) {
+for (const [tab, dopo] of [['novita'], ['pin'], ['calendario'], ['calendario', '.evc:has-text("Cena")'], ['calendario', '.evc:has-text("Pizzata")'], ['sondaggi'], ['foto', '#albums .album'], ['gioco'], ['santa', '.ss-item'], ['avvento'], ['fanta']]) {
   await vai(pr, tab); await pr.waitForTimeout(250)
   if (dopo) { await pr.click(dopo); await pr.waitForTimeout(400) }
   const fuori = await pr.evaluate(() => [...document.querySelectorAll('#view *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > innerWidth + 1 && !e.closest('.trend-row,.st-strip,.pgrid,.pics') }).map(e => e.tagName + '.' + e.className + ': ' + (e.textContent || '').trim().slice(0, 30)).slice(0, 3))
@@ -917,6 +917,26 @@ for (const [tab, dopo] of [['novita'], ['pin'], ['calendario'], ['calendario', '
   if (tab === 'novita') ok(await pr.evaluate(() => [...document.querySelectorAll('.tabs svg')].every(s => { const r = s.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight })), '320px: casetta e puntina in basso si vedono tutte')
 }
 for (const w of [320, 1280]) { await pr.setViewportSize({ width: w, height: w === 320 ? 640 : 860 }); await pr.click('[data-tab=novita]'); await pr.waitForSelector('#feed .tw'); ok(!(await pr.evaluate(() => document.documentElement.scrollWidth > innerWidth)), `prova: niente scorrimento laterale a ${w}px`); await shot(pr, '22-prova-' + w) }
+
+// ---------------- CALENDARIO DELL'AVVENTO (giorni finti: 17 novembre e 5 dicembre) ----------------
+for (const [quando, aperte, chiuse] of [[new Date(2026, 10, 17, 12), 0, 19], [new Date(2026, 11, 5, 12), 4, 14]]) {
+  const av = await telefono('Avvento'); await av.clock.setFixedTime(quando)
+  await av.goto(BASE + '/prova'); await av.fill('#g-in', 'prova'); await av.click('#g-pw [type=submit]'); await av.fill('#g-name input', 'Ricky'); await av.click('#g-name button'); await av.waitForSelector('.tabs')
+  await vai(av, 'avvento'); await av.waitForSelector('.avv-c')
+  const conta = await av.evaluate(() => ['aperta', 'oggi', 'chiusa'].map(c => document.querySelectorAll('.avv-c.' + c).length))
+  const giorno = quando.getDate() + (quando.getMonth() === 10 ? ' novembre' : ' dicembre')
+  ok(await av.locator('.avv-c').count() === 19 && conta[0] === aperte && conta[2] === chiuse && conta[1] === (quando.getMonth() === 11 ? 1 : 0), `avvento il ${giorno}: 19 caselle, ${aperte} aperte, ${chiuse} chiuse` + (quando.getMonth() === 11 ? ', la 5 è quella di oggi' : ''))
+  if (quando.getMonth() === 10) {
+    ok((await av.textContent('.avv-stato')).includes('mancano 14 giorni'), 'il 17 novembre: "mancano 14 giorni" alla prima casella')
+    await av.click('.avv-c[data-n="1"]'); ok((await toastText(av)).includes('si apre il 1 dicembre'), 'casella chiusa: dice quando si apre')
+  } else {
+    ok(await av.getAttribute('.avv-c.oggi', 'data-n') === '5', 'il 5 dicembre si accende la casella 5')
+    await av.click('.avv-c.oggi'); await av.waitForSelector('.avv-s'); ok((await av.textContent('.avv-s')).includes('Casella del 5 dicembre'), 'toccando la casella di oggi si apre (giochino in arrivo)')
+    await shot(av, '40-avvento-5-dicembre'); await av.click('.sheet [data-close]')
+    await av.click('.avv-c[data-n="6"]'); ok((await toastText(av)).includes('si apre il 6 dicembre'), 'la casella di domani resta chiusa')
+  }
+  await av.close()
+}
 
 ok(errori.length === 0, 'nessun errore JavaScript' + (errori.length ? ': ' + errori.join(' | ') : ''))
 await browser.close()
