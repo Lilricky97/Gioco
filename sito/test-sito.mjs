@@ -34,7 +34,7 @@ async function apriAdm(page) {
   if (!await page.evaluate(() => document.querySelector('#ss-adm').open)) await page.click('#ss-adm summary')
 }
 async function vai(page, z) {
-  if (z === 'novita' || z === 'pin') return page.click(`[data-tab=${z}]`)
+  if (z === 'novita' || z === 'pin' || z === 'mappa') return page.click(`[data-tab=${z}]`)
   if (z === 'foto') { await page.evaluate(() => { location.hash = '#foto' }); return page.waitForSelector('#albums') }   // le cartelle non sono più nel menu
   await page.click('#menu-btn'); await page.waitForSelector('.mz-ov.in [data-zona]'); await page.click(`.mz [data-zona=${z}]`)
   await page.waitForFunction(() => !document.querySelector('.mz-ov'))
@@ -290,8 +290,8 @@ const giornoT = k => { const d = new Date(); d.setDate(d.getDate() + k); return 
 const codaVuota = page => page.waitForFunction(() => Object.values(S.vq).every(q => !q.n))
 await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in [data-zona]')
 ok(await ricky.locator('.mz [data-zona=storie]').count() === 0 && await ricky.locator('.mz [data-zona=novita]').count() === 0 && await ricky.locator('.mz [data-zona=foto]').count() === 0 && await ricky.locator('.mz [data-zona=calendario]').count() === 1 && await ricky.locator('.mz [data-zona=avvento]').count() === 1, 'menu ☰: niente Novità, Storie e Foto; ci sono il Calendario e l\'Avvento')
-ok(await ricky.evaluate(() => { const B = [...document.querySelectorAll('.tabs button')]; return B.map(b => b.dataset.tab + ':' + b.getAttribute('aria-label')).join() === 'novita:Novità,pin:In evidenza' && B.every(b => { const s = b.querySelector('svg').getBoundingClientRect(); return b.textContent.trim() === '' && s.width >= 28 && s.height >= 28 }) }), 'barra in basso: solo la casetta e la puntina disegnate (niente scritte), belle grandi')
-ok(await ricky.locator('.mz [data-zona=pin]').count() === 0, 'menu ☰: "In evidenza" non c\'è (è la puntina in basso)')
+ok(await ricky.evaluate(() => { const B = [...document.querySelectorAll('.tabs button')]; return B.map(b => b.dataset.tab + ':' + b.getAttribute('aria-label')).join() === 'mappa:Mappa pippegosa,novita:Novità,pin:In evidenza' && B.every(b => { const s = b.querySelector('svg').getBoundingClientRect(); return b.textContent.trim() === '' && s.width >= 28 && s.height >= 28 }) }), 'barra in basso: mappamondo (a sinistra), casetta e puntina disegnati (niente scritte), belli grandi')
+ok(await ricky.locator('.mz [data-zona=pin]').count() === 0 && await ricky.locator('.mz [data-zona=mappa]').count() === 0, 'menu ☰: "In evidenza" e la Mappa non ci sono (sono la puntina e il mappamondo in basso)')
 if (await ricky.evaluate(() => NATALE)) ok(await ricky.evaluate(() => document.querySelectorAll('.logo .luci i').length === 15 && getComputedStyle(document.querySelector('.logo .rotto')).animationName === 'none'
   && getComputedStyle(document.querySelector('.logo .luci i')).animationName === 'lucina'), 'Natale: insegna fissa (niente sfarfallio) con 15 lucine che lampeggiano')
 await ricky.click('.mz [data-zona=calendario]'); await ricky.waitForFunction(() => !document.querySelector('.mz-ov'))
