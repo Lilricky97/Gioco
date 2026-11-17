@@ -262,6 +262,18 @@ create table if not exists event_date_votes (
   primary key (date_id, name)
 );
 
+create table if not exists comment_likes (       -- ❤️ ai commenti (storie, risposte ai post, foto, eventi): spariscono col commento
+  id uuid primary key default gen_random_uuid(),
+  story_comment uuid references story_comments(id) on delete cascade,
+  reply uuid references post_replies(id) on delete cascade,
+  photo_comment uuid references photo_comments(id) on delete cascade,
+  event_comment uuid references event_comments(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  constraint comment_likes_uno check (num_nonnulls(story_comment, reply, photo_comment, event_comment) = 1)
+);
+create unique index if not exists comment_likes_chi on comment_likes (coalesce(story_comment, reply, photo_comment, event_comment), lower(name));
+
 create table if not exists push_subs (          -- telefoni che vogliono le notifiche
   endpoint text primary key,                     -- indirizzo di notifica dato dal telefono (Apple/Google/Mozilla)
   name text not null,
@@ -334,6 +346,7 @@ alter table event_rsvp       enable row level security;
 alter table event_comments   enable row level security;
 alter table event_dates      enable row level security;
 alter table event_date_votes enable row level security;
+alter table comment_likes    enable row level security;
 alter table push_subs        enable row level security;
 alter table notif_queue      enable row level security;
 alter table attivita         enable row level security;
@@ -655,12 +668,49 @@ begin
   end if;
 end $$;
 
+-- ❤️ ai commenti: chi ce l'ha messo (in ordine), per un commento qualsiasi
+create or replace function _cuori(p_id uuid) returns json
+language sql stable security definer set search_path = public, extensions as $$
+  select coalesce(json_agg(l.name order by l.created_at), '[]'::json) from comment_likes l
+  where coalesce(l.story_comment, l.reply, l.photo_comment, l.event_comment) = p_id
+$$;
+
+-- ❤️ a un commento (p_tipo: storia / post / foto / evento). p_like true = mette, false = toglie. Restituisce chi ce l'ha messo
+create or replace function comment_like(p_pw text, p_tipo text, p_id uuid, p_name text, p_like boolean) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30);
+begin
+  perform _need(p_pw); perform _io(p_name);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  if p_tipo = 'storia' then
+    if not exists (select 1 from story_comments c join stories s on s.id = c.story_id
+                   where c.id = p_id and s.created_at > now() - interval '24 hours') then raise exception 'COMMENTO_SPARITO'; end if;
+  elsif p_tipo = 'post' then
+    if not exists (select 1 from post_replies where id = p_id) then raise exception 'COMMENTO_SPARITO'; end if;
+  elsif p_tipo = 'foto' then
+    if not exists (select 1 from photo_comments where id = p_id) then raise exception 'COMMENTO_SPARITO'; end if;
+  elsif p_tipo = 'evento' then
+    if not exists (select 1 from event_comments where id = p_id) then raise exception 'COMMENTO_SPARITO'; end if;
+  else
+    raise exception 'TIPO_NON_VALIDO';
+  end if;
+  if coalesce(p_like, true) then
+    insert into comment_likes(story_comment, reply, photo_comment, event_comment, name)
+    values (case when p_tipo = 'storia' then p_id end, case when p_tipo = 'post' then p_id end,
+            case when p_tipo = 'foto' then p_id end, case when p_tipo = 'evento' then p_id end, n)
+    on conflict do nothing;
+  else
+    delete from comment_likes where coalesce(story_comment, reply, photo_comment, event_comment) = p_id and lower(name) = lower(n);
+  end if;
+  return json_build_object('likes', _cuori(p_id));
+end $$;
+
 create or replace function story_comments(p_pw text, p_story uuid) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
 begin
   perform _need(p_pw);
   return coalesce((select json_agg(row_to_json(c) order by c.created_at)
-    from (select id, author, body, created_at from story_comments where story_id = p_story) c), '[]'::json);
+    from (select id, author, body, created_at, _cuori(id) as likes from story_comments where story_id = p_story) c), '[]'::json);
 end $$;
 
 create or replace function story_comment_add(p_pw text, p_story uuid, p_author text, p_body text) returns uuid
@@ -779,7 +829,7 @@ language plpgsql stable security definer set search_path = public, extensions as
 begin
   perform _need(p_pw);
   return coalesce((select json_agg(row_to_json(r) order by r.created_at)
-    from (select id, author, body, created_at from post_replies where post_id = p_id) r), '[]'::json);
+    from (select id, author, body, created_at, _cuori(id) as likes from post_replies where post_id = p_id) r), '[]'::json);
 end $$;
 
 create or replace function reply_add(p_pw text, p_id uuid, p_author text, p_body text) returns uuid
@@ -846,7 +896,7 @@ language plpgsql stable security definer set search_path = public, extensions as
 begin
   perform _need(p_pw);
   return coalesce((select json_agg(row_to_json(c) order by c.created_at)
-    from (select id, author, body, created_at from photo_comments where photo_id = p_photo) c), '[]'::json);
+    from (select id, author, body, created_at, _cuori(id) as likes from photo_comments where photo_id = p_photo) c), '[]'::json);
 end $$;
 
 create or replace function photo_comment_add(p_pw text, p_photo uuid, p_author text, p_body text) returns uuid
@@ -1642,7 +1692,7 @@ language sql stable security definer set search_path = public, extensions as $$
         'voters', coalesce((select json_agg(v.name order by v.created_at) from event_date_votes v where v.date_id = d.id), '[]'::json)) order by d.pos)
       from event_dates d where d.event_id = e.id), '[]'::json) else '[]'::json end,
     'body', case when p_full then e.body else left(e.body, 140) end,
-    'comments', case when p_full then coalesce((select json_agg(json_build_object('id', c.id, 'author', c.author, 'body', c.body, 'created_at', c.created_at) order by c.created_at)
+    'comments', case when p_full then coalesce((select json_agg(json_build_object('id', c.id, 'author', c.author, 'body', c.body, 'created_at', c.created_at, 'likes', _cuori(c.id)) order by c.created_at)
       from event_comments c where c.event_id = e.id), '[]'::json) else null end)
   from events e where e.id = p_id;
 $$;
@@ -2236,6 +2286,35 @@ end $$;
 drop trigger if exists att_voto on poll_votes;
 create trigger att_voto after insert or delete on poll_votes for each row execute function _att_voto();
 
+-- ❤️ a un tuo commento (storia, risposta a un post, foto, evento)
+create or replace function _att_cuore_commento() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare r text;
+begin
+  if tg_op = 'DELETE' then
+    perform _att_via('cl:' || coalesce(old.story_comment, old.reply, old.photo_comment, old.event_comment) || ':' || lower(old.name));
+    return null;
+  end if;
+  r := 'cl:' || coalesce(new.story_comment, new.reply, new.photo_comment, new.event_comment) || ':' || lower(new.name);
+  if new.story_comment is not null then
+    perform _att(c.author, new.name, 'cuore_commento_storia', s.author, c.body, '#storie/' || c.story_id, r)
+      from story_comments c join stories s on s.id = c.story_id where c.id = new.story_comment;
+  elsif new.reply is not null then
+    perform _att(c.author, new.name, 'cuore_risposta', coalesce(nullif(p.body, ''), '📷 foto'), c.body, '#post/' || c.post_id, r)
+      from post_replies c join posts p on p.id = c.post_id where c.id = new.reply;
+  elsif new.photo_comment is not null then
+    perform _att(c.author, new.name, 'cuore_commento_foto', a.name, c.body, '#foto/' || f.album_id, r)
+      from photo_comments c join photos f on f.id = c.photo_id join albums a on a.id = f.album_id where c.id = new.photo_comment;
+  else
+    perform _att(c.author, new.name, 'cuore_commento_evento', e.title, c.body, '#calendario/' || e.id, r)
+      from event_comments c join events e on e.id = c.event_id where c.id = new.event_comment;
+  end if;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_cuore_commento on comment_likes;
+create trigger att_cuore_commento after insert or delete on comment_likes for each row execute function _att_cuore_commento();
+
 -- la campanella di una persona: le attività degli ultimi 7 giorni (le più recenti prima) e fin dove le ha già viste
 create or replace function attivita_list(p_pw text, p_name text) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
@@ -2280,16 +2359,16 @@ grant execute on function check_pw, members_list, member_add, presenza, accesso_
   ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer,
   events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
   event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste,
-  avvento_inizia, avvento_gioca, avvento_classifica, avvento_fuori to anon, authenticated;
+  avvento_inizia, avvento_gioca, avvento_classifica, avvento_fuori, comment_like to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _avvento_oggi, _avvento_max, _avvento_aperta, _io from anon, authenticated;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _avvento_oggi, _avvento_max, _avvento_aperta, _io from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _avvento_oggi, _avvento_max, _avvento_aperta, _io from public;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _avvento_oggi, _avvento_max, _avvento_aperta, _io from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin

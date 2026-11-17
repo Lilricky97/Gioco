@@ -568,6 +568,58 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
   for (const t of ['attivita','attivita_lette']) { await db.exec('set role anon'); let no = false; try { await db.query(`select * from ${t}`) } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no, `tabella ${t} chiusa alla chiave pubblica`) }
 }
 
+// ❤️ AI COMMENTI (storie, risposte ai post, foto, eventi) + campanella
+{
+  const att = async n => (await one('select attivita_list($1,$2)',[PW,n])).items
+  const cuore = (tipo, id, n, si = true) => one('select comment_like($1,$2,$3,$4,$5)',[PW,tipo,id,n,si])
+  await q('delete from attivita')
+  // risposta a un post
+  const p = await one('select post_add($1,$2,$3,$4)',[PW,'Ricky','Stasera calcetto?',[]])
+  const r = await one('select reply_add($1,$2,$3,$4)',[PW,p,'Marco','Io ci sono!'])
+  ok(JSON.stringify((await cuore('post',r,'Luca')).likes)==='["Luca"]','Luca mette ❤️ alla risposta di Marco')
+  await cuore('post',r,'luca'); await cuore('post',r,'Sara')
+  let th = await one('select post_thread($1,$2)',[PW,p])
+  ok(JSON.stringify(th[0].likes)==='["Luca","Sara"]','la risposta mostra chi ha messo ❤️ (Luca conta una volta sola, anche scritto "luca")')
+  let aM = await att('Marco')
+  ok(aM.length===2 && aM.every(x=>x.tipo==='cuore_risposta') && aM[0].cosa==='Stasera calcetto?' && aM[0].testo==='Io ci sono!' && aM[0].url==='#post/'+p,
+    'campanella di Marco: ❤️ di Luca e Sara al suo commento, con il post, il commento e dove porta il tocco')
+  ok(!(await att('Ricky')).some(x=>x.tipo==='cuore_risposta'),'Ricky (autore del post) non riceve i ❤️ ai commenti degli altri')
+  ok(JSON.stringify((await cuore('post',r,'Sara',false)).likes)==='["Luca"]' && (await att('Marco')).length===1,'Sara toglie il ❤️: sparisce anche dalla campanella di Marco')
+  await cuore('post',r,'Marco')
+  ok((await att('Marco')).length===1 && (await one('select post_thread($1,$2)',[PW,p]))[0].likes.length===2,'Marco può mettere ❤️ al suo commento, ma non si avvisa da solo')
+  // commento a una storia
+  const st = await one('select story_add($1,$2,$3,$4)',[PW,'Anna','storie/c.jpg',''])
+  const sc = await one('select story_comment_add($1,$2,$3,$4)',[PW,st,'Giulia','Stupenda'])
+  await cuore('storia',sc,'Anna')
+  ok((await one('select story_comments($1,$2)',[PW,st]))[0].likes[0]==='Anna','❤️ al commento di una storia')
+  let aG = await att('Giulia')
+  ok(aG.length===1 && aG[0].tipo==='cuore_commento_storia' && aG[0].cosa==='Anna' && aG[0].url==='#storie/'+st,'campanella di Giulia: Anna ha messo ❤️ al suo commento alla storia di Anna')
+  // commento a una foto
+  const alb = await one('select album_create($1,$2,$3)',[PW,'Cena','Giulia'])
+  await q('select photo_add($1,$2,$3,$4)',[PW,alb,'album/x/c.jpg','Ricky'])
+  const f = (await one('select album_photos($1,$2)',[PW,alb]))[0].id
+  const fc = await one('select photo_comment_add($1,$2,$3,$4)',[PW,f,'Luca','Che fame'])
+  await cuore('foto',fc,'Ricky')
+  ok((await one('select photo_comments($1,$2)',[PW,f]))[0].likes[0]==='Ricky' && (await att('Luca')).some(x=>x.tipo==='cuore_commento_foto' && x.cosa==='Cena' && x.url==='#foto/'+alb),'❤️ al commento di una foto (campanella di Luca: in “Cena”)')
+  // commento a un evento
+  const ev = await one('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Ricky','Bowling','','',giorno(3),null,null,null])
+  const ec = await one('select event_comment_add($1,$2,$3,$4)',[PW,ev,'Sara','Porto le scarpe'])
+  await cuore('evento',ec,'Marco')
+  ok((await one('select event_get($1,$2)',[PW,ev])).comments[0].likes[0]==='Marco' && (await att('Sara')).some(x=>x.tipo==='cuore_commento_evento' && x.cosa==='Bowling' && x.url==='#calendario/'+ev),'❤️ al commento di un evento (campanella di Sara: in “Bowling”)')
+  // commento cancellato / storia scaduta / errori
+  await q('select reply_del($1,$2,$3)',[PW,r,'Marco'])
+  ok((await att('Marco')).length===0 && (await q('select count(*)::int n from comment_likes where reply = $1',[r]))[0].n===0,'commento cancellato: spariscono i suoi ❤️ e le attività')
+  ok((await err('select comment_like($1,$2,$3,$4,$5)',[PW,'post',r,'Luca',true]))==='COMMENTO_SPARITO','❤️ a un commento cancellato: "commento sparito"')
+  await q(`update stories set created_at = now() - interval '25 hours' where id = $1`,[st])
+  ok((await err('select comment_like($1,$2,$3,$4,$5)',[PW,'storia',sc,'Luca',true]))==='COMMENTO_SPARITO','niente ❤️ ai commenti di una storia scaduta')
+  ok((await err('select comment_like($1,$2,$3,$4,$5)',[PW,'boh',fc,'Luca',true]))==='TIPO_NON_VALIDO' && (await err('select comment_like($1,$2,$3,$4,$5)',[PW,'post',fc,'Luca',true]))==='COMMENTO_SPARITO','tipo sbagliato o commento di un altro tipo: rifiutato')
+  ok((await err('select comment_like($1,$2,$3,$4,$5)',['x','foto',fc,'Luca',true]))==='PASSWORD_ERRATA','❤️ ai commenti protetti dalla password')
+  await q('select story_del($1,$2,$3)',[PW,st,'Anna'])
+  ok((await att('Giulia')).length===0,'storia eliminata: spariscono anche i ❤️ ai suoi commenti')
+  await db.exec('set role anon'); let no = false; try { await db.query('select * from comment_likes') } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') }
+  ok(no,'tabella comment_likes chiusa alla chiave pubblica')
+}
+
 // CALENDARIO DELL'AVVENTO: un tentativo per casella, 5-4-3-2-1 punti, pari merito = chi ha iniziato prima
 {
   const oggi = d => q(`create or replace function _avvento_oggi() returns date language sql stable as $$ select '${d}'::date $$`)
@@ -613,7 +665,7 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
 // ACCESSO PERSONALE: ognuno entra col suo PIN, e il database controlla CHI fa ogni azione
 {
   // ogni funzione che agisce a nome di qualcuno controlla l'identità (controllo sul testo di schema.sql)
-  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste']
+  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like']
   const senzaIo = AZIONI.filter(f => { const m = SCHEMA.match(new RegExp('create or replace function ' + f + '\\([\\s\\S]*?end \\$\\$;')); return !m || !/perform _io\(p_(name|author|organizer)\)/.test(m[0]) })
   ok(senzaIo.length === 0, `tutte le ${AZIONI.length} funzioni che agiscono a nome di qualcuno controllano chi sei` + (senzaIo.length ? ': mancano ' + senzaIo : ''))
   await db.exec(IO_VERO)   // da qui il controllo è quello vero

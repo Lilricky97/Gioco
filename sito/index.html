@@ -22,6 +22,8 @@
   --rosa:#ff3ea5;--rosa-g:rgba(255,62,165,.55);--menta:#46f5c0;--menta-g:rgba(70,245,192,.45);
   --giallo:#ffd86b;--rosso:#ff5d6c;--testo:#eef1ff;--muto:#9aa3cf;--muto2:#6c76a8;
   --r:8px;--bar:64px;
+  /* zona in alto: sui telefoni con notch / Dynamic Island un po' più di spazio sotto (Ricky, 17/11/2026: la barra finiva sotto l'isola) */
+  --alto:calc(env(safe-area-inset-top, 0px) + min(env(safe-area-inset-top, 0px), 10px));
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;color:var(--testo);font:16px/1.45 Archivo,system-ui,-apple-system,sans-serif}
@@ -61,10 +63,18 @@ a{color:var(--menta)}
 .luci i::before{content:"";position:absolute;left:22%;right:22%;top:-.07em;height:.1em;border-radius:2px 2px 0 0;background:#245c36}
 @keyframes lucina{0%{opacity:1;filter:none}50%{opacity:.22;filter:saturate(.6);box-shadow:none}}
 @media (prefers-reduced-motion:reduce){.luci i{animation:none}}
+/* neve che cade sull'insegna in alto (davanti alle lettere) */
+.neve{position:absolute;left:-.3em;right:-.3em;top:-.5em;bottom:-.4em;overflow:hidden;pointer-events:none;z-index:1}
+.fiocco{position:absolute;top:0;width:var(--s,3px);height:var(--s,3px);margin-left:calc(var(--s,3px) / -2);border-radius:50%;background:#fff;
+  box-shadow:0 0 4px 1px rgba(255,255,255,.85);opacity:0;animation:fiocco var(--d,4s) linear var(--r,0s) infinite;will-change:transform}
+.fiocco.f{width:9px;height:9px;margin-left:-4.5px;border-radius:0;background:none;box-shadow:none}
+.fiocco.f svg{display:block;width:100%;height:100%;fill:none;stroke:#fff;stroke-width:1.3;stroke-linecap:round;filter:drop-shadow(0 0 2px rgba(255,255,255,.9))}
+@keyframes fiocco{0%{transform:translate(0,-.3em) rotate(0);opacity:0}12%{opacity:.95}80%{opacity:.85}100%{transform:translate(var(--dx,0),2.1em) rotate(240deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){.neve{display:none}}
 
 /* ---------- struttura ---------- */
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:calc(8px + env(safe-area-inset-top)) 16px 8px;background:rgba(10,15,36,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(39,51,104,.6)}
+  padding:calc(8px + var(--alto)) 16px 8px;background:rgba(10,15,36,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(39,51,104,.6)}
 .logo{font-family:Monoton,"Bebas Neue",sans-serif;font-size:clamp(17px,5.4vw,24px);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;flex:none;line-height:1;color:#fff3fa;background:none;border:0;padding:6px 0;cursor:pointer;
   text-shadow:0 0 2px #fff,0 0 7px var(--rosa),0 0 16px var(--rosa),0 0 30px rgba(255,62,165,.6)}
 .logo .s7{font-family:"Bebas Neue",sans-serif;font-size:1.25em;letter-spacing:.04em;margin-left:.15em;display:inline-block;transform:rotate(-6deg) translateY(1px)}
@@ -275,7 +285,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 /* ---------- visore foto ---------- */
 .lb{position:fixed;inset:0;z-index:60;background:rgba(4,6,16,.97);display:flex;flex-direction:column;color:#fff}
 .lb-top,.lb-bot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
-.lb-top{padding-top:calc(10px + env(safe-area-inset-top))}
+.lb-top{padding-top:calc(10px + var(--alto))}
 .lb-bot{padding-bottom:calc(14px + env(safe-area-inset-bottom));flex-wrap:wrap}
 .lb-n{font-weight:600;color:var(--muto)}
 .lb-x{font-size:24px;color:#fff;background:rgba(255,255,255,.08);border-radius:50%;width:44px;height:44px;border:0;cursor:pointer}
@@ -319,7 +329,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .game .btn.ghost{background:transparent;color:#fafafa;border:1.5px solid #3a3a45;box-shadow:none}
 .gl{position:fixed;inset:0;z-index:45;background:#0a0a0c;display:flex;flex-direction:column}
 .gl[hidden]{display:none}
-.gl-bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;background:#0d0d12;border-bottom:1px solid #2a2a33}
+.gl-bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(6px + var(--alto)) 10px 6px;background:#0d0d12;border-bottom:1px solid #2a2a33}
 .gl-b{background:rgba(255,255,255,.06);border:1px solid #2a2a33;color:#fafafa;border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px;cursor:pointer}
 .gl-x{width:36px;height:36px;padding:0}
 .gl-t{font-family:"Archivo Black",Archivo,sans-serif;font-size:14px;color:#fafafa}.gl-t i{font-style:normal;color:#ff2e63}
@@ -444,7 +454,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .st-prev{border-radius:10px;overflow:hidden;background:#000;display:grid;place-items:center}
 .st-prev img{max-width:100%;max-height:44vh;display:block}
 .sv{position:fixed;inset:0;z-index:65;background:#000;color:#fff;display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none}
-.sv-bars{display:flex;gap:4px;padding:calc(10px + env(safe-area-inset-top)) 10px 0}
+.sv-bars{display:flex;gap:4px;padding:calc(10px + var(--alto)) 10px 0}
 .sv-bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden}
 .sv-bars b{display:block;height:100%;background:#fff}
 .sv-top{display:flex;align-items:center;justify-content:space-between;padding:8px 6px 8px 14px}
@@ -466,6 +476,16 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .sv-like.on svg{fill:var(--rosa)}
 .sv-like.pop svg{animation:cuore .4s ease-out}
 @keyframes cuore{0%{transform:scale(1)}35%{transform:scale(1.45)}100%{transform:scale(1)}}
+/* ❤️ ai commenti (storie, risposte ai post, foto, eventi) */
+.tw.reply>.cl{flex:none;align-self:flex-start;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;color:var(--muto2);padding:6px 4px;margin:-2px -8px 0 -4px;min-width:36px;cursor:pointer;font:700 12px/1 Archivo,sans-serif}
+.cl svg{width:18px;height:18px;stroke-width:1.9}
+.tw.reply>.cl.on{color:var(--rosa)}
+.cl.on svg{fill:var(--rosa);filter:drop-shadow(0 0 5px var(--rosa-g))}
+.cl.pop svg{animation:cuore .4s ease-out}
+.cl span:empty{display:none}
+.cl-chi{color:var(--muto);font-size:13px;margin:3px 0 4px}
+.cl-chi:empty{display:none}
+.cl-chi b{color:var(--testo);font-weight:600}
 .sv-lk{display:inline-flex;align-items:center;gap:3px;color:var(--rosa);font-style:normal;font-weight:700;margin-left:6px}
 .sv-lk svg{width:15px;height:15px;fill:var(--rosa);stroke:var(--rosa);stroke-width:1.8}
 .prs .sv-lk svg{width:18px;height:18px}
@@ -477,7 +497,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .menu-btn.on{color:var(--menta);filter:drop-shadow(0 0 6px var(--menta-g))}
 .mz-ov{align-items:stretch;justify-content:flex-start}
 .mz{width:min(90vw,380px);height:100%;overflow:auto;background:linear-gradient(180deg,#0d1433,#070b1d);border-right:1px solid var(--line);box-shadow:20px 0 60px -20px #000;
-  padding:calc(14px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));transform:translateX(-100%);transition:transform .22s ease-out}
+  padding:calc(14px + var(--alto)) 16px calc(20px + env(safe-area-inset-bottom));transform:translateX(-100%);transition:transform .22s ease-out}
 .mz-ov.in .mz{transform:none}
 .mz-top{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .mz-me{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
@@ -802,6 +822,8 @@ const MSG = {
   ESCLUSIONI_IMPOSSIBILI: 'Con queste esclusioni il sorteggio è impossibile: togline qualcuna.',
   EVENTO_NON_TROVATO: 'Questo Secret Santa non esiste più.',
   EVENTO_SPARITO: 'Questo evento non esiste più.',
+  COMMENTO_SPARITO: 'Questo commento non c’è più (cancellato o storia scaduta).',
+  TIPO_NON_VALIDO: 'Qualcosa non va: ricarica il sito.',
   TITOLO_VUOTO: 'Scrivi il nome dell\'evento (es. "Cena da Marco").',
   DATA_VUOTA: 'Scegli il giorno.',
   DATA_NON_VALIDA: 'Questa data non va bene: controllala.',
@@ -990,7 +1012,7 @@ function insegna(grande) {
   const k = Math.min(4, testa.length - 1);   // la 5ª lettera è il "tubo difettoso"
   const prima = testa.map((c, i) => i === k ? `<span class="rotto">${esc(c)}</span>` : esc(c)).join('');
   const s = prima + (m[2] ? ` <span class="s7 flick">${esc(m[2])}</span>` : '');
-  return NATALE ? `<span class="xmas">${s}${lucine(grande ? 19 : 15, grande ? 2.5 : 3)}</span>` : s;
+  return NATALE ? `<span class="xmas">${s}${lucine(grande ? 19 : 15, grande ? 2.5 : 3)}${grande ? '' : neve(16)}</span>` : s;
 }
 // ---------- Natale (richiesta di Ricky): l'insegna smette di sfarfallare e ha intorno un filo di lucine colorate che lampeggiano.
 // Si spegne da sola dopo l'Epifania (6 gennaio 2027 compreso)
@@ -1002,6 +1024,14 @@ function lucine(n, giri) {
   const b = Array.from({ length: n }, (_, i) => { const x = (i + .5) / n;
     return `<i style="left:${(x * 100).toFixed(2)}%;top:${y(x).toFixed(1)}%;--c:${COL[i % COL.length]};animation-duration:${[1.4, 1.9, 1.15][i % 3]}s;animation-delay:-${((i * .53) % 1.4).toFixed(2)}s"></i>`; }).join('');
   return `<span class="luci" aria-hidden="true"><svg viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="${d}"/></svg>${b}</span>`;
+}
+// fiocchi di neve che cadono solo sull'insegna in alto (Ricky, 17/11/2026): puntini + qualche fiocco a 6 punte che gira
+function neve(n) {
+  const FIOCCO = '<svg viewBox="-6 -6 12 12"><path d="M0-5.5V5.5M-4.8-2.75 4.8 2.75M-4.8 2.75 4.8-2.75M-1.4-4.4 0-3 1.4-4.4M-1.4 4.4 0 3 1.4 4.4"/></svg>';
+  return `<span class="neve" aria-hidden="true">${Array.from({ length: n }, (_, i) => {
+    const st = `left:${((i * 61 + 7) % 100)}%;--d:${(3.4 + (i * 37 % 26) / 10).toFixed(1)}s;--r:-${((i * 53) % 60 / 10).toFixed(1)}s;--dx:${(((i * 29) % 13) - 6) / 20}em`;
+    return i % 4 === 1 ? `<i class="fiocco f" style="${st}">${FIOCCO}</i>` : `<i class="fiocco" style="${st};--s:${[2.5, 0, 3.5, 2][i % 4]}px"></i>`;
+  }).join('')}</span>`;
 }
 
 function sblocca() { if (!document.querySelector('.ov,.lb,.sv,.gl:not([hidden])')) document.body.classList.remove('noscroll'); }
@@ -1590,8 +1620,8 @@ function drawPost(id) {
   el.innerHTML = `<section class="card xfeed">${tweetHTML(p, true)}
     <div class="likers" id="likers" hidden></div>
     <form class="rp" id="rp-form" novalidate>${avatar(S.me, 's')}<textarea id="rp-text" rows="1" maxlength="2000" placeholder="Rispondi a ${esc(p.author)}…"></textarea><button class="btn sm" type="submit">Rispondi</button></form>
-    <div id="replies">${rs.map(r => `<div class="tw reply">${avatar(r.author, 's')}<div class="tw-b"><div class="tw-h"><b>${esc(r.author)}</b><span>· ${esc(quando(r.created_at))}</span>${same(r.author, S.me) ? `<button class="icon del" data-rdel="${esc(r.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div><div class="tw-t">${richText(r.body)}</div></div></div>`).join('')}</div></section>`;
-  wireTweets(el); drawLikers(id);
+    <div id="replies">${rs.map(r => commentoHTML(r, 'data-rdel')).join('')}</div></section>`;
+  wireTweets(el); drawLikers(id); wireCuori($('#replies'), 'post', () => S.thread[id] || []);
   const ta = $('#rp-text'); ta.value = draft; autoGrow(ta);
   ta.oninput = () => { S.replyDraft[id] = ta.value; autoGrow(ta); };
   $('#rp-form').onsubmit = async e => {
@@ -1654,9 +1684,42 @@ function viewAlbum(id) {
 function votaFoto(f, val) {
   votoInCoda('f' + f.id, f, val, v => rpc('photo_vote', { p_photo: f.id, p_name: S.me, p_val: v }), () => dipingiVoti(f, 'lb'), () => Object.values(S.album).some(l => l.includes(f)));
 }
+// ❤️ ai commenti: uguale per storie, risposte ai post, foto ed eventi (tipo: storia / post / foto / evento)
+function piaceA(c) {
+  const L = c.likes || []; if (!L.length) return '';
+  const nomi = L.map(n => `<b>${same(n, S.me) ? 'te' : esc(n)}</b>`);
+  return `Piace a ${nomi.length <= 3 ? nomi.slice(0, -1).join(', ') + (nomi.length > 1 ? ' e ' : '') + nomi.at(-1) : nomi.slice(0, 2).join(', ') + ` e altri ${nomi.length - 2}`}`;
+}
+function cuoreComHTML(c) {
+  if (!Array.isArray(c.likes)) return '';   // database non ancora aggiornato: niente cuori
+  const on = c.likes.some(n => same(n, S.me));
+  return `<button class="cl${on ? ' on' : ''}" data-cl="${esc(c.id)}" aria-label="Mi piace il commento" aria-pressed="${on}">${ICO_CUORE}<span>${c.likes.length || ''}</span></button>`;
+}
+function commentoHTML(c, delAttr) {
+  return `<div class="tw reply" data-cid="${esc(c.id)}">${avatar(c.author, 's')}<div class="tw-b"><div class="tw-h"><b>${esc(c.author)}</b><span>· ${esc(quando(c.created_at))}</span>${same(c.author, S.me) ? `<button class="icon del" ${delAttr}="${esc(c.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div><div class="tw-t">${richText(c.body)}</div><div class="cl-chi">${piaceA(c)}</div></div>${cuoreComHTML(c)}</div>`;
+}
+function rifaiCuore(root, c, pop) {
+  const box = [...root.querySelectorAll('[data-cid]')].find(x => x.dataset.cid === c.id), b = box && box.querySelector('[data-cl]'); if (!b) return;
+  const on = c.likes.some(n => same(n, S.me));
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.querySelector('span').textContent = c.likes.length || '';
+  if (pop) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+  box.querySelector('.cl-chi').innerHTML = piaceA(c);
+}
+function wireCuori(root, tipo, lista) {
+  root.querySelectorAll('[data-cl]').forEach(b => b.onclick = () => {
+    const c = lista().find(x => x.id === b.dataset.cl); if (!c || !Array.isArray(c.likes)) return;
+    const voglio = !c.likes.some(n => same(n, S.me));
+    c.likes = voglio ? [...c.likes, S.me] : c.likes.filter(n => !same(n, S.me));
+    rifaiCuore(root, c, voglio);
+    inFila('cl' + c.id, async q => {   // si vede subito, poi il database conferma (i tocchi veloci partono in fila)
+      try { const r = await rpc('comment_like', { p_tipo: tipo, p_id: c.id, p_name: S.me, p_like: voglio }); if (q.n === 1 && r && Array.isArray(r.likes)) { c.likes = r.likes; rifaiCuore(root, c); } }
+      catch (ex) { toast(msg(ex), 'err'); if (q.n === 1) { c.likes = voglio ? c.likes.filter(n => !same(n, S.me)) : [...c.likes, S.me]; rifaiCuore(root, c); } }
+    });
+  });
+}
 // commenti a una foto dell'album
 // finestra dei commenti, uguale per foto e storie
-function commentiSheet({ elenco, aggiungi, elimina, conta, chiuso, max = 1000 }) {
+function commentiSheet({ tipo, elenco, aggiungi, elimina, conta, chiuso, max = 1000 }) {
   sheet(`<h3>Commenti</h3><div class="cm" id="fc-list"><div class="loading">Carico</div></div>
     <form class="rp cm-form" id="fc-form" novalidate>${avatar(S.me, 's')}<textarea id="fc-text" rows="1" maxlength="${max}" placeholder="Scrivi un commento…"></textarea><button class="btn sm" type="submit">Invia</button></form>
     <div class="row end"><button class="btn ghost" data-close>Chiudi</button></div>`, (s, close) => {
@@ -1666,8 +1729,9 @@ function commentiSheet({ elenco, aggiungi, elimina, conta, chiuso, max = 1000 })
       try {
         const L = await elenco();
         if (conta) conta(L.length);
-        list.innerHTML = L.length ? L.map(c => `<div class="tw reply">${avatar(c.author, 's')}<div class="tw-b"><div class="tw-h"><b>${esc(c.author)}</b><span>· ${esc(quando(c.created_at))}</span>${same(c.author, S.me) ? `<button class="icon del" data-cdel="${esc(c.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div><div class="tw-t">${richText(c.body)}</div></div></div>`).join('')
+        list.innerHTML = L.length ? L.map(c => commentoHTML(c, 'data-cdel')).join('')
           : '<p class="muto">Ancora nessun commento. Scrivi il primo!</p>';
+        wireCuori(list, tipo, () => L);
         list.querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
           try { await elimina(b.dataset.cdel); toast('Commento eliminato'); load(); } catch (e) { toast(msg(e), 'err'); }
         });
@@ -1684,7 +1748,7 @@ function commentiSheet({ elenco, aggiungi, elimina, conta, chiuso, max = 1000 })
   }, chiuso);
 }
 function commentiFoto(f, aggiorna) {
-  commentiSheet({
+  commentiSheet({ tipo: 'foto',
     elenco: () => rpc('photo_comments', { p_photo: f.id }),
     aggiungi: body => rpc('photo_comment_add', { p_photo: f.id, p_author: S.me, p_body: body }),
     elimina: id => rpc('photo_comment_del', { p_id: id, p_author: S.me }),
@@ -2510,7 +2574,7 @@ function disegnaEv(el, e) {
     : `<section class="card"><h3>Chi viene</h3><div class="rsvp" id="evd-rsvp">${['si', 'forse', 'no'].map(k => `<button class="rs ${k}${io === k ? ' on' : ''}" data-ans="${k}"><b>${RSVP_T[k]}</b><span>${e.rsvp[k].length}</span></button>`).join('')}</div>
       <div class="rs-l">${['si', 'forse', 'no'].filter(k => e.rsvp[k].length).map(k => `<div class="grp-k">${RSVP_T[k]} · ${e.rsvp[k].length}</div><div class="rs-p">${e.rsvp[k].map(n => `<span class="chip">${avatar(n, 'xs')}${esc(n)}</span>`).join('')}</div>`).join('') || '<p class="hint" style="margin:10px 0 0">Ancora nessuno ha risposto: sii il primo!</p>'}</div></section>`}
     <section class="card"><h3>💬 Commenti ${comm.length ? `<span class="count">${comm.length}</span>` : ''}</h3>
-      <div id="evd-com">${comm.map(c => `<div class="tw reply">${avatar(c.author, 's')}<div class="tw-b"><div class="tw-h"><b>${esc(c.author)}</b><span>· ${esc(quando(c.created_at))}</span>${same(c.author, S.me) ? `<button class="icon del" data-cdel="${esc(c.id)}" aria-label="Elimina">${ICO.del}</button>` : ''}</div><div class="tw-t">${richText(c.body)}</div></div></div>`).join('') || '<p class="muto" style="margin:0">Ancora nessun commento.</p>'}</div>
+      <div id="evd-com">${comm.map(c => commentoHTML(c, 'data-cdel')).join('') || '<p class="muto" style="margin:0">Ancora nessun commento.</p>'}</div>
       <form class="rp ev-rp" id="evd-form" novalidate>${avatar(S.me, 's')}<textarea id="evd-text" rows="1" maxlength="1000" placeholder="Scrivi un commento…"></textarea><button class="btn sm" type="submit">Invia</button></form></section>`;
   const cv = $('#evd-cover'); if (cv) cv.onclick = () => lightbox([e.cover], 0);
   const mn = $('#evd-menu'); if (mn) mn.onclick = () => menuEv(e);
@@ -2518,6 +2582,7 @@ function disegnaEv(el, e) {
   el.querySelectorAll('[data-ans]').forEach(b => b.onclick = () => rispondiEv(e, b.dataset.ans));
   el.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => votaData(e, b.dataset.dv));
   el.querySelectorAll('[data-fix]').forEach(b => b.onclick = () => fissaData(e, e.dates.find(d => d.id === b.dataset.fix)));
+  wireCuori($('#evd-com'), 'evento', () => e.comments || []);
   el.querySelectorAll('[data-cdel]').forEach(b => b.onclick = async () => {
     try { await rpc('event_comment_del', { p_id: b.dataset.cdel, p_author: S.me }); toast('Commento eliminato'); await caricaEv(e.id); } catch (ex) { toast(msg(ex), 'err'); }
   });
@@ -2927,7 +2992,11 @@ const ATT = {
   evento_forse: a => `🤔 forse viene a${q8(a.cosa)}`,
   evento_no: a => `❌ non ci sarà a${q8(a.cosa)}`,
   commento_evento: a => `ha commentato${q8(a.cosa)}`,
-  voto: a => `ha votato il tuo sondaggio${q8(a.cosa)}`
+  voto: a => `ha votato il tuo sondaggio${q8(a.cosa)}`,
+  cuore_risposta: a => `ha messo ❤️ al tuo commento al post${q8(a.cosa)}`,
+  cuore_commento_storia: a => same(a.cosa, S.me) ? 'ha messo ❤️ al tuo commento alla tua storia' : `ha messo ❤️ al tuo commento alla storia di ${esc(a.cosa)}`,
+  cuore_commento_foto: a => `ha messo ❤️ al tuo commento a una foto in${q8(a.cosa)}`,
+  cuore_commento_evento: a => `ha messo ❤️ al tuo commento in${q8(a.cosa)}`
 };
 function attHTML(a, nuova) {
   const t = (ATT[a.tipo] || (() => 'ha interagito con te'))(a);
@@ -3300,7 +3369,7 @@ function guardaStorie(tutte, gi, opz = {}) {
     };
     el.querySelector('#sv-com').onclick = () => {
       pausa();
-      commentiSheet({
+      commentiSheet({ tipo: 'storia',
         max: 500,
         elenco: () => rpc('story_comments', { p_story: s.id }),
         aggiungi: body => rpc('story_comment_add', { p_story: s.id, p_author: S.me, p_body: body }),
@@ -3355,11 +3424,12 @@ function guardaStorie(tutte, gi, opz = {}) {
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
   const desc = (a, b) => a.created_at < b.created_at ? 1 : -1;
+  const cuoriCom = id => D.clikes.filter(l => l.c === id).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(l => l.name);   // ❤️ a un commento
   const alfa = (x, y) => x.toLowerCase() < y.toLowerCase() ? -1 : 1;
   const fotoFinta = (i, emo, scritta, W = 900, H = 675, nome = 'foto') => {
     const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
@@ -3380,10 +3450,11 @@ function creaDemo() {
     .forEach(([author, min, emo, scritta, caption], i) => D.stories.push({ id: uid(), author, path: fotoFinta(i + 10, emo, scritta, 720, 1280, 'storia'), caption: caption || '', created_at: t(min) }));
   D.scomments.push({ id: uid(), story_id: D.stories[1].id, author: 'Sara', body: 'Che cucciolo!! 😍', created_at: t(30) });
   D.slikes.push({ story: D.stories[1].id, name: 'Sara' }, { story: D.stories[1].id, name: 'Luca' });
+  D.clikes.push({ c: D.scomments.at(-1).id, name: 'Luca', created_at: t(20) });
   // campanella di prova: cose che gli altri "hanno fatto" con le tue (valgono per chiunque entri)
   D.att = [['Giulia', 'cuore', '', '', '#novita', 8], ['Marco', 'risposta', 'Chi viene al mare sabato?', 'Io ci sono! Porto il pallone ⚽', '#novita', 35],
     ['Sara', 'evento_si', 'Cena di Natale (prova)', '', '#calendario', 95], ['Luca', 'voto', 'Dove andiamo a Capodanno?', '', '#sondaggi', 60 * 5],
-    ['Anna', 'like_foto', 'Sabato al mare (prova)', '', '#foto', 60 * 26], ['Giulia', 'like', 'Chi viene al mare sabato?', '', '#novita', 60 * 30]]
+    ['Anna', 'like_foto', 'Sabato al mare (prova)', '', '#foto', 60 * 26], ['Luca', 'cuore_risposta', 'Chi viene al mare sabato?', 'Ci sto, porto le racchette 🏓', '#novita', 60 * 3], ['Giulia', 'like', 'Chi viene al mare sabato?', '', '#novita', 60 * 30]]
     .map(([chi, tipo, cosa, testo, url, min], i) => ({ id: i + 1, chi, tipo, cosa, testo, url, created_at: t(min) }));
   D.attViste = {};
   // avvento di prova: risultati finti della casella 1 (si vedono dal 1° dicembre)
@@ -3450,7 +3521,7 @@ function creaDemo() {
   const evJ = (e, full) => ({ id: e.id, author: e.author, title: e.title, place: e.place, day: e.day, ora: e.ora || null, cover: e.cover || null, created_at: e.created_at, voting: !e.day,
     rsvp: Object.fromEntries(['si', 'forse', 'no'].map(k => [k, e.rsvp.filter(r => r.ans === k).map(r => r.name)])), n_comments: e.comments.length,
     dates: e.day ? [] : e.dates.map(d => ({ id: d.id, day: d.day, ora: d.ora || null, voters: d.voters.slice() })),
-    body: full ? e.body : e.body.slice(0, 140), comments: full ? e.comments.map(c => Object.assign({}, c)) : null });
+    body: full ? e.body : e.body.slice(0, 140), comments: full ? e.comments.map(c => Object.assign({}, c, { likes: cuoriCom(c.id) })) : null });
   const logga = (e, m) => e.log.push({ at: t(0), msg: m });
   const persona = (name, pin, wish, pending) => ({ id: uid(), name, pin, wish: wish || '', pending: !!pending, code: null, seen_draw: 0, seen_at: 0, changed_at: 0, bought: false, pin_fail: 0, pin_lock: 0 });
   const nuovoEvento = (name, budget, gift_date, organizer, admin_pin) => { const e = { id: uid(), name, budget, gift_date, organizer, admin_pin, status: 'open', drawn_at: null, created_at: t(0), draw_no: 0, prev_event: null, admin_fail: 0, admin_lock: 0, people: [], excl: [], pairs: null, log: [], questions: [] }; D.ss.push(e); return e; };
@@ -3592,7 +3663,7 @@ function creaDemo() {
     story_add: a => { need(a); const p = clean(a.p_path, 300); if (!p) throw err('POST_VUOTO'); const id = uid(); D.stories.push({ id, author: clean(a.p_author, 30), path: p, caption: clean(a.p_caption, 150), created_at: t(0) }); return id; },
     story_seen: a => { need(a); const n = clean(a.p_name, 30), s = D.stories.find(x => x.id === a.p_id); if (n && s && !same(s.author, n) && !D.views.some(v => v.story === s.id && same(v.name, n))) D.views.push({ story: s.id, name: n }); },
     story_del: a => { need(a); D.stories = D.stories.filter(s => !(s.id === a.p_id && s.author === a.p_author)); D.scomments = D.scomments.filter(c => D.stories.some(s => s.id === c.story_id)); D.slikes = D.slikes.filter(l => D.stories.some(s => s.id === l.story)); },
-    story_comments: a => { need(a); return D.scomments.filter(c => c.story_id === a.p_story).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(c => ({ id: c.id, author: c.author, body: c.body, created_at: c.created_at })); },
+    story_comments: a => { need(a); return D.scomments.filter(c => c.story_id === a.p_story).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(c => ({ id: c.id, author: c.author, body: c.body, created_at: c.created_at, likes: cuoriCom(c.id) })); },
     story_comment_add: a => {
       need(a); const b = clean(a.p_body, 500); if (!b) throw err('POST_VUOTO');
       const st = D.stories.find(x => x.id === a.p_story); if (!st || new Date(st.created_at) < Date.now() - 864e5) throw err('STORIA_SCADUTA');
@@ -3609,13 +3680,23 @@ function creaDemo() {
     },
     post_vote: a => vota(a, D.likes, 'post', a.p_id, a.p_name, a.p_val, () => D.posts.some(p => p.id === a.p_id), 'POST_NON_TROVATO'),
     photo_vote: a => vota(a, D.pvotes, 'photo', a.p_photo, a.p_name, a.p_val, () => D.photos.some(f => f.id === a.p_photo), 'FOTO_NON_TROVATA'),
-    post_thread: a => { need(a); return D.replies.filter(r => r.post_id === a.p_id).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(r => ({ id: r.id, author: r.author, body: r.body, created_at: r.created_at })); },
+    post_thread: a => { need(a); return D.replies.filter(r => r.post_id === a.p_id).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(r => ({ id: r.id, author: r.author, body: r.body, created_at: r.created_at, likes: cuoriCom(r.id) })); },
+    comment_like: a => {
+      need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO');
+      const c = { storia: () => D.scomments.some(c => c.id === a.p_id && D.stories.some(st => st.id === c.story_id && new Date(st.created_at) > Date.now() - 864e5)),
+        post: () => D.replies.some(r => r.id === a.p_id), foto: () => D.pcomments.some(c => c.id === a.p_id),
+        evento: () => D.events.some(e => e.comments.some(c => c.id === a.p_id)) }[a.p_tipo];
+      if (!c) throw err('TIPO_NON_VALIDO'); if (!c()) throw err('COMMENTO_SPARITO');
+      D.clikes = D.clikes.filter(l => !(l.c === a.p_id && same(l.name, n)));
+      if (a.p_like !== false) D.clikes.push({ c: a.p_id, name: n, created_at: t(0) });
+      return { likes: cuoriCom(a.p_id) };
+    },
     reply_add: a => { need(a); const b = clean(a.p_body, 2000); if (!b) throw err('POST_VUOTO'); if (!D.posts.some(p => p.id === a.p_id)) throw err('POST_NON_TROVATO'); const id = uid(); D.replies.push({ id, post_id: a.p_id, author: clean(a.p_author, 30), body: b, created_at: t(0) }); return id; },
     reply_del: a => { need(a); D.replies = D.replies.filter(r => !(r.id === a.p_id && r.author === a.p_author)); },
     albums_list: a => { need(a); return D.albums.slice().sort(desc).map(x => { const ph = D.photos.filter(f => f.album_id === x.id).sort(desc); return Object.assign({}, x, { n: ph.length, cover: ph[0] ? ph[0].path : null }); }); },
     album_create: a => { need(a); const n = clean(a.p_name, 60); if (!n) throw err('NOME_VUOTO'); const id = uid(); D.albums.push({ id, name: n, created_by: clean(a.p_author, 30), created_at: t(0) }); return id; },
     album_photos: a => { need(a); return D.photos.filter(f => f.album_id === a.p_album).sort(desc).map(f => ({ id: f.id, path: f.path, author: f.author, created_at: f.created_at, comments: D.pcomments.filter(c => c.photo_id === f.id).length, likes: D.pvotes.filter(v => v.photo === f.id && v.val === 1).map(v => v.name), dislikes: D.pvotes.filter(v => v.photo === f.id && v.val === -1).map(v => v.name) })); },
-    photo_comments: a => { need(a); return D.pcomments.filter(c => c.photo_id === a.p_photo).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(c => ({ id: c.id, author: c.author, body: c.body, created_at: c.created_at })); },
+    photo_comments: a => { need(a); return D.pcomments.filter(c => c.photo_id === a.p_photo).sort((x, y) => x.created_at < y.created_at ? -1 : 1).map(c => ({ id: c.id, author: c.author, body: c.body, created_at: c.created_at, likes: cuoriCom(c.id) })); },
     photo_comment_add: a => { need(a); const b = clean(a.p_body, 1000); if (!b) throw err('POST_VUOTO'); if (!D.photos.some(f => f.id === a.p_photo)) throw err('FOTO_NON_TROVATA'); const id = uid(); D.pcomments.push({ id, photo_id: a.p_photo, author: clean(a.p_author, 30), body: b, created_at: t(0) }); return id; },
     photo_comment_del: a => { need(a); D.pcomments = D.pcomments.filter(c => !(c.id === a.p_id && c.author === a.p_author)); },
     photo_add: a => { need(a); D.photos.push({ id: uid(), album_id: a.p_album, path: clean(a.p_path, 300), author: clean(a.p_author, 30), created_at: t(0) }); },
