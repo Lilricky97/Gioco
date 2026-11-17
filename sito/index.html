@@ -633,6 +633,15 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .avv-s-n{display:inline-grid;place-items:center;width:84px;height:84px;margin:4px 0 8px;border-radius:10px;font:400 52px/1 "Bebas Neue",sans-serif;color:#fff;
   background:linear-gradient(90deg,transparent 42%,rgba(255,255,255,.85) 42% 58%,transparent 58%),var(--k);box-shadow:0 0 22px var(--k)}
 .avv-s .row{justify-content:center}
+.avv-test{margin:0 0 12px;padding:6px 10px;border-radius:6px;background:repeating-linear-gradient(-45deg,rgba(255,216,107,.18) 0 10px,rgba(255,216,107,.07) 10px 20px);border:1px solid rgba(255,216,107,.5);color:var(--giallo);font:800 11.5px/1.4 Archivo,sans-serif;letter-spacing:.06em}
+.lab-in{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;cursor:pointer;color:var(--testo);border-color:rgba(255,216,107,.45);background:linear-gradient(100deg,rgba(255,216,107,.1),transparent 70%),var(--card)}
+.lab-in span{font-size:22px}.lab-in b{font-size:17px;color:var(--giallo)}.lab-in small{color:var(--muto)}
+.lab{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.lab-r{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.lab-n{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:6px;font:400 26px/1 "Bebas Neue",sans-serif;color:#fff;
+  background:linear-gradient(90deg,transparent 42%,rgba(255,255,255,.75) 42% 58%,transparent 58%),var(--k);text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.lab-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.lab-t small{color:var(--muto2);font-size:12.5px}
 @media (prefers-reduced-motion:reduce){.avv-neve,.avv-c.oggi{animation:none}}
 .soon{text-align:center;padding:34px 18px}
 .soon .mic{font-size:64px;filter:drop-shadow(0 0 16px var(--rosa-g))}
@@ -2487,7 +2496,21 @@ function giornoAvvento() {
   return d.getFullYear() === AVV_ANNO && d.getMonth() === 11 ? d.getDate() : 99;
 }
 const ICO_LUCCHETTO = svg('<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>');
-function viewAvvento() {
+// I GIOCHINI: uno per casella, si aggiungono qui man mano (anche prima del loro giorno: gli altri li vedono solo dal giorno giusto).
+// Forma: GIOCHI_AVVENTO[5] = { nome: 'Indovina chi', gioca(box, { test, fine }) { ...disegna il gioco in box...; fine(punti) } }
+// In prova (laboratorio dell'amministratore) test = true: i punti non vengono salvati e l'amministratore non è in classifica.
+const GIOCHI_AVVENTO = {};
+function apriCasella(n, test) {
+  const g = GIOCHI_AVVENTO[n], k = AVV_COL[AVV_ORDINE.indexOf(n) % AVV_COL.length];
+  sheet(`<div class="avv-s">${test ? '<div class="avv-test">🔧 PROVA · solo tu la vedi · i punti non contano</div>' : ''}
+    <div class="avv-s-n" style="--k:${k}">${n}</div><h3>${g ? esc(g.nome) : `Casella del ${n} dicembre`}</h3>
+    <div class="avv-gioco">${g ? '' : `<p class="muto">${test ? 'Questo giochino non è ancora stato creato: quando lo carichiamo lo provi da qui.' : 'Il giochino di questa casella è in arrivo: stiamo preparando i 19 giochi e la classifica. 🎄'}</p>`}</div>
+    <div class="row end"><button class="btn" data-close>${g ? 'Chiudi' : 'Ok'}</button></div></div>`, (s, close) => {
+    if (g) g.gioca(s.querySelector('.avv-gioco'), { test: !!test, fine: punti => { if (test) toast(`Prova finita: ${punti} punti (non salvati)`); close(); } });
+  });
+}
+function viewAvvento(arg) {
+  if (arg === 'lab') return viewLab();
   const oggi = giornoAvvento(), manca = Math.ceil((new Date(AVV_ANNO, 11, 1) - Date.now()) / 864e5);
   const stato = oggi === 0 ? `⏳ La prima casella si apre il <b>1° dicembre</b>: ${manca === 1 ? 'manca <b>1 giorno</b>' : `mancano <b>${manca} giorni</b>`}`
     : oggi <= 19 ? `🎁 Oggi si apre la casella <b>${oggi}</b>` : '🎄 Tutte le caselle sono aperte';
@@ -2499,17 +2522,34 @@ function viewAvvento() {
       return `<button class="avv-c ${s}${AVV_GRANDI.includes(n) ? ' grande' : ''}" data-n="${n}" style="--k:${AVV_COL[i % AVV_COL.length]}" aria-label="Casella ${n}${s === 'chiusa' ? ', chiusa' : ''}">
         <span class="avv-n">${n}</span>${s === 'chiusa' ? `<span class="avv-l">${ICO_LUCCHETTO}</span>` : s === 'oggi' ? '<span class="avv-o">Oggi</span>' : '<span class="avv-v">✓</span>'}</button>`;
     }).join('')}</div>
-    <section class="card avv-cl"><h3>🏆 Classifica</h3><p class="muto">In arrivo: qui vedrete chi fa più punti con i giochini.</p></section>`;
+    <section class="card avv-cl"><h3>🏆 Classifica</h3><p class="muto">In arrivo: qui vedrete chi fa più punti con i giochini.</p></section>
+    ${adminPin() ? `<button class="card lab-in" data-go="#avvento/lab"><span>🔧</span><b>Laboratorio dei giochi</b><small>Solo per te (amministratore): prova tutti i giochini prima che escano</small></button>` : ''}`;
   $('#view').querySelectorAll('.avv-c').forEach(b => b.onclick = () => {
     const n = +b.dataset.n;
     if (b.classList.contains('chiusa')) {
       b.classList.remove('no'); void b.offsetWidth; b.classList.add('no');
       return toast(`La casella ${n} si apre il ${n} dicembre ⏳`);
     }
-    sheet(`<div class="avv-s"><div class="avv-s-n" style="--k:${b.style.getPropertyValue('--k')}">${n}</div><h3>Casella del ${n} dicembre</h3>
-      <p class="muto">Il giochino di questa casella è in arrivo: stiamo preparando i 19 giochi e la classifica. 🎄</p>
-      <div class="row end"><button class="btn" data-close>Ok</button></div></div>`);
+    apriCasella(n, false);
   });
+}
+// laboratorio: solo con l'Area amministratore sbloccata. Tutte le caselle si provano subito, i punti non contano
+function viewLab() {
+  if (!adminPin()) {
+    $('#view').innerHTML = `<button class="back" data-go="#avvento">‹ Avvento</button><div class="empty" style="margin-top:20px">🔒 Il laboratorio è solo per l'amministratore.<br><span class="muto">Sblocca l'Area amministratore (bottone verde "online" → Area amministratore) e torna qui.</span></div>`;
+    return;
+  }
+  const oggi = giornoAvvento(), fatti = Object.keys(GIOCHI_AVVENTO).length;
+  $('#view').innerHTML = `<button class="back" data-go="#avvento">‹ Avvento</button><h1 class="neon m">Laboratorio</h1>
+    <p class="intro">Solo tu lo vedi. Qui provi ogni giochino anche prima del suo giorno: gli altri vedono la casella chiusa fino al giorno giusto. I punti fatti qui non vengono salvati e tu non sei in classifica.</p>
+    <div class="avv-stato">🧩 Giochini pronti: <b>${fatti} su 19</b></div>
+    <div class="lab">${Array.from({ length: 19 }, (_, i) => i + 1).map(n => {
+      const g = GIOCHI_AVVENTO[n], k = AVV_COL[AVV_ORDINE.indexOf(n) % AVV_COL.length];
+      const stato = n < oggi || oggi === 99 ? 'già aperta per tutti' : n === oggi ? 'si apre oggi per tutti' : `gli altri la vedono dal ${n} dicembre`;
+      return `<div class="lab-r"><span class="lab-n" style="--k:${k}">${n}</span><span class="lab-t"><b>${g ? esc(g.nome) : 'Giochino da creare'}</b><small>${stato}</small></span>
+        <button class="btn ghost xs" data-prova="${n}">▶ Prova</button></div>`;
+    }).join('')}</div>`;
+  $('#view').querySelectorAll('[data-prova]').forEach(b => b.onclick = () => apriCasella(+b.dataset.prova, true));
 }
 
 // ===================== FANTASANREMO =====================

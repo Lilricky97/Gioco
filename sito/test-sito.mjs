@@ -724,6 +724,18 @@ for (let n = 4; n >= 0; n--) { await ricky.click('#pinfeed .tw [data-pin] >> nth
 await ricky.waitForFunction(() => document.querySelector('#pinfeed').textContent.includes('Ancora nessun post'))
 await ricky.click('[data-tab=novita]'); await ricky.waitForFunction(k => document.querySelectorAll('#feed .tw').length === k, nHome)
 ok(true, 'l\'amministratore li toglie: tornano nelle Novità')
+// laboratorio dei giochi dell'avvento: solo per l'amministratore (Area amministratore sbloccata)
+await vai(ricky, 'avvento'); await ricky.waitForSelector('.lab-in')
+await ricky.click('.lab-in'); await ricky.waitForSelector('.lab-r')
+ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('0 su 19'), 'laboratorio: le 19 caselle, 0 giochini pronti')
+await ricky.click('.lab-r:has(.lab-n:text-is("19")) [data-prova]'); await ricky.waitForSelector('.avv-test')
+ok((await ricky.textContent('.sheet')).includes('PROVA') && (await ricky.textContent('.sheet')).includes('non è ancora stato creato'), 'laboratorio: anche la casella 19 si prova subito (in PROVA, punti non salvati)')
+await shot(ricky, '41-laboratorio'); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
+await vai(marco, 'avvento'); await marco.waitForSelector('.avv-c')
+ok(await marco.locator('.lab-in').count() === 0, 'Marco non vede il laboratorio')
+await marco.evaluate(() => { location.hash = '#avvento/lab' }); await marco.waitForSelector('.empty')
+ok((await marco.textContent('.empty')).includes('solo per l\'amministratore') && await marco.locator('.lab-r').count() === 0, 'Marco che prova a entrare nel laboratorio viene fermato')
+await ricky.click('[data-tab=novita]'); await ricky.waitForSelector('#feed .tw'); await marco.click('[data-tab=novita]'); await marco.waitForSelector('#feed .tw')
 await ricky.click('#on-btn'); await ricky.waitForSelector('#gruppo [data-adm-lock]'); await ricky.click('#gruppo [data-adm-lock]'); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
 
 // blocchi colorati nelle Novità: post azzurro, evento verde, Secret Santa rosso, sondaggio giallo, foto viola
@@ -897,7 +909,11 @@ await pr.click('.lb-x')
 await vai(pr, 'santa'); await pr.waitForSelector('.ss-item'); await pr.click('.ss-item'); await pr.waitForSelector('#ss-join')
 await pr.fill('#ss-join [name=pin]', '5555'); await pr.click('#ss-join [type=submit]'); await pr.waitForSelector('#ss-me [data-a=wish]')
 await apriAdm(pr); ok((await pr.textContent('#adm-body')).includes('0000'), 'prova: suggerito il PIN organizzatore 0000')
-await pr.fill('#adm-in [name=p]', '0000'); await pr.click('#adm-in button'); await pr.waitForSelector('[data-x=draw]')
+await pr.fill('#adm-in [name=p]', '0000'); await pr.click('#adm-in button')
+try { await pr.waitForSelector('[data-x=draw]', { timeout: 10000 }) } catch (e) {   // diagnosi del raro blocco: cosa c'è sullo schermo
+  console.log('DIAGNOSI', JSON.stringify(await pr.evaluate(() => ({ hash: location.hash, open: document.querySelector('#ss-adm')?.open, adm: JSON.stringify(S.ui.adm), admErr: JSON.stringify(S.ui.admErr || null), body: (document.querySelector('#adm-body')?.innerText || '').slice(0, 200), pin: document.querySelector('#adm-in [name=p]')?.value, chiavi: Object.keys(localStorage).filter(k => /ssadm/.test(k)), ov: [...document.querySelectorAll('.ov,.toast')].map(x => x.className + ':' + x.innerText.slice(0, 60)) }))))
+  await shot(pr, 'DIAGNOSI-blocco'); throw e
+}
 await pr.click('[data-x=draw]'); await pr.waitForSelector('.sheet [name=a]'); await pr.uncheck('.sheet [name=a]'); await pr.click('.sheet [type=submit]'); await pr.waitForSelector('#ss-me [data-a=reveal]')
 await pr.click('#ss-me [data-a=reveal]'); await pr.waitForSelector('.rv-name')
 const dTo = (await pr.textContent('.rv-name')).trim()
