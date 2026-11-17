@@ -271,6 +271,25 @@ create table if not exists notif_queue (        -- "cassetta delle lettere" dell
 -- notifiche personali (es. "ha commentato la tua storia"): solo a questi nomi (in minuscolo), anche se non hanno scelto quel tipo
 alter table notif_queue add column if not exists dest text[];
 
+create table if not exists attivita (            -- "campanella": cosa hanno fatto gli altri con le tue cose (si cancella dopo 7 giorni)
+  id bigint generated always as identity primary key,
+  dest text not null,                            -- a chi (nome in minuscolo)
+  chi text not null,                             -- chi l'ha fatto
+  tipo text not null,                            -- like, risposta, cuore, commento_storia(_altri), like_foto, commento_foto, evento_si/forse/no, commento_evento, voto
+  cosa text not null default '',                 -- su cosa: inizio del post, cartella, titolo dell'evento, domanda del sondaggio
+  testo text not null default '',                -- il loro testo (commento, risposta)
+  url text not null default '',                  -- dove porta il tocco
+  rif text not null,                             -- per toglierla se la cosa viene annullata (mi piace tolto, commento cancellato)
+  created_at timestamptz not null default now()
+);
+create index if not exists attivita_dest on attivita(dest, created_at desc);
+create index if not exists attivita_rif on attivita(rif);
+
+create table if not exists attivita_lette (      -- fin quando ognuno ha già guardato la campanella
+  name text primary key,                         -- nome in minuscolo
+  at timestamptz not null default now()
+);
+
 alter table app_config enable row level security;
 alter table members   enable row level security;
 alter table stories     enable row level security;
@@ -301,6 +320,8 @@ alter table event_dates      enable row level security;
 alter table event_date_votes enable row level security;
 alter table push_subs        enable row level security;
 alter table notif_queue      enable row level security;
+alter table attivita         enable row level security;
+alter table attivita_lette   enable row level security;
 -- nessuna policy: dall'esterno si passa solo dalle funzioni qui sotto
 
 -- ---------- utilità ----------
@@ -1866,6 +1887,187 @@ begin
   return vapid_get();
 end $$;
 
+-- ---------- CAMPANELLA: le interazioni degli altri con le tue cose ----------
+-- Le riempiono i trigger qui sotto. Ognuno vede solo le sue (dest). Dopo 7 giorni si cancellano da sole.
+-- Se la cosa viene annullata (mi piace tolto, commento cancellato, post eliminato) l'attività sparisce.
+create or replace function _att(p_dest text, p_chi text, p_tipo text, p_cosa text, p_testo text, p_url text, p_rif text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if coalesce(p_dest, '') = '' or coalesce(p_chi, '') = '' or lower(p_dest) = lower(p_chi) then return; end if;   -- le tue cose fatte da te: no
+  delete from attivita where created_at < now() - interval '7 days';
+  delete from attivita where rif = p_rif and dest = lower(p_dest);
+  insert into attivita(dest, chi, tipo, cosa, testo, url, rif)
+  values (lower(p_dest), p_chi, p_tipo, left(regexp_replace(coalesce(p_cosa, ''), '\s+', ' ', 'g'), 80),
+          left(regexp_replace(coalesce(p_testo, ''), '\s+', ' ', 'g'), 160), coalesce(p_url, ''), p_rif);
+end $$;
+
+create or replace function _att_via(p_rif text) returns void
+language sql security definer set search_path = public, extensions as $$ delete from attivita where rif = p_rif $$;
+
+create or replace function _att_post_like() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op <> 'INSERT' then perform _att_via('pl:' || old.post_id || ':' || lower(old.name)); end if;
+  if tg_op <> 'DELETE' then
+    if new.val = 1 then   -- solo i 👍 (i 👎 non si segnalano)
+      perform _att(p.author, new.name, 'like', coalesce(nullif(p.body, ''), '📷 foto'), '', '#post/' || p.id, 'pl:' || new.post_id || ':' || lower(new.name))
+        from posts p where p.id = new.post_id;
+    end if;
+  end if;
+  return null;
+exception when others then return null;          -- la campanella non deve mai bloccare niente
+end $$;
+drop trigger if exists att_post_like on post_likes;
+create trigger att_post_like after insert or update or delete on post_likes for each row execute function _att_post_like();
+
+create or replace function _att_risposta() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op = 'DELETE' then perform _att_via('pr:' || old.id); return null; end if;
+  perform _att(p.author, new.author, 'risposta', coalesce(nullif(p.body, ''), '📷 foto'), new.body, '#post/' || p.id, 'pr:' || new.id)
+    from posts p where p.id = new.post_id;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_risposta on post_replies;
+create trigger att_risposta after insert or delete on post_replies for each row execute function _att_risposta();
+
+create or replace function _att_cuore() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op = 'DELETE' then perform _att_via('sl:' || old.story_id || ':' || lower(old.name)); return null; end if;
+  perform _att(s.author, new.name, 'cuore', s.caption, '', '#storie/' || s.id, 'sl:' || new.story_id || ':' || lower(new.name))
+    from stories s where s.id = new.story_id;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_cuore on story_likes;
+create trigger att_cuore after insert or delete on story_likes for each row execute function _att_cuore();
+
+-- commento a una storia: a chi l'ha pubblicata e a chi l'aveva già commentata
+create or replace function _att_commento_storia() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text;
+begin
+  if tg_op = 'DELETE' then perform _att_via('sc:' || old.id); return null; end if;
+  select author into a from stories where id = new.story_id;
+  if a is null then return null; end if;
+  perform _att(a, new.author, 'commento_storia', '', new.body, '#storie/' || new.story_id, 'sc:' || new.id);
+  perform _att(x.n, new.author, 'commento_storia_altri', a, new.body, '#storie/' || new.story_id, 'sc:' || new.id)
+    from (select distinct lower(c.author) as n from story_comments c
+          where c.story_id = new.story_id and c.id <> new.id and lower(c.author) <> lower(a)) x;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_commento_storia on story_comments;
+create trigger att_commento_storia after insert or delete on story_comments for each row execute function _att_commento_storia();
+
+create or replace function _att_like_foto() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op <> 'INSERT' then perform _att_via('fv:' || old.photo_id || ':' || lower(old.name)); end if;
+  if tg_op <> 'DELETE' then
+    if new.val = 1 then
+      perform _att(f.author, new.name, 'like_foto', a.name, '', '#foto/' || f.album_id, 'fv:' || new.photo_id || ':' || lower(new.name))
+        from photos f join albums a on a.id = f.album_id where f.id = new.photo_id;
+    end if;
+  end if;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_like_foto on photo_votes;
+create trigger att_like_foto after insert or update or delete on photo_votes for each row execute function _att_like_foto();
+
+create or replace function _att_commento_foto() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op = 'DELETE' then perform _att_via('fc:' || old.id); return null; end if;
+  perform _att(f.author, new.author, 'commento_foto', a.name, new.body, '#foto/' || f.album_id, 'fc:' || new.id)
+    from photos f join albums a on a.id = f.album_id where f.id = new.photo_id;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_commento_foto on photo_comments;
+create trigger att_commento_foto after insert or delete on photo_comments for each row execute function _att_commento_foto();
+
+create or replace function _att_evento() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op <> 'INSERT' then perform _att_via('er:' || old.event_id || ':' || lower(old.name)); end if;
+  if tg_op <> 'DELETE' then
+    perform _att(e.author, new.name, 'evento_' || new.ans, e.title, '', '#calendario/' || e.id, 'er:' || new.event_id || ':' || lower(new.name))
+      from events e where e.id = new.event_id;
+  end if;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_evento on event_rsvp;
+create trigger att_evento after insert or update or delete on event_rsvp for each row execute function _att_evento();
+
+create or replace function _att_commento_evento() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op = 'DELETE' then perform _att_via('ec:' || old.id); return null; end if;
+  perform _att(e.author, new.author, 'commento_evento', e.title, new.body, '#calendario/' || e.id, 'ec:' || new.id)
+    from events e where e.id = new.event_id;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_commento_evento on event_comments;
+create trigger att_commento_evento after insert or delete on event_comments for each row execute function _att_commento_evento();
+
+-- voto a un sondaggio: una sola attività per persona (anche se sceglie più risposte)
+create or replace function _att_voto() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op = 'DELETE' then
+    if not exists (select 1 from poll_votes v where v.poll_id = old.poll_id and lower(v.name) = lower(old.name)) then
+      perform _att_via('vo:' || old.poll_id || ':' || lower(old.name));
+    end if;
+    return null;
+  end if;
+  perform _att(p.author, new.name, 'voto', p.question, '', '#sondaggi', 'vo:' || new.poll_id || ':' || lower(new.name))
+    from polls p where p.id = new.poll_id;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_voto on poll_votes;
+create trigger att_voto after insert or delete on poll_votes for each row execute function _att_voto();
+
+-- la campanella di una persona: le attività degli ultimi 7 giorni (le più recenti prima) e fin dove le ha già viste
+create or replace function attivita_list(p_pw text, p_name text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare n text := lower(_clean(p_name, 30));
+begin
+  perform _need(p_pw);
+  return json_build_object('viste', (select at from attivita_lette where name = n),
+    'items', coalesce((select json_agg(x order by x.created_at desc) from (
+      select id, chi, tipo, cosa, testo, url, created_at from attivita
+      where dest = n and created_at > now() - interval '7 days' order by created_at desc limit 100) x), '[]'::json));
+end $$;
+
+-- quante attività non ancora viste (la campanella si illumina): il sito lo chiede insieme al "bussare"
+create or replace function attivita_nuove(p_pw text, p_name text) returns int
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare n text := lower(_clean(p_name, 30));
+begin
+  perform _need(p_pw);
+  return (select count(*) from attivita a where a.dest = n and a.created_at > now() - interval '7 days'
+    and a.created_at > coalesce((select l.at from attivita_lette l where l.name = n), '-infinity'::timestamptz))::int;
+end $$;
+
+-- "le ho viste" (fino a p_fino: la più recente che il telefono ha mostrato). Non torna mai indietro
+create or replace function attivita_viste(p_pw text, p_name text, p_fino timestamptz) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := lower(_clean(p_name, 30)); f timestamptz := least(coalesce(p_fino, now()), now());
+begin
+  perform _need(p_pw);
+  if n = '' then raise exception 'NOME_VUOTO'; end if;
+  insert into attivita_lette(name, at) values (n, f)
+  on conflict (name) do update set at = greatest(attivita_lette.at, excluded.at);
+  return json_build_object('ok', true);
+end $$;
+
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
 grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_like, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
@@ -1875,14 +2077,16 @@ grant execute on function check_pw, members_list, member_add, presenza, avatars_
   ss_draw, ss_undo, ss_event_del, ss_reveal, ss_check, ss_admin_check, ss_reset_pin,
   ss_me, ss_admit, ss_status, ss_tabella, ss_bought, ss_ask, ss_inbox, ss_answer,
   events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
-  event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe to anon, authenticated;
+  event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
-  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave from anon, authenticated;
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
-  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave from public;
+  _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin

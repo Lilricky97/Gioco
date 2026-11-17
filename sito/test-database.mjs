@@ -13,7 +13,7 @@ const PW='cocorico'
 {
   const sch = fs.readFileSync(new URL('./schema.sql', import.meta.url),'utf8').replace(/--[^\n]*/g, '')
   const senza = [...sch.matchAll(/\b(delete\s+from|update)\s+[a-z_.]+[^;]*;/gi)].map(m => m[0])
-    .filter(st => !/\bwhere\b/i.test(st) && !/\bupdate\s+of\b/i.test(st) && !/^update\s+set\b/i.test(st))
+    .filter(st => !/\bwhere\b/i.test(st) && !/\bupdate\s+of\b/i.test(st) && !/^update\s+set\b/i.test(st) && !/^update\s+or\s+delete\s+on\b/i.test(st))   // i trigger "after insert or update or delete on ..." non sono comandi
   if (senza.length) console.log('❌ DELETE/UPDATE senza WHERE (Supabase li blocca):', senza.map(x => x.replace(/\s+/g, ' ').slice(0, 60)))
   else console.log('✅ nessuna DELETE/UPDATE senza WHERE (Supabase le bloccherebbe)')
 }
@@ -499,6 +499,68 @@ ok((await q('select count(*)::int n from notif_queue'))[0].n===prima+1,'senza pg
 await q('select push_unsubscribe($1,$2)',[PW,EP(1)]); await comeRuolo('service_role','select push_gone($1)',[EP(2)])
 ok((await q('select count(*)::int n from push_subs'))[0].n===2,'disiscrizione dal telefono e telefoni spariti tolti')
 await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub','vapid_priv')`)
+}
+
+// CAMPANELLA: ognuno vede solo le interazioni degli altri con le sue cose
+{
+  const att = async n => (await one('select attivita_list($1,$2)',[PW,n])).items
+  const nuove = n => one('select attivita_nuove($1,$2)',[PW,n])
+  await q('delete from attivita')
+  const pR = await one('select post_add($1,$2,$3,$4)',[PW,'Ricky','Chi viene\n al mare?',[]])
+  await q('select post_vote($1,$2,$3,$4)',[PW,pR,'Ricky',1])
+  await q('select post_vote($1,$2,$3,$4)',[PW,pR,'Marco',1])
+  await q('select post_vote($1,$2,$3,$4)',[PW,pR,'Luca',-1])
+  const rp = await one('select reply_add($1,$2,$3,$4)',[PW,pR,'Giulia','Io!   ci sono'])
+  let a = await att('ricky')
+  ok(a.length===2 && a[0].tipo==='risposta' && a[0].chi==='Giulia' && a[0].testo==='Io! ci sono' && a[0].cosa==='Chi viene al mare?' && a[0].url==='#post/'+pR && a[1].tipo==='like' && a[1].chi==='Marco',
+    'campanella di Ricky: Giulia ha risposto, Marco ha messo mi piace (il suo mi piace e i 👎 no)')
+  ok(await nuove('Ricky')===2 && await nuove('RICKY')===2,'2 attività nuove per Ricky (maiuscole non contano)')
+  ok((await att('Marco')).length===0 && await nuove('Marco')===0,'Marco non vede le attività di Ricky')
+  await q('select post_vote($1,$2,$3,$4)',[PW,pR,'Marco',1]); await q('select reply_del($1,$2,$3)',[PW,rp,'Giulia'])
+  ok((await att('Ricky')).length===0,'mi piace tolto e risposta cancellata: spariscono anche dalla campanella')
+  await q('select post_vote($1,$2,$3,$4)',[PW,pR,'Marco',1]); await q('select post_vote($1,$2,$3,$4)',[PW,pR,'Marco',-1])
+  ok((await att('Ricky')).length===0,'mi piace cambiato in 👎: sparisce')
+  for (let i = 0; i < 3; i++) await q('select post_vote($1,$2,$3,$4)',[PW,pR,'Marco',1])
+  ok((await att('Ricky')).length===1,'mi piace messo e tolto più volte: una sola attività')
+  await q('select attivita_viste($1,$2,$3)',[PW,'Ricky',(await att('Ricky'))[0].created_at])
+  ok(await nuove('Ricky')===0 && (await one('select attivita_list($1,$2)',[PW,'ricky'])).viste!==null,'Ricky apre la campanella: niente più attività nuove (vale su tutti i suoi telefoni)')
+  await q('select attivita_viste($1,$2,$3)',[PW,'Ricky','2000-01-01']); ok(await nuove('Ricky')===0,'"viste" non torna mai indietro')
+  // storie, foto, eventi, sondaggi
+  const st = await one('select story_add($1,$2,$3,$4)',[PW,'Ricky','storie/z.jpg','Tramonto'])
+  await q('select story_like($1,$2,$3,$4)',[PW,st,'Sara',true])
+  await q('select story_comment_add($1,$2,$3,$4)',[PW,st,'Marco','Che colori'])
+  await q('select story_comment_add($1,$2,$3,$4)',[PW,st,'Sara','Bellissimo'])
+  const alb = await one('select album_create($1,$2,$3)',[PW,'Montagna','Giulia'])
+  await q('select photo_add($1,$2,$3,$4)',[PW,alb,'album/x/r.jpg','Ricky'])
+  const fR = (await one('select album_photos($1,$2)',[PW,alb]))[0].id
+  await q('select photo_vote($1,$2,$3,$4)',[PW,fR,'Luca',1]); await q('select photo_comment_add($1,$2,$3,$4)',[PW,fR,'Luca','Che panorama'])
+  const ev = await one('select event_add($1,$2,$3,$4,$5,$6,$7,$8,$9)',[PW,'Ricky','Pizzata','','',giorno(4),null,null,null])
+  await q('select event_rsvp($1,$2,$3,$4)',[PW,ev,'Marco','si']); await q('select event_rsvp($1,$2,$3,$4)',[PW,ev,'Marco','forse'])
+  await q('select event_comment_add($1,$2,$3,$4)',[PW,ev,'Giulia','Porto le birre'])
+  const sp = await one('select poll_create($1,$2,$3,$4,$5)',[PW,'Ricky','Quando?',['Ven','Sab'],true])
+  const [v1, v2] = (await one('select polls_list($1)',[PW])).find(x=>x.id===sp).options.map(o=>o.id)
+  await q('select poll_vote($1,$2,$3,$4)',[PW,sp,v1,'Sara']); await q('select poll_vote($1,$2,$3,$4)',[PW,sp,v2,'Sara'])
+  a = await att('Ricky')
+  const tipi = a.map(x => x.tipo + ':' + x.chi).sort().join()
+  ok(tipi === ['commento_evento:Giulia','commento_foto:Luca','commento_storia:Marco','commento_storia:Sara','cuore:Sara','evento_forse:Marco','like:Marco','like_foto:Luca','voto:Sara'].join(),
+    'campanella di Ricky: ❤️ e commenti alla storia, 👍 e commento alla foto, "forse" e commento all\'evento, voto al sondaggio (una volta sola anche con 2 risposte) → '+tipi)
+  ok(a.find(x=>x.tipo==='commento_foto').cosa==='Montagna' && a.find(x=>x.tipo==='commento_foto').url==='#foto/'+alb && a.find(x=>x.tipo==='evento_forse').cosa==='Pizzata' && a.find(x=>x.tipo==='voto').url==='#sondaggi' && a.find(x=>x.tipo==='cuore').url==='#storie/'+st,
+    'ogni attività dice su cosa ("Montagna", "Pizzata"…) e dove porta il tocco')
+  ok(await nuove('Ricky')===8,'8 attività nuove (il mi piace di Marco l\'aveva già visto): la campanella si illumina')
+  const aM = await att('Marco')
+  ok(aM.length===1 && aM[0].tipo==='commento_storia_altri' && aM[0].chi==='Sara' && aM[0].cosa==='Ricky','Marco: Sara ha commentato la storia di Ricky dove aveva commentato anche lui')
+  await q('select poll_vote($1,$2,$3,$4)',[PW,sp,v1,'Sara'])
+  ok((await att('Ricky')).some(x=>x.tipo==='voto'),'Sara toglie una delle 2 risposte: il voto resta')
+  await q('select poll_vote($1,$2,$3,$4)',[PW,sp,v2,'Sara'])
+  ok(!(await att('Ricky')).some(x=>x.tipo==='voto'),'Sara toglie anche l\'altra: il voto sparisce')
+  await q('select story_del($1,$2,$3)',[PW,st,'Ricky'])
+  ok(!(await att('Ricky')).some(x=>x.url==='#storie/'+st) && (await att('Marco')).length===0,'storia cancellata: spariscono le sue attività (per tutti)')
+  await q(`update attivita set created_at = now() - interval '8 days' where true`)
+  ok((await att('Ricky')).length===0 && await nuove('Ricky')===0,'dopo 7 giorni non si vedono più…')
+  await q('select post_vote($1,$2,$3,$4)',[PW,pR,'Anna',1])
+  ok((await q('select count(*)::int n from attivita'))[0].n===1,'…e alla prossima attività vengono cancellate dal database')
+  ok((await err('select attivita_list($1,$2)',['x','Ricky']))==='PASSWORD_ERRATA' && (await err('select attivita_viste($1,$2,$3)',['x','Ricky',null]))==='PASSWORD_ERRATA','campanella protetta dalla password')
+  for (const t of ['attivita','attivita_lette']) { await db.exec('set role anon'); let no = false; try { await db.query(`select * from ${t}`) } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no, `tabella ${t} chiusa alla chiave pubblica`) }
 }
 
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)
