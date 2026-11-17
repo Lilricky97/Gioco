@@ -17,6 +17,16 @@ create table if not exists members (
 alter table members add column if not exists last_seen timestamptz;   -- per sapere chi è online
 alter table members add column if not exists banned boolean not null default false;   -- rimosso dal gruppo (kick)
 alter table members add column if not exists avatar text;   -- foto utente (percorso nello spazio foto: avatar/<uuid>.jpg)
+-- accesso personale: ognuno ha il suo PIN (4-6 cifre, salvato cifrato). Null = non l'ha ancora scelto (lo sceglie al prossimo ingresso)
+alter table members add column if not exists pin_hash text;
+alter table members add column if not exists pin_fail int not null default 0;
+alter table members add column if not exists pin_lock timestamptz;
+
+create table if not exists sessioni (             -- telefoni entrati col PIN personale (il telefono tiene il codice, qui solo la sua impronta)
+  hash text primary key,                          -- sha256 del codice segreto del telefono
+  name text not null,
+  created_at timestamptz not null default now()
+);
 
 create table if not exists stories (            -- foto che spariscono dopo 24 ore
   id uuid primary key default gen_random_uuid(),
@@ -292,6 +302,7 @@ create table if not exists attivita_lette (      -- fin quando ognuno ha già gu
 
 alter table app_config enable row level security;
 alter table members   enable row level security;
+alter table sessioni  enable row level security;
 alter table stories     enable row level security;
 alter table story_views enable row level security;
 alter table story_comments enable row level security;
@@ -327,13 +338,33 @@ alter table attivita_lette   enable row level security;
 -- ---------- utilità ----------
 create or replace function _ok(p_pw text) returns boolean
 language sql stable security definer set search_path = public, extensions as $$
-  select exists (select 1 from app_config where k = 'pw' and v = extensions.crypt(coalesce(p_pw,''), v));
+  select exists (select 1 from app_config where k = 'pw' and v = extensions.crypt(split_part(coalesce(p_pw, ''), chr(31), 1), v));
 $$;
 
+-- controlla la password del gruppo e, se c'è, il codice del telefono: "pip.io" = chi è entrato col suo PIN (vale per questa chiamata)
 create or replace function _need(p_pw text) returns void
 language plpgsql stable security definer set search_path = public, extensions as $$
+declare tok text := split_part(coalesce(p_pw, ''), chr(31), 2); n text;
 begin
   if not _ok(p_pw) then raise exception 'PASSWORD_ERRATA'; end if;
+  if tok <> '' then
+    select s.name into n from sessioni s join members m on lower(m.name) = lower(s.name) and not m.banned
+    where s.hash = encode(extensions.digest(tok, 'sha256'), 'hex');
+  end if;
+  perform set_config('pip.io', coalesce(n, ''), true);
+end $$;
+
+-- chi fa un'azione a nome di p_name deve essere entrato proprio con quel nome (col suo PIN personale)
+create or replace function _io(p_name text) returns void
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare io text := coalesce(current_setting('pip.io', true), '');
+begin
+  if io = '' then
+    if exists (select 1 from members where lower(name) = lower(_clean(p_name, 30)) and banned) then raise exception 'SEI_STATO_RIMOSSO'; end if;
+    raise exception 'ACCEDI';
+  end if;
+  if lower(trim(coalesce(p_name, ''))) <> lower(io)
+     and (_nome_chiave(p_name) = '' or _nome_chiave(p_name) <> _nome_chiave(io)) then raise exception 'NON_SEI_TU'; end if;
 end $$;
 
 -- PIN amministratore (app_config k='admin'): lo imposta Ricky dal SQL Editor, come la password
@@ -360,10 +391,75 @@ create or replace function member_add(p_pw text, p_name text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'NOME_BLOCCATO'; end if;
   insert into members(name) values (n) on conflict do nothing;
+end $$;
+
+-- ---------- ACCESSO PERSONALE (PIN di 4-6 cifre per ognuno) ----------
+-- prima di chiedere il PIN: esiste questo nome? ha già scelto il suo PIN?
+create or replace function accesso_info(p_pw text, p_name text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare m members%rowtype;
+begin
+  perform _need(p_pw);
+  select * into m from members where lower(name) = lower(_clean(p_name, 30));
+  return json_build_object('esiste', found, 'pin', found and m.pin_hash is not null, 'bloccato', found and m.banned);
+end $$;
+
+-- entra col proprio nome: la prima volta sceglie il PIN, poi lo deve rimettere giusto (5 errori → 15 minuti di blocco).
+-- Restituisce il codice segreto che il telefono tiene (al database resta solo la sua impronta)
+create or replace function accedi(p_pw text, p_name text, p_pin text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); m members%rowtype; tok text; nuovo boolean := false;
+begin
+  perform _need(p_pw);
+  if n = '' or _nome_chiave(n) = '' then raise exception 'NOME_VUOTO'; end if;
+  if coalesce(p_pin, '') !~ '^[0-9]{4,6}$' then return json_build_object('err', 'PIN_FORMATO'); end if;
+  select * into m from members where lower(name) = lower(n) for update;
+  if found and m.banned then return json_build_object('err', 'NOME_BLOCCATO'); end if;
+  if found and m.pin_lock > now() then return json_build_object('err', 'PIN_PERSONALE_BLOCCATO'); end if;
+  if not found then
+    insert into members(name, pin_hash) values (n, extensions.crypt(p_pin, extensions.gen_salt('bf'))) returning * into m; nuovo := true;
+  elsif m.pin_hash is null then
+    update members set pin_hash = extensions.crypt(p_pin, extensions.gen_salt('bf')), pin_fail = 0, pin_lock = null where name = m.name; nuovo := true;
+  elsif m.pin_hash <> extensions.crypt(p_pin, m.pin_hash) then
+    if m.pin_fail + 1 >= 5 then
+      update members set pin_fail = 0, pin_lock = now() + interval '15 minutes' where name = m.name;
+      return json_build_object('err', 'PIN_PERSONALE_BLOCCATO');
+    end if;
+    update members set pin_fail = m.pin_fail + 1 where name = m.name;
+    return json_build_object('err', 'PIN_PERSONALE_ERRATO');
+  end if;
+  update members set pin_fail = 0, pin_lock = null where name = m.name;
+  tok := encode(extensions.gen_random_bytes(24), 'hex');
+  insert into sessioni(hash, name) values (encode(extensions.digest(tok, 'sha256'), 'hex'), m.name);
+  delete from sessioni where created_at < now() - interval '400 days';
+  return json_build_object('ok', true, 'token', tok, 'name', m.name, 'nuovo', nuovo);
+end $$;
+
+-- "Esci" da questo telefono: il suo codice non vale più
+create or replace function esci(p_pw text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare tok text := split_part(coalesce(p_pw, ''), chr(31), 2);
+begin
+  perform _need(p_pw);
+  if tok <> '' then delete from sessioni where hash = encode(extensions.digest(tok, 'sha256'), 'hex'); end if;
+  return json_build_object('ok', true);
+end $$;
+
+-- l'amministratore azzera il PIN di qualcuno (l'ha dimenticato, o qualcuno ha preso il suo nome): al prossimo ingresso ne sceglie uno nuovo
+create or replace function member_pin_reset(p_pw text, p_admin text, p_name text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+declare e text; n text := _clean(p_name, 30);
+begin
+  perform _need(p_pw);
+  e := _admin_try(p_admin); if e is not null then return json_build_object('err', e); end if;
+  update members set pin_hash = null, pin_fail = 0, pin_lock = null where lower(name) = lower(n);
+  if not found then raise exception 'NOME_NON_TROVATO'; end if;
+  delete from sessioni where lower(name) = lower(n);
+  return json_build_object('ok', true);
 end $$;
 
 -- chi è online: ogni telefono "bussa" ogni 45 secondi; online = visto negli ultimi 150 secondi
@@ -371,14 +467,14 @@ create or replace function presenza(p_pw text, p_name text) returns json
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n <> '' then
     if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'SEI_STATO_RIMOSSO'; end if;
     update members set last_seen = now() where lower(name) = lower(n);
     if not found then insert into members(name, last_seen) values (n, now()) on conflict (name) do update set last_seen = now(); end if;
   end if;
   return coalesce((select json_agg(json_build_object('name', name, 'created_at', created_at, 'last_seen', last_seen,
-      'online', coalesce(last_seen > now() - interval '150 seconds', false) and not banned, 'banned', banned, 'avatar', avatar) order by last_seen desc nulls last, lower(name)) from members), '[]'::json);
+      'online', coalesce(last_seen > now() - interval '150 seconds', false) and not banned, 'banned', banned, 'avatar', avatar, 'pin', pin_hash is not null) order by last_seen desc nulls last, lower(name)) from members), '[]'::json);
 end $$;
 
 -- foto utente: { "Nome": "avatar/<uuid>.jpg", ... } (per la schermata "Chi sei?")
@@ -394,7 +490,7 @@ create or replace function member_avatar(p_pw text, p_name text, p_path text) re
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if p_path is not null and p_path !~ '^avatar/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$' then raise exception 'FOTO_NON_VALIDA'; end if;
   if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'SEI_STATO_RIMOSSO'; end if;
@@ -442,6 +538,7 @@ begin
   e := _admin_try(p_admin); if e is not null then return json_build_object('err', e); end if;
   update members set banned = coalesce(p_ban, true) where lower(name) = lower(_clean(p_name, 30));
   if not found then raise exception 'NOME_NON_TROVATO'; end if;
+  if coalesce(p_ban, true) then delete from sessioni where lower(name) = lower(_clean(p_name, 30)); end if;   -- esce da tutti i telefoni
   return json_build_object('ok', true);
 end $$;
 
@@ -500,7 +597,7 @@ end $$;
 create or replace function stories_list(p_pw text, p_name text) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   return coalesce((select json_agg(x order by x.created_at) from (
     select s.id, s.author, s.path, s.caption, s.created_at,
       case when lower(s.author) = lower(coalesce(p_name, '')) then   -- chi l'ha vista e chi ha messo ❤️: solo per l'autore
@@ -519,7 +616,7 @@ create or replace function story_like(p_pw text, p_story uuid, p_name text, p_li
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); a text;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   select author into a from stories where id = p_story and created_at > now() - interval '24 hours';
   if not found then raise exception 'STORIA_SCADUTA'; end if;
@@ -535,7 +632,7 @@ create or replace function story_add(p_pw text, p_author text, p_path text, p_ca
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; pth text := _clean(p_path, 300);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if pth = '' then raise exception 'POST_VUOTO'; end if;
   delete from stories where created_at < now() - interval '24 hours';   -- pulizia delle scadute
   insert into stories(author, path, caption) values (_clean(p_author, 30), pth, _clean(p_caption, 150)) returning id into new_id;
@@ -546,7 +643,7 @@ create or replace function story_seen(p_pw text, p_id uuid, p_name text) returns
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then return; end if;
   if exists (select 1 from stories where id = p_id and lower(author) <> lower(n)) then
     insert into story_views(story_id, name) values (p_id, n) on conflict do nothing;
@@ -565,7 +662,7 @@ create or replace function story_comment_add(p_pw text, p_story uuid, p_author t
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; b text := _clean(p_body, 500);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if b = '' then raise exception 'POST_VUOTO'; end if;
   if not exists (select 1 from stories where id = p_story and created_at > now() - interval '24 hours') then raise exception 'STORIA_SCADUTA'; end if;
   insert into story_comments(story_id, author, body) values (p_story, _clean(p_author, 30), b) returning id into new_id;
@@ -575,14 +672,14 @@ end $$;
 create or replace function story_comment_del(p_pw text, p_id uuid, p_author text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   delete from story_comments where id = p_id and author = p_author;
 end $$;
 
 create or replace function story_del(p_pw text, p_id uuid, p_author text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   delete from stories where id = p_id and author = p_author;
 end $$;
 
@@ -629,7 +726,7 @@ create or replace function post_add(p_pw text, p_author text, p_body text, p_pho
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; b text := _clean(p_body, 4000);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if b = '' and coalesce(array_length(p_photos,1),0) = 0 then raise exception 'POST_VUOTO'; end if;
   insert into posts(author, body, photos) values (_clean(p_author,30), b, coalesce(p_photos[1:20], '{}')) returning id into new_id;
   return new_id;
@@ -638,7 +735,7 @@ end $$;
 create or replace function post_del(p_pw text, p_id uuid, p_author text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   delete from posts where id = p_id and author = p_author;
 end $$;
 
@@ -647,7 +744,7 @@ create or replace function post_like(p_pw text, p_id uuid, p_name text) returns 
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if not exists (select 1 from posts where id = p_id) then raise exception 'POST_NON_TROVATO'; end if;
   delete from post_likes where post_id = p_id and lower(name) = lower(n) and val = 1;
@@ -661,7 +758,7 @@ create or replace function post_vote(p_pw text, p_id uuid, p_name text, p_val in
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); prima smallint;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if p_val is null or p_val not in (1, -1) then raise exception 'VOTO_NON_VALIDO'; end if;
   if not exists (select 1 from posts where id = p_id) then raise exception 'POST_NON_TROVATO'; end if;
@@ -684,7 +781,7 @@ create or replace function reply_add(p_pw text, p_id uuid, p_author text, p_body
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; b text := _clean(p_body, 2000);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if b = '' then raise exception 'POST_VUOTO'; end if;
   if not exists (select 1 from posts where id = p_id) then raise exception 'POST_NON_TROVATO'; end if;
   insert into post_replies(post_id, author, body) values (p_id, _clean(p_author,30), b) returning id into new_id;
@@ -694,7 +791,7 @@ end $$;
 create or replace function reply_del(p_pw text, p_id uuid, p_author text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   delete from post_replies where id = p_id and author = p_author;
 end $$;
 
@@ -714,7 +811,7 @@ create or replace function album_create(p_pw text, p_name text, p_author text) r
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; n text := _clean(p_name, 60);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   insert into albums(name, created_by) values (n, _clean(p_author,30)) returning id into new_id;
   return new_id;
@@ -735,7 +832,7 @@ end $$;
 create or replace function photo_add(p_pw text, p_album uuid, p_path text, p_author text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   insert into photos(album_id, path, author) values (p_album, _clean(p_path,300), _clean(p_author,30));
 end $$;
 
@@ -751,7 +848,7 @@ create or replace function photo_comment_add(p_pw text, p_photo uuid, p_author t
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; b text := _clean(p_body, 1000);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if b = '' then raise exception 'POST_VUOTO'; end if;
   if not exists (select 1 from photos where id = p_photo) then raise exception 'FOTO_NON_TROVATA'; end if;
   insert into photo_comments(photo_id, author, body) values (p_photo, _clean(p_author, 30), b) returning id into new_id;
@@ -762,7 +859,7 @@ create or replace function photo_vote(p_pw text, p_photo uuid, p_name text, p_va
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); prima smallint;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if p_val is null or p_val not in (1, -1) then raise exception 'VOTO_NON_VALIDO'; end if;
   if not exists (select 1 from photos where id = p_photo) then raise exception 'FOTO_NON_TROVATA'; end if;
@@ -776,7 +873,7 @@ end $$;
 create or replace function photo_comment_del(p_pw text, p_id uuid, p_author text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   delete from photo_comments where id = p_id and author = p_author;
 end $$;
 
@@ -817,7 +914,7 @@ create or replace function poll_create(p_pw text, p_author text, p_question text
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; q text := _clean(p_question, 200); opts text[]; o text; i int := 0;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if q = '' then raise exception 'DOMANDA_VUOTA'; end if;
   select array_agg(t order by k) into opts from (
     select distinct on (lower(_clean(t, 100))) _clean(t, 100) as t, k
@@ -837,7 +934,7 @@ create or replace function poll_vote(p_pw text, p_poll uuid, p_option uuid, p_na
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); pl polls%rowtype;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   select * into pl from polls where id = p_poll;
   if not found then raise exception 'SONDAGGIO_NON_TROVATO'; end if;
@@ -855,14 +952,14 @@ end $$;
 create or replace function poll_close(p_pw text, p_poll uuid, p_author text, p_closed boolean) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   update polls set closed = coalesce(p_closed, true) where id = p_poll and author = p_author;
 end $$;
 
 create or replace function poll_del(p_pw text, p_poll uuid, p_author text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   delete from polls where id = p_poll and author = p_author;
 end $$;
 
@@ -1110,7 +1207,7 @@ create or replace function ss_create(p_pw text, p_name text, p_budget text, p_da
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; pn text;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_organizer);
   if _clean(p_name, 80) = '' then raise exception 'NOME_VUOTO'; end if;
   if coalesce(p_admin_pin, '') !~ '^[0-9]{4,8}$' then raise exception 'PIN_NON_VALIDO'; end if;
   if p_prev is not null then
@@ -1136,7 +1233,7 @@ create or replace function ss_join(p_pw text, p_event uuid, p_name text, p_pin t
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); ev ss_events%rowtype; ex ss_people%rowtype; r json;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   select * into ev from ss_events where id = p_event for update;
   if not found then raise exception 'EVENTO_NON_TROVATO'; end if;
   if n = '' then raise exception 'NOME_VUOTO'; end if;
@@ -1160,7 +1257,7 @@ create or replace function ss_leave(p_pw text, p_event uuid, p_name text, p_pin 
 language plpgsql security definer set search_path = public, extensions as $$
 declare ev ss_events%rowtype; me ss_people%rowtype; r json;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   select * into ev from ss_events where id = p_event for update;
   if not found then raise exception 'EVENTO_NON_TROVATO'; end if;
   r := _ss_pin(p_event, p_name, p_pin);
@@ -1178,7 +1275,7 @@ create or replace function ss_me(p_pw text, p_event uuid, p_name text, p_pin tex
 language plpgsql security definer set search_path = public, extensions as $$
 declare me ss_people%rowtype; r json; st text;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   r := _ss_pin(p_event, p_name, p_pin);
   if r->>'err' is not null then return r; end if;
   select * into me from ss_people where id = (r->>'id')::uuid;
@@ -1192,7 +1289,7 @@ create or replace function ss_reveal(p_pw text, p_event uuid, p_name text, p_pin
 language plpgsql volatile security definer set search_path = public, extensions as $$
 declare me ss_people%rowtype; rec ss_people%rowtype; ev ss_events%rowtype; r json; rifatto boolean; cambiato boolean;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   r := _ss_pin(p_event, p_name, p_pin);
   if r->>'err' is not null then return r; end if;
   select * into me from ss_people where id = (r->>'id')::uuid;
@@ -1469,7 +1566,7 @@ create or replace function ss_bought(p_pw text, p_event uuid, p_name text, p_pin
 language plpgsql security definer set search_path = public, extensions as $$
 declare r json;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   r := _ss_pin(p_event, p_name, p_pin);
   if r->>'err' is not null then return r; end if;
   update ss_people set bought = coalesce(p_val, true) where id = (r->>'id')::uuid;
@@ -1481,7 +1578,7 @@ create or replace function ss_ask(p_pw text, p_event uuid, p_name text, p_pin te
 language plpgsql security definer set search_path = public, extensions as $$
 declare r json; me uuid; rc uuid; qt text := _clean(p_question, 500);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   r := _ss_pin(p_event, p_name, p_pin);
   if r->>'err' is not null then return r; end if;
   me := (r->>'id')::uuid;
@@ -1497,7 +1594,7 @@ create or replace function ss_inbox(p_pw text, p_event uuid, p_name text, p_pin 
 language plpgsql security definer set search_path = public, extensions as $$
 declare r json; me uuid; rc uuid;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   r := _ss_pin(p_event, p_name, p_pin);
   if r->>'err' is not null then return r; end if;
   me := (r->>'id')::uuid;
@@ -1516,7 +1613,7 @@ create or replace function ss_answer(p_pw text, p_event uuid, p_name text, p_pin
 language plpgsql security definer set search_path = public, extensions as $$
 declare r json; a text := _clean(p_answer, 500);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   r := _ss_pin(p_event, p_name, p_pin);
   if r->>'err' is not null then return r; end if;
   if a = '' then return json_build_object('err', 'POST_VUOTO'); end if;
@@ -1575,7 +1672,7 @@ create or replace function event_add(p_pw text, p_author text, p_title text, p_p
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; t text := _clean(p_title, 80); a text := _clean(p_author, 30); n int; giorni date[]; ore time[];
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if a = '' then raise exception 'NOME_VUOTO'; end if;
   if t = '' then raise exception 'TITOLO_VUOTO'; end if;
   if not _event_cover_ok(p_cover) then raise exception 'FOTO_NON_VALIDA'; end if;
@@ -1606,7 +1703,7 @@ create or replace function event_edit(p_pw text, p_id uuid, p_author text, p_tit
 language plpgsql security definer set search_path = public, extensions as $$
 declare e events%rowtype; t text := _clean(p_title, 80);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   select * into e from events where id = p_id for update;
   if not found then raise exception 'EVENTO_SPARITO'; end if;
   if lower(e.author) <> lower(_clean(p_author, 30)) then raise exception 'NON_AUTORIZZATO'; end if;
@@ -1626,7 +1723,7 @@ create or replace function event_del(p_pw text, p_id uuid, p_author text, p_admi
 language plpgsql security definer set search_path = public, extensions as $$
 declare e events%rowtype; x text;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   select * into e from events where id = p_id;
   if not found then return json_build_object('ok', true); end if;
   if lower(e.author) <> lower(_clean(p_author, 30)) then
@@ -1643,7 +1740,7 @@ create or replace function event_rsvp(p_pw text, p_id uuid, p_name text, p_ans t
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); a text := nullif(_clean(p_ans, 10), '');
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if not exists (select 1 from events where id = p_id) then raise exception 'EVENTO_SPARITO'; end if;
   if a is not null and a not in ('si', 'forse', 'no') then raise exception 'RISPOSTA_NON_VALIDA'; end if;
@@ -1656,7 +1753,7 @@ create or replace function event_comment_add(p_pw text, p_id uuid, p_author text
 language plpgsql security definer set search_path = public, extensions as $$
 declare new_id uuid; b text := _clean(p_body, 1000); a text := _clean(p_author, 30);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   if b = '' then raise exception 'POST_VUOTO'; end if;
   if a = '' then raise exception 'NOME_VUOTO'; end if;
   if not exists (select 1 from events where id = p_id) then raise exception 'EVENTO_SPARITO'; end if;
@@ -1667,7 +1764,7 @@ end $$;
 create or replace function event_comment_del(p_pw text, p_id uuid, p_author text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   delete from event_comments where id = p_id and lower(author) = lower(_clean(p_author, 30));
 end $$;
 
@@ -1676,7 +1773,7 @@ create or replace function event_date_vote(p_pw text, p_date uuid, p_name text) 
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); ev uuid;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   select d.event_id into ev from event_dates d where d.id = p_date;
   if not found then raise exception 'EVENTO_SPARITO'; end if;
@@ -1694,7 +1791,7 @@ create or replace function event_fix_date(p_pw text, p_id uuid, p_author text, p
 language plpgsql security definer set search_path = public, extensions as $$
 declare e events%rowtype; d event_dates%rowtype;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_author);
   select * into e from events where id = p_id for update;
   if not found then raise exception 'EVENTO_SPARITO'; end if;
   if lower(e.author) <> lower(_clean(p_author, 30)) then raise exception 'NON_AUTORIZZATO'; end if;
@@ -1832,7 +1929,7 @@ create or replace function push_subscribe(p_pw text, p_name text, p_endpoint tex
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); ks text[];
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   if exists (select 1 from members where lower(name) = lower(n) and banned) then raise exception 'SEI_STATO_RIMOSSO'; end if;
   if coalesce(p_endpoint, '') !~ '^https://\S+$' or length(p_endpoint) not between 20 and 1000
@@ -1928,7 +2025,7 @@ create or replace function avvento_inizia(p_pw text, p_giorno int, p_name text) 
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30); x text;
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' or _nome_chiave(n) = '' then raise exception 'NOME_VUOTO'; end if;
   x := _avvento_aperta(p_giorno, n);
   if x is not null then return json_build_object('err', x); end if;
@@ -1941,7 +2038,7 @@ create or replace function avvento_gioca(p_pw text, p_giorno int, p_name text, p
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if p_punteggio is null or p_punteggio < 0 or p_punteggio > _avvento_max(p_giorno) then raise exception 'PUNTEGGIO_NON_VALIDO'; end if;
   update avvento_punti set punteggio = p_punteggio, finito_at = now()
   where giorno = p_giorno and _nome_chiave(name) = _nome_chiave(n) and punteggio is null and created_at > now() - interval '3 minutes';
@@ -1979,7 +2076,7 @@ create or replace function avvento_fuori(p_pw text, p_admin text, p_name text) r
 language plpgsql security definer set search_path = public, extensions as $$
 declare x text; k text := _nome_chiave(p_name);
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   x := _admin_try(p_admin);
   if x is not null then return json_build_object('err', x); end if;
   if k = '' then raise exception 'NOME_VUOTO'; end if;
@@ -2139,7 +2236,7 @@ create or replace function attivita_list(p_pw text, p_name text) returns json
 language plpgsql stable security definer set search_path = public, extensions as $$
 declare n text := lower(_clean(p_name, 30));
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   return json_build_object('viste', (select at from attivita_lette where name = n),
     'items', coalesce((select json_agg(x order by x.created_at desc) from (
       select id, chi, tipo, cosa, testo, url, created_at from attivita
@@ -2151,7 +2248,7 @@ create or replace function attivita_nuove(p_pw text, p_name text) returns int
 language plpgsql stable security definer set search_path = public, extensions as $$
 declare n text := lower(_clean(p_name, 30));
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   return (select count(*) from attivita a where a.dest = n and a.created_at > now() - interval '7 days'
     and a.created_at > coalesce((select l.at from attivita_lette l where l.name = n), '-infinity'::timestamptz))::int;
 end $$;
@@ -2161,7 +2258,7 @@ create or replace function attivita_viste(p_pw text, p_name text, p_fino timesta
 language plpgsql security definer set search_path = public, extensions as $$
 declare n text := lower(_clean(p_name, 30)); f timestamptz := least(coalesce(p_fino, now()), now());
 begin
-  perform _need(p_pw);
+  perform _need(p_pw); perform _io(p_name);
   if n = '' then raise exception 'NOME_VUOTO'; end if;
   insert into attivita_lette(name, at) values (n, f)
   on conflict (name) do update set at = greatest(attivita_lette.at, excluded.at);
@@ -2170,7 +2267,7 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, presenza, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_like, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
+grant execute on function check_pw, members_list, member_add, presenza, accesso_info, accedi, esci, member_pin_reset, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_like, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
   reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
@@ -2183,11 +2280,11 @@ drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _avvento_oggi, _avvento_max, _avvento_aperta from anon, authenticated;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _avvento_oggi, _avvento_max, _avvento_aperta, _io from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _avvento_oggi, _avvento_max, _avvento_aperta from public;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _avvento_oggi, _avvento_max, _avvento_aperta, _io from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin

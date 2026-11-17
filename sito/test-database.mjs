@@ -9,6 +9,11 @@ await db.exec(`insert into app_config(k,v) values ('pw', extensions.crypt('cocor
 const q = async (sql, p=[]) => (await db.query(sql, p)).rows
 const one = async (sql,p)=> Object.values((await q(sql,p))[0])[0]
 const PW='cocorico'
+// I test "di sempre" agiscono direttamente a nome di tante persone: per loro il controllo del PIN personale (_io) è spento.
+// Il blocco "ACCESSO PERSONALE" più sotto lo riaccende (quello vero di schema.sql) e lo prova sul serio.
+const SCHEMA = fs.readFileSync(new URL('./schema.sql', import.meta.url),'utf8')
+const IO_VERO = SCHEMA.match(/create or replace function _io\(p_name text\)[\s\S]*?end \$\$;/)[0]
+await db.exec(`create or replace function _io(p_name text) returns void language sql as $$ select $$`)
 // Supabase (pg_safeupdate) rifiuta DELETE e UPDATE senza WHERE: qui non si vede, quindi controllo il testo
 {
   const sch = fs.readFileSync(new URL('./schema.sql', import.meta.url),'utf8').replace(/--[^\n]*/g, '')
@@ -603,6 +608,56 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
   ok((await inizia(5,'Anna')).err==='AVVENTO_FINITO','dopo il 19 dicembre non si gioca più')
   ok((await err('select avvento_classifica($1)',['x']))==='PASSWORD_ERRATA' && (await err('select avvento_inizia($1,$2,$3)',['x',1,'Anna']))==='PASSWORD_ERRATA','avvento protetto dalla password')
   for (const t of ['avvento_punti','avvento_fuori']) { await db.exec('set role anon'); let no = false; try { await db.query(`select * from ${t}`) } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no, `tabella ${t} chiusa alla chiave pubblica`) }
+}
+
+// ACCESSO PERSONALE: ognuno entra col suo PIN, e il database controlla CHI fa ogni azione
+{
+  // ogni funzione che agisce a nome di qualcuno controlla l'identità (controllo sul testo di schema.sql)
+  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste']
+  const senzaIo = AZIONI.filter(f => { const m = SCHEMA.match(new RegExp('create or replace function ' + f + '\\([\\s\\S]*?end \\$\\$;')); return !m || !/perform _io\(p_(name|author|organizer)\)/.test(m[0]) })
+  ok(senzaIo.length === 0, `tutte le ${AZIONI.length} funzioni che agiscono a nome di qualcuno controllano chi sei` + (senzaIo.length ? ': mancano ' + senzaIo : ''))
+  await db.exec(IO_VERO)   // da qui il controllo è quello vero
+  const W = tok => PW + String.fromCharCode(31) + (tok || '')
+  const accedi = (n, pin) => one('select accedi($1,$2,$3)',[PW,n,pin])
+  ok((await one('select accesso_info($1,$2)',[PW,'Zoe'])).esiste===false,'Zoe non c\'è ancora')
+  ok((await accedi('Zoe','12')).err==='PIN_FORMATO' && (await accedi('Zoe','1234567')).err==='PIN_FORMATO' && (await accedi('Zoe','12a4')).err==='PIN_FORMATO','PIN: solo da 4 a 6 cifre')
+  const z1 = await accedi('Zoe','2580')
+  ok(z1.ok===true && z1.nuovo===true && /^[0-9a-f]{48}$/.test(z1.token),'Zoe entra la prima volta: sceglie il PIN, il telefono riceve il suo codice')
+  ok((await one('select accesso_info($1,$2)',[PW,'zoe'])).pin===true,'ora Zoe ha il suo PIN')
+  ok((await q('select count(*)::int n from sessioni where hash = $1',[z1.token])).at(0).n===0 && (await q('select pin_hash from members where name=$1',['Zoe']))[0].pin_hash.startsWith('$2'),'nel database non ci sono né il PIN né il codice in chiaro')
+  ok((await accedi('zoe','1111')).err==='PIN_PERSONALE_ERRATO','PIN sbagliato: non entra')
+  const z2 = await accedi('ZOE','2580'); ok(z2.ok===true && z2.nuovo===false && z2.name==='Zoe','PIN giusto: entra (anche scritto "ZOE")')
+  // azioni: senza codice, con quello giusto, con quello di un altro
+  ok((await err('select post_add($1,$2,$3,$4)',[PW,'Zoe','Ciao',[]]))==='ACCEDI','senza essere entrati col PIN non si pubblica niente')
+  const pz = await one('select post_add($1,$2,$3,$4)',[W(z1.token),'Zoe','Ciao da Zoe',[]])
+  ok(!!pz,'Zoe col suo telefono pubblica')
+  ok((await err('select post_add($1,$2,$3,$4)',[W(z1.token),'Marco','Sono Marco (finto)',[]]))==='NON_SEI_TU','Zoe NON può pubblicare a nome di Marco')
+  ok((await err('select post_vote($1,$2,$3,$4)',[W(z1.token),pz,'Luca',1]))==='NON_SEI_TU','…né mettere mi piace a nome di Luca')
+  ok((await err('select attivita_list($1,$2)',[W(z1.token),'Ricky']))==='NON_SEI_TU','…né leggere la campanella di Ricky')
+  ok((await err('select post_add($1,$2,$3,$4)',[W('codiceinventato'),'Zoe','x',[]]))==='ACCEDI','con un codice inventato non si fa niente')
+  ok(Array.isArray(await one('select feed($1)',[PW])),'le cose da leggere (le Novità) bastano la password del gruppo')
+  // 5 PIN sbagliati → 15 minuti di blocco
+  for (let i = 0; i < 4; i++) await accedi('Zoe','0000')
+  ok((await accedi('Zoe','0000')).err==='PIN_PERSONALE_BLOCCATO' && (await accedi('Zoe','2580')).err==='PIN_PERSONALE_BLOCCATO','5 PIN sbagliati: bloccato per 15 minuti (anche col PIN giusto)')
+  await q(`update members set pin_lock = now() - interval '1 minute' where name = 'Zoe'`)
+  ok((await accedi('Zoe','2580')).ok===true,'passati i 15 minuti col PIN giusto rientra')
+  // esci
+  const z3 = await accedi('Zoe','2580'); await q('select esci($1)',[W(z3.token)])
+  ok((await err('select post_add($1,$2,$3,$4)',[W(z3.token),'Zoe','x',[]]))==='ACCEDI' && !!(await one('select post_add($1,$2,$3,$4)',[W(z1.token),'Zoe','dall\'altro telefono',[]])),'"Esci" chiude solo quel telefono')
+  // l'amministratore azzera il PIN
+  ok((await one('select member_pin_reset($1,$2,$3)',[PW,'0000','Zoe'])).err==='PIN_ADMIN_ERRATO','azzerare un PIN: serve il PIN amministratore')
+  ok((await one('select member_pin_reset($1,$2,$3)',[PW,'4321','Zoe'])).ok===true,'l\'amministratore azzera il PIN di Zoe')
+  ok((await err('select post_add($1,$2,$3,$4)',[W(z1.token),'Zoe','x',[]]))==='ACCEDI' && (await one('select accesso_info($1,$2)',[PW,'Zoe'])).pin===false,'tutti i telefoni di Zoe escono, al prossimo ingresso sceglie un PIN nuovo')
+  const z4 = await accedi('Zoe','9876'); ok(z4.ok===true && z4.nuovo===true,'Zoe sceglie il PIN nuovo')
+  // chi viene rimosso esce da tutti i telefoni
+  await q('select member_kick($1,$2,$3,$4)',[PW,'4321','Zoe',true])
+  ok((await err('select post_add($1,$2,$3,$4)',[W(z4.token),'Zoe','x',[]]))==='SEI_STATO_RIMOSSO' && (await accedi('Zoe','9876')).err==='NOME_BLOCCATO','Zoe rimossa: il suo telefono esce subito ("sei stato rimosso") e non può rientrare')
+  await q('select member_kick($1,$2,$3,$4)',[PW,'4321','Zoe',false])
+  // il Secret Santa: anche col PIN del Secret Santa giusto, a nome di un altro no
+  const ok2 = await accedi('Zoe','9876')
+  ok((await err('select ss_reveal($1,$2,$3,$4)',[W(ok2.token),'00000000-0000-0000-0000-000000000000','Marco','1111']))==='NON_SEI_TU','Secret Santa: nessuno può guardare il sorteggio a nome di un altro')
+  ok(await (async () => { await db.exec('set role anon'); try { await db.query('select * from sessioni'); return false } catch (e) { return /permission/.test(e.message) } finally { await db.exec('reset role') } })(),'tabella sessioni chiusa alla chiave pubblica')
+  await db.exec(`create or replace function _io(p_name text) returns void language sql as $$ select $$`)   // per il resto dei test
 }
 
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)

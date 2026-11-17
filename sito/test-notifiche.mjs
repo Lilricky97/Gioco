@@ -29,6 +29,7 @@ const attesa = ms => new Promise(r => setTimeout(r, ms))
 const db = await PGlite.create({ extensions: { pgcrypto } })
 await db.exec('create role anon; create role authenticated; create role service_role;')
 await db.exec(fs.readFileSync(DIR + 'schema.sql', 'utf8'))
+await db.exec(`create or replace function _io(p_name text) returns void language sql as $$ select $$`)   // qui si provano le notifiche, non l'accesso personale (provato in test-database)
 await db.query(`insert into app_config(k,v) values ('pw', extensions.crypt($1, extensions.gen_salt('bf')))`, [PW])
 const one = async (sql, p = []) => Object.values((await db.query(sql, p)).rows[0])[0]
 const RISERVATE = { vapid_get: [], vapid_set: ['p_pub', 'p_priv'], notif_claim: ['p_id'], push_gone: ['p_endpoint'] }

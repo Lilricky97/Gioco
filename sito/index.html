@@ -500,6 +500,9 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .mz-not{margin-top:8px;background:rgba(255,216,107,.05);border-color:rgba(255,216,107,.3)}
 .mz-not svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--giallo);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mz-not b{color:var(--giallo)}
+.pin-who{display:flex;align-items:center;gap:12px;margin-bottom:6px}.pin-who h2{margin:0}
+#pin-f .pin{text-align:center}
+.prs-nopin{font-size:11.5px;color:var(--giallo);white-space:nowrap}
 .mz-adm{margin-top:8px;background:rgba(255,62,165,.05);border-color:rgba(255,62,165,.3)}
 .mz-adm svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--rosa);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mz-adm b{color:var(--rosa)}
@@ -752,7 +755,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(PFX + k, JSON.stringify(v)); } catch (e) {} },
   del(k) { try { localStorage.removeItem(PFX + k); } catch (e) {} }
 };
-const S = { pw: store.get('pw'), me: store.get('me'), feed: null, albums: null, album: {}, ss: null,
+const S = { pw: store.get('pw'), me: store.get('me'), tok: store.get('tok'), feed: null, albums: null, album: {}, ss: null,
   draft: { text: '', files: [] }, ui: { rev: {}, adm: {}, me: {}, meLoad: {}, qa: {}, qaLoad: {}, tab: {}, stat: {}, logAll: {} }, mine: {}, busy: 0, refresh: null,
   thread: {}, replyDraft: {}, liking: {}, vq: {}, lastFeed: '#novita', av: store.get('av') || {}, ev: null, evFull: {} };
 
@@ -767,6 +770,11 @@ const MSG = {
   ADMIN_NON_IMPOSTATO: 'Il PIN amministratore non è ancora stato impostato (lo fa Ricky da Supabase).',
   PASSWORD_PROVA: 'Il sito è ancora in modalità prova, quindi per ora la password è "prova". La password vera del gruppo funzionerà appena il sito è collegato al database.',
   NOME_VUOTO: 'Scrivi un nome.',
+  ACCEDI: 'Rientra col tuo PIN personale.',
+  NON_SEI_TU: 'Puoi farlo solo col tuo nome.',
+  PIN_FORMATO: 'Il PIN deve avere da 4 a 6 cifre (solo numeri).',
+  PIN_PERSONALE_ERRATO: 'PIN sbagliato.',
+  PIN_PERSONALE_BLOCCATO: 'Troppi PIN sbagliati: questo nome è bloccato per 15 minuti. Se l\'hai dimenticato chiedi all\'amministratore di azzerarlo.',
   CASELLA_CHIUSA: 'Questa casella non è ancora aperta.',
   CASELLA_NON_VALIDA: 'Casella non valida.',
   AVVENTO_FINITO: 'Il calendario dell\'avvento è finito: non si gioca più.',
@@ -851,7 +859,7 @@ async function rpc(fn, args = {}) {
   let r;
   try {
     r = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: headers({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(Object.assign({ p_pw: S.pw }, args)) });
+      body: JSON.stringify(Object.assign({ p_pw: S.pw + (S.tok ? '\u001f' + S.tok : '') }, args)) });
   } catch (e) { throw err('RETE'); }
   const t = await r.text(); let d = null;
   try { d = t ? JSON.parse(t) : null; } catch (e) {}
@@ -860,6 +868,8 @@ async function rpc(fn, args = {}) {
     const c = (d && d.message) || ('HTTP ' + r.status);
     if (c === 'PASSWORD_ERRATA' && fn !== 'check_pw') { logout('La password del gruppo è cambiata: inseriscila di nuovo.'); }
     if (c === 'SEI_STATO_RIMOSSO') { S.me = null; store.del('me'); store.del('admin'); logout(MSG.SEI_STATO_RIMOSSO); }
+    // accesso personale: il codice del telefono non vale più (PIN azzerato, "Esci" da un altro telefono…) → si rientra col PIN
+    if (c === 'ACCEDI' && S.me && !S.pinChiesto) { S.pinChiesto = true; S.tok = null; store.del('tok'); setTimeout(() => renderPin(S.me, 'Rientra col tuo PIN personale.'), 0); }
     throw err(c);
   }
   return errInRisposta(d);
@@ -1105,7 +1115,7 @@ function renderLogin(avviso) {
       const ok = await rpc('check_pw', { p_pw: pw });
       if (!ok) throw err(DEMO ? 'PASSWORD_PROVA' : 'PASSWORD_ERRATA');
       S.pw = pw; store.set('pw', pw);
-      S.me ? start() : renderChiSei();
+      S.me ? (S.tok ? start() : renderPin(S.me)) : renderChiSei();
     } catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; }
   };
 }
@@ -1123,7 +1133,7 @@ async function renderChiSei() {
     <p class="err" hidden></p><button class="btn wide" type="submit">Entra</button></form>
     ${S.me ? `<button class="link" id="g-back">Annulla</button>` : ''}`;
   box.querySelectorAll('[data-n]').forEach(c => c.onclick = () => setMe(c.dataset.n));
-  if ($('#g-back')) $('#g-back').onclick = start;
+  if ($('#g-back')) $('#g-back').onclick = () => S.tok ? start() : renderPin(S.me);
   const f = $('#g-name'), e = f.querySelector('.err'), b = f.querySelector('button');
   box.addEventListener('click', ev => { if (ev.target.matches('[data-retry]')) renderChiSei(); });
   f.onsubmit = async ev => {
@@ -1132,10 +1142,52 @@ async function renderChiSei() {
     const gia = members.find(m => same(m, n));
     if (gia) return setMe(gia);
     b.disabled = true; e.hidden = true;
-    try { await rpc('member_add', { p_name: n }); setMe(n); } catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; }
+    setMe(n);
   };
 }
-function setMe(n) { S.me = n; store.set('me', n); start(); }
+// scelto il nome → PIN personale (la prima volta lo sceglie). Il telefono poi tiene un codice e non lo chiede più
+function setMe(n) { esciPersona(); renderPin(n); }
+async function renderPin(n, avviso) {
+  S.pinChiesto = false;
+  $('#app').innerHTML = `<main class="gate"><div class="sign">${insegna(true)}</div><section class="card" id="g-pin"><div class="loading">Un attimo</div></section></main>`;
+  const box = $('#g-pin'); let info;
+  try { info = await rpc('accesso_info', { p_name: n }); }
+  catch (ex) {
+    if (ex.message === 'NO_DB') {   // database non ancora aggiornato: si entra come prima, senza PIN personale
+      try { await rpc('member_add', { p_name: n }); S.me = n; store.set('me', n); return start(); }
+      catch (e2) { box.innerHTML = `<p class="err">${esc(msg(e2))}</p><button class="link" id="pin-altro">Cambia nome</button>`; $('#pin-altro').onclick = renderChiSei; return; }
+    }
+    box.innerHTML = errBox(ex); box.querySelector('[data-retry]').onclick = () => renderPin(n, avviso); return;
+  }
+  if (info.bloccato) { box.innerHTML = `<p class="err">${esc(MSG.NOME_BLOCCATO)}</p><button class="link" id="pin-altro">Cambia nome</button>`; $('#pin-altro').onclick = renderChiSei; return; }
+  const nuovo = !info.pin;
+  box.innerHTML = `<div class="pin-who">${avatar(n)}<h2>${nuovo ? (info.esiste ? 'Ciao ' + esc(n) + '!' : 'Benvenuto, ' + esc(n) + '!') : 'Ciao ' + esc(n) + '!'}</h2></div>
+    ${avviso ? `<p class="err" style="margin:0 0 8px">${esc(avviso)}</p>` : ''}
+    <p class="muto">${nuovo ? '🔐 Scegli il tuo <b>PIN personale</b> (da 4 a 6 cifre): serve per entrare col tuo nome, così nessun altro può usarlo. Il telefono se lo ricorda: non dovrai rimetterlo ogni volta.' : '🔐 Scrivi il tuo <b>PIN personale</b>.'}</p>
+    <form id="pin-f" novalidate><input name="a" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="${nuovo ? 'new-password' : 'current-password'}" placeholder="${nuovo ? 'Scegli il PIN' : 'PIN'}" enterkeyhint="go">
+      ${nuovo ? '<input name="b" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="Ripeti il PIN" style="margin-top:10px">' : ''}
+      <p class="err" hidden></p><button class="btn wide" type="submit" style="margin-top:14px">Entra</button></form>
+    ${nuovo ? '' : '<p class="hint">PIN dimenticato? Chiedi all\'amministratore di azzerarlo: poi ne scegli uno nuovo.</p>'}
+    <button class="link" id="pin-altro">Non sei ${esc(n)}? Cambia nome</button>`;
+  $('#pin-altro').onclick = renderChiSei;
+  const f = $('#pin-f'), e = f.querySelector('.err'), b = f.querySelector('[type=submit]');
+  setTimeout(() => f.a.focus(), 200);
+  f.onsubmit = async ev => {
+    ev.preventDefault(); e.hidden = true;
+    const a = f.a.value.trim();
+    if (!/^[0-9]{4,6}$/.test(a)) { e.textContent = MSG.PIN_FORMATO; e.hidden = false; return; }
+    if (nuovo && f.b.value.trim() !== a) { e.textContent = 'I due PIN non coincidono: riscrivili.'; e.hidden = false; return; }
+    b.disabled = true;
+    try {
+      const r = await rpc('accedi', { p_name: n, p_pin: a });
+      S.tok = r.token; store.set('tok', r.token); S.me = r.name; store.set('me', r.name);
+      if (r.nuovo) toast('PIN personale salvato 🔐');
+      start();
+    } catch (ex) { e.textContent = msg(ex); e.hidden = false; b.disabled = false; f.a.value = ''; if (f.b) f.b.value = ''; f.a.focus(); }
+  };
+}
+// chiude l'accesso personale di questo telefono (il codice non vale più neanche nel database)
+function esciPersona() { if (S.tok && !DEMO) rpc('esci').catch(() => {}); S.tok = null; store.del('tok'); }
 function logout(avviso) {
   S.pw = null; store.del('pw'); S.feed = S.albums = S.ss = null; S.album = {}; S.thread = {};
   clearInterval(S.tick); S.people = S.storie = null;
@@ -1211,7 +1263,7 @@ function apriMenu() {
   ov.querySelector('[data-a=ricarica]').onclick = () => location.reload();
   ov.querySelector('[data-a=notifiche]').onclick = () => { chiudi(); setTimeout(apriNotifiche, 220); };
   ov.querySelector('[data-a=admin]').onclick = () => { chiudi(); setTimeout(() => adminPin() ? apriAdminAttivo() : chiediAdmin(route), 220); };
-  ov.querySelector('[data-a=esci]').onclick = () => { chiudi(); logout(); };
+  ov.querySelector('[data-a=esci]').onclick = () => { chiudi(); esciPersona(); logout(); };
 }
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
@@ -3060,7 +3112,7 @@ function gruppoHTML() {
   if (S.noPresenza) return '<p class="muto">Per vedere chi è online bisogna aggiornare il database: ricopia <b>installa.sql</b> nel SQL Editor di Supabase e premi Run (non cancella niente).</p>';
   const tuttiConRimossi = S.people || [], ppl = tuttiConRimossi.filter(p => !p.banned), rimossi = tuttiConRimossi.filter(p => p.banned), on = ppl.filter(p => p.online), adm = !!adminPin();
   const tutti = ppl.slice().sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
-  const kick = p => adm && !same(p.name, S.me) ? `<span class="prs-a"><span class="prs-s ${p.online ? 'on' : ''}">${p.online ? '<i class="dot"></i>' : ''}</span><button class="btn ghost rosso xs" data-kick="${esc(p.name)}">Rimuovi</button></span>` : '';
+  const kick = p => adm ? `<span class="prs-a"><span class="prs-s ${p.online ? 'on' : ''}">${p.online ? '<i class="dot"></i>' : ''}</span>${p.pin ? `<button class="btn ghost xs" data-pinreset="${esc(p.name)}" title="Azzera il PIN personale">PIN ↺</button>` : 'pin' in p ? '<span class="prs-nopin" title="Non ha ancora scelto il PIN personale">senza PIN</span>' : ''}${!same(p.name, S.me) ? `<button class="btn ghost rosso xs" data-kick="${esc(p.name)}">Rimuovi</button>` : ''}</span>` : '';
   return `<div class="grp-k"><i class="dot"></i>Online ora · ${on.length}</div>${on.map(p => personaHTML(p)).join('') || '<p class="hint">Nessuno online in questo momento.</p>'}
     <div class="grp-k">Tutti gli iscritti · ${ppl.length}</div>${tutti.map(p => personaHTML(p, true, kick(p))).join('')}
     ${adm && rimossi.length ? `<div class="grp-k">Rimossi · ${rimossi.length}</div>${rimossi.map(p => personaHTML(p, false, `<button class="btn ghost xs" data-unkick="${esc(p.name)}">Riammetti</button>`)).join('')}` : ''}
@@ -3086,6 +3138,12 @@ function drawOnline() {
   const d = $('#online-d'); if (d) d.innerHTML = on.map(p => personaHTML(p)).join('') || '<p class="hint" style="margin:0">Nessuno online.</p>';
   const g = $('#gruppo'); if (g && !g.querySelector('#adm-form:not([hidden])')) g.innerHTML = gruppoHTML();
 }
+async function azzeraPin(nome) {
+  if (!await ask(`Azzerare il PIN di ${nome}?`, `${esc(nome)} esce da tutti i suoi telefoni e al prossimo ingresso sceglie un PIN nuovo. Serve se l'ha dimenticato, o se qualcun altro ha scelto il PIN al posto suo.`, 'Azzera', true)) return;
+  try { await rpc('member_pin_reset', { p_admin: adminPin(), p_name: nome }); toast(`PIN di ${nome} azzerato`); }
+  catch (e) { if (/PIN_ADMIN_ERRATO|PIN_BLOCCATO/.test(e.message)) store.del('admin'); toast(msg(e), 'err'); }
+  await ping();
+}
 async function kick(nome, rimuovi) {
   if (rimuovi && !await ask(`Rimuovere ${nome} dal gruppo?`, `Esce subito dal sito e non può più rientrare con questo nome. I suoi post restano.<br><br>Per tenerlo fuori del tutto cambia anche la password del gruppo e dilla solo agli altri.`, 'Rimuovi', true)) return;
   try { await rpc('member_kick', { p_admin: adminPin(), p_name: nome, p_ban: rimuovi }); toast(rimuovi ? `${nome} è stato rimosso dal gruppo` : `${nome} può rientrare`); }
@@ -3095,7 +3153,8 @@ async function kick(nome, rimuovi) {
 function apriGruppo() {
   sheet(`<h3>Il gruppo</h3><div id="gruppo">${S.people || S.noPresenza ? gruppoHTML() : '<div class="loading">Carico</div>'}</div><div class="row end"><button class="btn" data-close>Chiudi</button></div>`, s => {
     s.addEventListener('click', e => {
-      const t = e.target.closest('[data-kick],[data-unkick],[data-adm-open],[data-adm-lock],[data-couple],[data-uncouple]'); if (!t) return;
+      const t = e.target.closest('[data-kick],[data-unkick],[data-adm-open],[data-adm-lock],[data-couple],[data-uncouple],[data-pinreset]'); if (!t) return;
+      if (t.dataset.pinreset) return azzeraPin(t.dataset.pinreset);
       if (t.hasAttribute('data-couple')) {
         const a = s.querySelector('#cp-a').value, b = s.querySelector('#cp-b').value;
         if (same(a, b)) return toast(MSG.STESSA_PERSONA, 'err');
@@ -3452,6 +3511,21 @@ function creaDemo() {
   const F = {
     check_pw: a => pwOk(a.p_pw),
     members_list: a => { need(a); return D.members.filter(m => !m.banned).map(m => m.name).sort(alfa); },
+    // accesso personale (stesse regole del database: accedi, accesso_info, esci, member_pin_reset)
+    accesso_info: a => { need(a); const m = D.members.find(x => same(x.name, clean(a.p_name, 30))); return { esiste: !!m, pin: !!(m && m.pin), bloccato: !!(m && m.banned) }; },
+    accedi: a => {
+      need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO');
+      if (!/^[0-9]{4,6}$/.test(a.p_pin || '')) return { err: 'PIN_FORMATO' };
+      let m = D.members.find(x => same(x.name, n)), nuovo = false;
+      if (m && m.banned) return { err: 'NOME_BLOCCATO' };
+      if (m && m.pinLock > Date.now()) return { err: 'PIN_PERSONALE_BLOCCATO' };
+      if (!m) { m = { name: n, created_at: t(0), last_seen: null, pin: a.p_pin }; D.members.push(m); nuovo = true; }
+      else if (!m.pin) { m.pin = a.p_pin; nuovo = true; }
+      else if (m.pin !== a.p_pin) { m.pinFail = (m.pinFail || 0) + 1; if (m.pinFail >= 5) { m.pinFail = 0; m.pinLock = Date.now() + 15 * 60000; return { err: 'PIN_PERSONALE_BLOCCATO' }; } return { err: 'PIN_PERSONALE_ERRATO' }; }
+      m.pinFail = 0; return { ok: true, token: uid().replace(/-/g, ''), name: m.name, nuovo };
+    },
+    esci: a => { need(a); return { ok: true }; },
+    member_pin_reset: a => { need(a); const x = admG(a.p_admin); if (x) return { err: x }; const m = D.members.find(y => same(y.name, clean(a.p_name, 30))); if (!m) throw err('NOME_NON_TROVATO'); m.pin = null; return { ok: true }; },
     admin_check: a => { need(a); const x = admG(a.p_admin); return { set: true, ok: !x, err: x }; },
     member_kick: a => { need(a); const x = admG(a.p_admin); if (x) return { err: x }; const m = D.members.find(y => same(y.name, clean(a.p_name, 30))); if (!m) throw err('NOME_NON_TROVATO'); m.banned = a.p_ban !== false; return { ok: true }; },
     member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (D.members.some(m => same(m.name, n) && m.banned)) throw err('NOME_BLOCCATO'); if (!D.members.some(m => m.name === n)) D.members.push({ name: n, created_at: t(0), last_seen: null }); },
@@ -3461,7 +3535,7 @@ function creaDemo() {
       if (n) { const m = D.members.find(x => same(x.name, n)); if (m && m.banned) throw err('SEI_STATO_RIMOSSO'); if (m) m.last_seen = ora; else D.members.push({ name: n, created_at: ora, last_seen: ora }); }
       const lim = Date.now() - 150000;
       return D.members.map(m => ({ name: m.name, created_at: m.created_at, last_seen: m.last_seen, online: !m.banned && !!m.last_seen && new Date(m.last_seen) > lim, banned: !!m.banned }))
-        .map((x, i) => Object.assign(x, { avatar: D.members[i].avatar || null }))
+        .map((x, i) => Object.assign(x, { avatar: D.members[i].avatar || null, pin: !!D.members[i].pin }))
         .sort((x, y) => (x.last_seen || '') < (y.last_seen || '') ? 1 : -1);
     },
     avatars_list: a => { need(a); return Object.fromEntries(D.members.filter(m => m.avatar && !m.banned).map(m => [m.name, m.avatar])); },
@@ -3802,6 +3876,7 @@ function creaDemo() {
 if (TRASLOCO) $('#app').innerHTML = '<main class="gate"><div class="loading">Un attimo</div></main>';
 else if (!S.pw) renderLogin();
 else if (!S.me) renderChiSei();
+else if (!S.tok) renderPin(S.me);
 else start();
 </script>
 </body>

@@ -39,6 +39,16 @@ async function vai(page, z) {
   await page.click('#menu-btn'); await page.waitForSelector('.mz-ov.in [data-zona]'); await page.click(`.mz [data-zona=${z}]`)
   await page.waitForFunction(() => !document.querySelector('.mz-ov'))
 }
+// accesso personale: dopo il nome si mette il PIN (la prima volta si sceglie, due volte). Nei test tutti usano 2468
+const PIN = '2468'
+async function conPin(page) {
+  await page.waitForSelector('#pin-f, .tabs')
+  if (await page.locator('#pin-f').count()) {
+    await page.fill('#pin-f [name=a]', PIN); if (await page.locator('#pin-f [name=b]').count()) await page.fill('#pin-f [name=b]', PIN)
+    await page.click('#pin-f [type=submit]')
+  }
+  await page.waitForSelector('.tabs')
+}
 async function entra(page, nome, pw = 'prova') {
   await page.goto(BASE + '/')
   await page.fill('#g-in', pw)
@@ -47,7 +57,7 @@ async function entra(page, nome, pw = 'prova') {
   const chip = page.locator(`#g-who [data-n="${nome}"]`)
   if (await chip.count()) await chip.click()
   else { await page.fill('#g-name input', nome); await page.click('#g-name button') }
-  await page.waitForSelector('.tabs')
+  await conPin(page)
 }
 const fotoCaricata = (page, nome) => page.waitForFunction(n => [...document.querySelectorAll(`.av[data-av="${n}"] img`)].some(i => i.complete && i.naturalWidth > 0), nome)
 // immagini di prova (foto grandi, colorate)
@@ -75,7 +85,12 @@ ok((await ricky.textContent('#g-pw .err:not([hidden])')).includes('sbagliata'), 
 await ricky.fill('#g-in', 'prova'); await ricky.click('#g-pw [type=submit]')
 await ricky.waitForSelector('#g-who h2')
 await ricky.fill('#g-name input', 'Ricky'); await ricky.click('#g-name button')
-await ricky.waitForSelector('.tabs')
+// accesso personale: Ricky sceglie il suo PIN (4-6 cifre, scritto due volte)
+await ricky.waitForSelector('#pin-f [name=b]'); await shot(ricky, '02b-pin-personale')
+ok((await ricky.textContent('#g-pin')).includes('PIN personale'), 'dopo il nome: "Scegli il tuo PIN personale"')
+await ricky.fill('#pin-f [name=a]', '12'); await ricky.click('#pin-f [type=submit]'); ok((await ricky.textContent('#pin-f .err')).includes('da 4 a 6 cifre'), 'PIN troppo corto: bloccato')
+await ricky.fill('#pin-f [name=a]', PIN); await ricky.fill('#pin-f [name=b]', '9999'); await ricky.click('#pin-f [type=submit]'); ok((await ricky.textContent('#pin-f .err')).includes('non coincidono'), 'i due PIN devono coincidere')
+await conPin(ricky)
 ok(await ricky.evaluate(() => S.me) === 'Ricky', 'entrato come Ricky')
 await ricky.waitForSelector('#feed .empty')
 
@@ -143,7 +158,7 @@ await ricky.click('.lb-x'); ok(await ricky.locator('.lb').count() === 0, 'visore
 const marco = await telefono('Marco')
 await marco.goto(BASE + '/'); await marco.fill('#g-in', 'prova'); await marco.click('#g-pw [type=submit]'); await marco.waitForSelector('#g-who [data-n="Ricky"]')
 await fotoCaricata(marco, 'Ricky'); ok(true, '"Chi sei?": accanto a Ricky c\'è la sua foto')
-await marco.fill('#g-name input', 'Marco'); await marco.click('#g-name button'); await marco.waitForSelector('.tabs')
+await marco.fill('#g-name input', 'Marco'); await marco.click('#g-name button'); await conPin(marco)
 await marco.waitForSelector('#feed .tw')
 await fotoCaricata(marco, 'Ricky'); ok(await marco.locator('#feed .tw .av.foto[data-av="Ricky"]').count() === 1, 'Marco vede la foto di Ricky accanto al suo post')
 ok(await marco.locator('.avpop').count() === 0 && await marco.locator('#feed .av[data-av="Marco"] img').count() === 0, 'chi non ha la foto ha l\'iniziale')
@@ -188,7 +203,11 @@ ok(await marco.locator('#feed .tw:nth-child(2) [data-del]').count() === 0 && awa
 const marco2 = await telefono('Marco-2')
 await marco2.goto(BASE + '/'); await marco2.fill('#g-in', 'prova'); await marco2.click('#g-pw [type=submit]')
 await marco2.waitForSelector('#g-who [data-n="Marco"]')
-await marco2.fill('#g-name input', 'marco'); await marco2.click('#g-name button'); await marco2.waitForSelector('.tabs')
+await marco2.fill('#g-name input', 'marco'); await marco2.click('#g-name button'); await marco2.waitForSelector('#pin-f')
+ok(await marco2.locator('#pin-f [name=b]').count() === 0 && (await marco2.textContent('#g-pin')).includes('Ciao Marco'), 'un altro telefono che sceglie "Marco" deve mettere il PIN di Marco')
+await marco2.fill('#pin-f [name=a]', '1111'); await marco2.click('#pin-f [type=submit]'); await marco2.waitForSelector('#pin-f .err:not([hidden])')
+ok((await marco2.textContent('#pin-f .err')).includes('PIN sbagliato') && await marco2.locator('.tabs').count() === 0, 'col PIN sbagliato non si entra come Marco')
+await conPin(marco2)
 ok((await marco2.evaluate(() => S.me)) === 'Marco', '"marco" minuscolo diventa il Marco già esistente')
 await marco2.close()
 
@@ -502,7 +521,7 @@ for (const [n, a] of Object.entries(amici)) {
   if (n === 'Giulia') {   // tentativo di rubare il nome di Marco
     await p.fill('#ss-join [name=nm]', 'marco'); await p.fill('#ss-join [name=pin]', '9876'); await p.click('#ss-join [type=submit]')
     await p.waitForSelector('#ss-join .err:not([hidden])')
-    ok((await p.textContent('#ss-join .err')).includes('già qualcuno'), 'Giulia non può iscriversi come "marco"')
+    ok((await p.textContent('#ss-join .err')).includes('solo col tuo nome'), 'Giulia non può iscriversi come "marco" (il database sa che è Giulia)')
     await p.fill('#ss-join [name=nm]', 'Giulia')
   }
   if (n === 'Sara') { await p.fill('#ss-join [name=pin]', '12'); await p.click('#ss-join [type=submit]'); ok((await p.textContent('#ss-join .err')).includes('4 a 8'), 'PIN troppo corto: bloccato') }
@@ -644,10 +663,10 @@ ok((await anna2.textContent('.rv-name')).trim() === abb3.Anna, 'Anna dall\'altro
 await shot(anna2, '12-altro-telefono')
 // sullo stesso telefono qualcuno entra nel sito con un ALTRO nome: il sorteggio di chi c'era prima NON si vede
 const lucaP = amici.Luca.page
-await lucaP.evaluate(() => renderChiSei()); await lucaP.waitForSelector('#g-who [data-n="Sara"]'); await lucaP.click('#g-who [data-n="Sara"]'); await lucaP.waitForSelector('.tabs')
+await lucaP.evaluate(() => renderChiSei()); await lucaP.waitForSelector('#g-who [data-n="Sara"]'); await lucaP.click('#g-who [data-n="Sara"]'); await conPin(lucaP)
 await lucaP.goto(BASE + '/#santa/' + evId); await lucaP.waitForSelector('#ss-me [data-a=login]')
 ok(await lucaP.locator('.rv-name').count() === 0 && await lucaP.locator('#ss-me [data-a=reveal]').count() === 0, 'sul telefono di Luca qualcuno entra come "Sara": il sorteggio di Luca non si vede, serve il PIN')
-await lucaP.evaluate(() => renderChiSei()); await lucaP.waitForSelector('#g-who [data-n="Luca"]'); await lucaP.click('#g-who [data-n="Luca"]'); await lucaP.waitForSelector('.tabs')
+await lucaP.evaluate(() => renderChiSei()); await lucaP.waitForSelector('#g-who [data-n="Luca"]'); await lucaP.click('#g-who [data-n="Luca"]'); await conPin(lucaP)
 await lucaP.goto(BASE + '/#santa/' + evId); await lucaP.waitForSelector('#ss-me .rv-name, #ss-me [data-a=reveal]')
 ok(await lucaP.locator('#ss-me [data-a=login]').count() === 0, 'tornato "Luca" sul suo telefono: il PIN è ricordato, non deve riscriverlo')
 
@@ -693,8 +712,8 @@ ok((await ricky.textContent('#ev')).includes('annullato il sorteggio n° 1'), 'n
 const furbo = await telefono('Furbo'); await entra(furbo, 'Furbo')
 await furbo.goto(BASE + '/#santa/' + evId); await furbo.waitForSelector('#ss-me [data-a=login]')
 await furbo.click('#ss-me [data-a=login]'); await furbo.selectOption('.sheet select', 'Paolo')
-for (let i = 0; i < 5; i++) { await furbo.fill('.sheet [name=p]', String(1000 + i)); await furbo.click('.sheet [type=submit]'); await furbo.waitForSelector('.sheet .err:not([hidden])') }
-ok((await furbo.textContent('.sheet .err')).includes('Troppi PIN sbagliati'), 'chi prova tutti i PIN viene bloccato dopo 5 tentativi')
+await furbo.fill('.sheet [name=p]', '1000'); await furbo.click('.sheet [type=submit]'); await furbo.waitForSelector('.sheet .err:not([hidden])')
+ok((await furbo.textContent('.sheet .err')).includes('solo col tuo nome'), 'chi prova i PIN del Secret Santa di Paolo viene fermato subito: col nome di un altro non si può nemmeno provare')
 await furbo.close()
 
 // ---------------- ALTRE SEZIONI ----------------
@@ -795,7 +814,8 @@ await ricky.click('#menu-btn'); await ricky.waitForSelector('.mz-ov.in'); await 
 await ricky.waitForSelector('#g-pw'); ok(true, 'esci: torna alla password')
 
 // amministratore: rimuove Marco e lo riammette
-await ricky.goto(BASE + '/'); await ricky.fill('#g-in', 'prova'); await ricky.click('#g-pw [type=submit]'); await ricky.waitForSelector('.tabs')
+await ricky.goto(BASE + '/'); await ricky.fill('#g-in', 'prova'); await ricky.click('#g-pw [type=submit]'); await conPin(ricky)
+ok(true, 'dopo "Esci" per rientrare serve anche il PIN personale')
 await ricky.evaluate(() => ping()); await ricky.click('#on-btn'); await ricky.waitForSelector('#gruppo [data-adm-open]')
 ok(await ricky.locator('#gruppo [data-kick]').count() === 0, 'senza PIN amministratore niente bottone "Rimuovi"')
 await ricky.click('#gruppo [data-adm-open]'); await ricky.fill('#adm-form [name=p]', '1111'); await ricky.click('#adm-form button')
@@ -809,13 +829,22 @@ await marco.evaluate(() => ping()); await marco.waitForSelector('#g-pw .err')
 ok((await marco.textContent('#g-pw .err')).includes('rimosso'), 'il telefono di Marco esce subito: "Sei stato rimosso dal gruppo"')
 await marco.fill('#g-in', 'prova'); await marco.click('#g-pw [type=submit]'); await marco.waitForSelector('#g-who h2')
 ok(await marco.locator('#g-who [data-n="Marco"]').count() === 0, 'il nome Marco non è più tra quelli da scegliere')
-await marco.fill('#g-name input', 'marco'); await marco.click('#g-name button'); await marco.waitForSelector('#g-name .err:not([hidden])')
-ok((await marco.textContent('#g-name .err')).includes('rimosso'), 'non può rientrare scrivendo di nuovo "marco"')
+await marco.fill('#g-name input', 'marco'); await marco.click('#g-name button'); await marco.waitForSelector('#g-pin .err')
+ok((await marco.textContent('#g-pin .err')).includes('rimosso'), 'non può rientrare scrivendo di nuovo "marco"')
 await ricky.click('#gruppo [data-unkick="Marco"]'); await ricky.waitForSelector('#gruppo [data-kick="Marco"]')
 ok(true, 'Ricky riammette Marco')
 await ricky.click('.sheet [data-close]')
-await marco.reload(); await marco.waitForSelector('#g-who [data-n="Marco"]'); await marco.click('#g-who [data-n="Marco"]'); await marco.waitForSelector('.tabs')
-ok(await marco.evaluate(() => S.me) === 'Marco', 'riammesso: Marco ritrova il suo nome e rientra')
+await marco.reload(); await marco.waitForSelector('#g-who [data-n="Marco"]'); await marco.click('#g-who [data-n="Marco"]'); await conPin(marco)
+ok(await marco.evaluate(() => S.me) === 'Marco', 'riammesso: Marco ritrova il suo nome e rientra (col suo PIN)')
+// accesso personale: nessuno può fare cose a nome di un altro (lo blocca il database)
+ok((await marco.evaluate(async () => { try { await rpc('post_add', { p_author: 'Ricky', p_body: 'post finto', p_photos: [] }); return 'pubblicato' } catch (e) { return e.message } })) === 'NON_SEI_TU', 'Marco non può pubblicare a nome di Ricky, nemmeno "smanettando"')
+// l'amministratore azzera il PIN di Marco: Marco esce e ne sceglie uno nuovo
+await ricky.evaluate(() => apriGruppo()); await ricky.waitForSelector('#gruppo [data-pinreset="Marco"]'); await shot(ricky, '27b-azzera-pin')
+await ricky.click('#gruppo [data-pinreset="Marco"]'); await ricky.click('.sheet:has(h3:text("Azzerare")) [data-ok]')
+await ricky.waitForSelector('.toast:has-text("PIN di Marco azzerato")'); await ricky.click('.sheet [data-close]')
+await marco.evaluate(() => ping()); await marco.waitForSelector('#pin-f [name=b]')
+ok((await marco.textContent('#g-pin')).includes('Rientra'), 'PIN azzerato: Marco esce e deve sceglierne uno nuovo')
+await conPin(marco)
 
 // password cambiata mentre si è dentro → torna alla password
 await marco.evaluate(() => localStorage.setItem('pip_pw', JSON.stringify('vecchia')))
@@ -847,7 +876,7 @@ await pr.fill('#g-in', 'Prova '); await pr.click('#g-pw [type=submit]'); await p
 await pr.evaluate(() => localStorage.clear()); await pr.reload()
 await shot(pr, '20-prova-ingresso')
 await pr.fill('#g-in', 'prova'); await pr.click('#g-pw [type=submit]'); await pr.waitForSelector('#g-who [data-n=Marco]')
-await pr.fill('#g-name input', 'Ricky'); await pr.click('#g-name button'); await pr.waitForSelector('#feed .tw')
+await pr.fill('#g-name input', 'Ricky'); await pr.click('#g-name button'); await conPin(pr); await pr.waitForSelector('#feed .tw')
 ok(await pr.locator('.demo-bar').count() === 1 && await pr.locator('#feed .tw').count() === 8, 'prova: 8 post di esempio (+1 in evidenza) e striscia "modalità prova"')
 ok(await pr.evaluate(() => ['post', 'evento', 'santa', 'sondaggio', 'foto'].every(k => document.querySelector('#feed .tw.k-' + k))), 'prova: un blocco per ogni colore (post, evento, Secret Santa, sondaggio, foto)')
 await pr.waitForFunction(() => document.querySelector('#on-btn b').textContent === '3')
@@ -969,7 +998,7 @@ for (const w of [320, 1280]) { await pr.setViewportSize({ width: w, height: w ==
 // ---------------- CALENDARIO DELL'AVVENTO (giorni finti: 17 novembre e 5 dicembre) ----------------
 for (const [quando, aperte, chiuse] of [[new Date(2026, 10, 17, 12), 0, 19], [new Date(2026, 11, 5, 12), 4, 14]]) {
   const av = await telefono('Avvento'); await av.clock.setFixedTime(quando)
-  await av.goto(BASE + '/prova'); await av.fill('#g-in', 'prova'); await av.click('#g-pw [type=submit]'); await av.fill('#g-name input', 'Ricky'); await av.click('#g-name button'); await av.waitForSelector('.tabs')
+  await av.goto(BASE + '/prova'); await av.fill('#g-in', 'prova'); await av.click('#g-pw [type=submit]'); await av.fill('#g-name input', 'Ricky'); await av.click('#g-name button'); await conPin(av)
   await vai(av, 'avvento'); await av.waitForSelector('.avv-c')
   const conta = await av.evaluate(() => ['aperta', 'oggi', 'chiusa'].map(c => document.querySelectorAll('.avv-c.' + c).length))
   const giorno = quando.getDate() + (quando.getMonth() === 10 ? ' novembre' : ' dicembre')
