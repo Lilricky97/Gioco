@@ -777,6 +777,38 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
   ok((await err('select ss_org_pin($1,$2,$3,$4)',['x',e,'4321','2222']))==='PASSWORD_ERRATA' && (await one('select ss_org_pin($1,$2,$3,$4)',[PW,'00000000-0000-0000-0000-000000000000','4321','2222'])).err==='EVENTO_NON_TROVATO','protetto dalla password; Secret Santa inesistente: errore')
 }
 
+// IL SORTEGGIO NON SI ROMPE (Ricky, 18/11/2026): cambio del PIN di un partecipante, PIN organizzatore bloccato e rifatto,
+// PIN amministratore bloccato, installa.sql ricopiato → gli abbinamenti restano IDENTICI e ognuno vede la stessa persona
+{
+  const P = ['Ricky','Panni','Giulia','Marco','Sara','Luca','Anna','Paolo'], pin = n => String(1000 + P.indexOf(n) * 111)
+  const ev = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Natale vero','30 €','20/12','Ricky','5555',null])
+  for (const n of P) await one('select ss_join($1,$2,$3,$4,$5)',[PW,ev,n,pin(n),'Letterina di '+n])
+  ok((await one('select ss_draw($1,$2,$3)',[PW,ev,'5555'])).ok===true,'sorteggio vero: 8 persone')
+  const foto = async () => (await q('select g.name as da, r.name as a, g.code as l from ss_pairs s join ss_people g on g.id = s.giver join ss_people r on r.id = s.receiver where s.event_id = $1 order by g.name',[ev])).map(x => x.da + '>' + x.a + ':' + x.l).join()
+  const prima = await foto()
+  const vede = async (n, p) => (await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,n,p])).to
+  const visti = {}; for (const n of P) visti[n] = await vede(n, pin(n))
+  // 1) Panni sbaglia il PIN e l'organizzatore gliene dà uno nuovo
+  for (let i = 0; i < 3; i++) await err('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Panni','0000'])
+  ok((await one('select ss_reset_pin($1,$2,$3,$4,$5)',[PW,ev,'5555','panni','2468'])).ok===true && await vede('Panni','2468') === visti.Panni && !(await one('select ss_reveal($1,$2,$3,$4)',[PW,ev,'Panni',pin('Panni')])).to,
+    'Panni col PIN nuovo vede la stessa persona di prima (il PIN vecchio non va più)')
+  // 2) PIN organizzatore sbagliato 5 volte → bloccato → l'amministratore ne dà uno nuovo
+  for (let i = 0; i < 5; i++) await one('select ss_admin_check($1,$2,$3)',[PW,ev,'0000'])
+  ok((await one('select ss_org_pin($1,$2,$3,$4)',[PW,ev,'4321','7777'])).ok===true && (await one('select ss_admin_check($1,$2,$3)',[PW,ev,'7777'])).ok===true,'PIN organizzatore bloccato e rifatto dall\'amministratore')
+  // 3) PIN amministratore sbagliato fino al blocco (poi passano i 15 minuti)
+  for (let i = 0; i < 5; i++) await one('select admin_check($1,$2)',[PW,'0000'])
+  await q(`delete from app_config where k in ('admin_lock','admin_fail')`)
+  // 4) installa.sql copiato di nuovo, due volte
+  await db.exec(SCHEMA); await db.exec(SCHEMA)
+  await db.exec(`create or replace function _io(p_name text) returns void language sql as $$ select $$`)
+  ok(await foto() === prima,'dopo tutto questo gli abbinamenti (e le lettere della verifica) sono IDENTICI a quelli del sorteggio')
+  let uguali = true; for (const n of P) if (await vede(n, n === 'Panni' ? '2468' : pin(n)) !== visti[n]) uguali = false
+  ok(uguali,'ognuno vede ancora la stessa persona di prima')
+  const t = await one('select ss_tabella($1,$2)',[PW,ev])
+  ok(t.check.ok === true && t.check.self === 0 && t.check.excluded_pairs === 0 && t.righe.length === 8 && new Set(t.righe.map(r => r.da)).size === 8 && new Set(t.righe.map(r => r.a)).size === 8 && t.righe.every(r => r.da !== r.a),
+    'la Verifica dice ✅ Sorteggio regolare: 8 lettere, ognuno fa e riceve un solo regalo, nessuno a se stesso, coppie rispettate')
+}
+
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)
 for(let i=0;i<5;i++) await err('select member_kick($1,$2,$3,$4)',[PW,'0000','Luca',true])
 ok((await err('select member_kick($1,$2,$3,$4)',[PW,'4321','Luca',true]))==='PIN_BLOCCATO','5 PIN amministratore sbagliati: blocco di 15 minuti')
