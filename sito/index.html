@@ -755,8 +755,8 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .mp-stat{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;color:var(--muto);margin:-6px 0 12px;font-size:15px;min-height:22px}
 .mp-stat b{color:var(--testo);font-size:17px}
 .mp-band{font-size:19px;letter-spacing:3px;line-height:1.2;overflow-wrap:anywhere}
-.mp-box{position:relative;height:min(62vh,560px);min-height:320px;border-radius:var(--r);overflow:hidden;border:1.5px solid rgba(255,62,165,.55);
-  box-shadow:0 0 24px -8px var(--rosa);background:#070b1d;margin:0 0 12px}
+.mp-box{position:relative;height:min(62vh,560px);min-height:320px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);
+  box-shadow:0 10px 30px -14px rgba(0,0,0,.7);background:#0b1026;margin:0 0 12px}
 #mp-map{position:absolute;inset:0}
 .mp-msg{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;color:var(--muto);background:#070b1d}
 .mp-msg[hidden]{display:none}
@@ -765,14 +765,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .mp-ctl button{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--muto);font:800 12px/1 Archivo,sans-serif;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-radius:6px;cursor:pointer}
 .mp-ctl svg{display:block;width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .mp-ctl button.on{color:#05261c;background:var(--menta);box-shadow:0 0 12px -2px var(--menta-g)}
-.mp-pin{width:30px;height:30px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
-.mp-pin i{position:relative;display:block;width:15px;height:15px;border-radius:50%;background:var(--rosa);border:2px solid #fff3fa;box-shadow:0 0 6px var(--rosa),0 0 16px var(--rosa-g);transition:transform .2s}
-.mp-pin i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--rosa);opacity:0;animation:mp-onda 2.6s ease-out infinite}
-.mp-pin.sel i{background:var(--menta);border-color:#effff9;box-shadow:0 0 8px var(--menta),0 0 22px var(--menta-g);transform:scale(1.3)}
-.mp-pin.sel i::after{border-color:var(--menta)}
-@keyframes mp-onda{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.9);opacity:0}}
-@media (prefers-reduced-motion:reduce){.mp-pin i::after{animation:none}}
-.mp-card{position:absolute;z-index:4;left:10px;right:10px;bottom:10px;max-height:calc(100% - 70px);overflow:auto;background:rgba(12,18,46,.96);border:1px solid rgba(70,245,192,.55);border-radius:8px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 18px -8px var(--menta)}
+.mp-card{position:absolute;z-index:4;left:10px;right:10px;bottom:10px;max-height:56%;overflow:auto;background:rgba(12,18,46,.96);border:1px solid rgba(70,245,192,.55);border-radius:8px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 18px -8px var(--menta)}
 .mp-card[hidden]{display:none}
 .mp-card h3{margin:0 34px 2px 0;font-size:20px;overflow-wrap:anywhere}
 .mp-card .mp-x{position:absolute;top:4px;right:4px;padding:10px;color:var(--muto)}
@@ -811,10 +804,10 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .lf-chi .chip{padding:4px 11px 4px 4px;font-size:14px;cursor:pointer}
 .lf-chi .chip.on{border-color:var(--menta);color:var(--menta);background:rgba(70,245,192,.08)}
 /* road trip: tappe numerate e tragitto del colore del viaggio */
-.mp-tappa{width:24px;height:24px;padding:0;border-radius:50%;border:2px solid var(--c);background:#070b1d;color:var(--c);font:800 11px/20px Archivo,sans-serif;text-align:center;cursor:pointer;box-shadow:0 0 8px var(--c)}
-.mp-tappa.sel{background:var(--c);color:#070b1d;box-shadow:0 0 14px var(--c)}
 .mp-n{flex:none;display:inline-block;width:22px;height:22px;border-radius:50%;border:2px solid var(--c);color:var(--c);font:800 11px/18px Archivo,sans-serif;text-align:center;box-shadow:0 0 6px var(--c)}
-.mp-ct{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:4px 10px}
+.mp-ct{list-style:none;margin:0 0 8px;padding:0 0 2px;display:flex;gap:4px 10px;overflow-x:auto;scrollbar-width:none}
+.mp-ct::-webkit-scrollbar{display:none}
+.mp-ct li{flex:none}
 .mp-ct button{display:flex;align-items:center;gap:6px;background:none;border:0;color:inherit;font:inherit;font-size:14.5px;padding:3px 0;cursor:pointer;text-align:left}
 .mp-ct li:not(:last-child) button::after{content:"→";color:var(--muto2);margin-left:4px}
 .mp-rt{display:inline-flex;align-items:center;gap:5px;color:var(--c);font-weight:700}
@@ -1843,7 +1836,7 @@ function drawPost(id) {
 // I posti dove siamo stati insieme (Ricky, 17/11/2026): cartina vera scura (OpenFreeMap) con MapLibre, pallamondo che gira o cartina piatta.
 // Ricerca: Open-Meteo (capisce i nomi italiani: "Parigi", "Monaco di Baviera") + OpenStreetMap (vie e locali, solo premendo Cerca).
 const MAPLIBRE = 'https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl';
-const MAPPA_STILE = 'https://tiles.openfreemap.org/styles/dark';
+const MAPPA_STILE = 'https://tiles.openfreemap.org/styles/liberty';
 const ICO_GLOBO = svg('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/>');
 const ICO_CARTINA = svg('<path d="m3.5 6.5 5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>');
 const ICO_TUTTI = svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>');
@@ -1857,29 +1850,15 @@ function caricaMaplibre() {
     document.head.appendChild(s);
   }));
 }
-// lo stile scuro di OpenFreeMap coi colori del sito: terra blu notte, mare scurissimo, confini rosa neon, nomi in italiano
+// cartina chiara di OpenFreeMap ("liberty", come le mappe normali) coi nomi in italiano (Ricky, 18/11/2026: il neon non gli piaceva, i punti si devono capire)
 function stileMappa() {
   return stilePromessa || (stilePromessa = fetch(MAPPA_STILE).then(r => { if (!r.ok) throw err('MAPPA_NON_CARICA'); return r.json(); }).then(st => {
     const nome = ['coalesce', ['get', 'name:it'], ['get', 'name:latin'], ['get', 'name']];
     for (const l of st.layers) {
-      const p = l.paint || (l.paint = {}), y = l.layout || {};
-      if (l.id === 'background') p['background-color'] = '#141c40';
-      else if (l.id === 'water' || l.id === 'waterway') p[l.type === 'fill' ? 'fill-color' : 'line-color'] = '#060a1c';
-      else if (/^landcover_(ice|glacier)/.test(l.id)) p['fill-color'] = '#1a2350';
-      else if (/^(landcover_wood|landuse_park)$/.test(l.id)) p['fill-color'] = '#17204a';
-      else if (l.id === 'landuse_residential') p['fill-color'] = '#1a2452';
-      else if (l.id === 'building') { p['fill-color'] = '#1e2858'; p['fill-outline-color'] = '#26326a'; }
-      else if (/^boundary_country/.test(l.id)) p['line-color'] = 'rgba(255,62,165,.62)';
-      else if (l.id === 'boundary_state') p['line-color'] = 'rgba(255,62,165,.2)';
-      else if (l.type === 'line' && /^highway_(minor|path)/.test(l.id)) p['line-color'] = '#222d61';
-      else if (l.type === 'line' && /^highway_major_(inner|subtle)/.test(l.id)) p['line-color'] = '#2c3874';
-      if (l.type === 'symbol' && y['text-field'] && /^(place_|water_name)/.test(l.id)) {
-        y['text-field'] = nome;
-        p['text-color'] = /^place_country/.test(l.id) ? '#ffb3dc' : l.id === 'water_name' ? '#4a5aa0' : '#c9cff5';
-        p['text-halo-color'] = '#070b1d';
-      }
+      const y = l.layout || {};
+      if (l.type === 'symbol' && y['text-field'] && /name/.test(JSON.stringify(y['text-field']))) y['text-field'] = nome;
     }
-    st.sky = { 'sky-color': '#070b1d', 'horizon-color': '#ff3ea5', 'fog-color': '#070b1d', 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, .9, 5, .6, 7, 0] };
+    st.sky = { 'sky-color': '#0b1026', 'horizon-color': '#bcd8ff', 'fog-color': '#e8f1ff', 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, .8, 5, .5, 7, 0] };
     return st;
   }).catch(e => { stilePromessa = null; throw e; }));
 }
@@ -1887,7 +1866,8 @@ const bandiera = cc => /^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[..
 function nomePaese(cc, dflt) { try { return /^[A-Z]{2}$/.test(cc || '') ? new Intl.DisplayNames(['it'], { type: 'region' }).of(cc) : (dflt || ''); } catch (e) { return dflt || ''; } }
 const quandoLuogo = l => l.anno ? (l.mese ? MESI[l.mese - 1] + ' ' : '') + l.anno : '';
 // road trip (Ricky, 17/11/2026): più tappe in ordine, colorate, col tragitto lungo le strade (OSRM, servizio gratuito)
-const COLORI_VIAGGI = ['#46f5c0', '#ffd86b', '#4cc9ff', '#a78bff', '#ff9a3c', '#ff5d6c'];
+const COLORI_VIAGGI = ['#1e6bff', '#ff7a00', '#00a36c', '#8e44ff', '#00a3c4', '#d4a000'];
+const COL_POSTO = '#e5195e';   // i posti singoli: rosa-rosso pieno col bordo bianco
 const coloreViaggio = id => { let h = 7; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COLORI_VIAGGI[h % COLORI_VIAGGI.length]; };
 const eRoadTrip = l => Array.isArray(l.tappe) && l.tappe.length > 1;
 const paesiDi = l => eRoadTrip(l) ? l.tappe.map(t => t.cc).filter(Boolean) : (l.cc ? [l.cc] : []);
@@ -1933,7 +1913,7 @@ function viewMappa(arg) {
     <button class="btn wide" id="mp-add">+ Aggiungi un posto</button>
     <div class="mp-chi" id="mp-chi"></div>
     <div id="mp-list"><div class="loading">Carico i posti</div></div>`;
-  S.mp = { vista, markers: new Map(), sel: null, selIniz: arg || null };
+  S.mp = { vista, sel: null, selIniz: arg || null };
   document.querySelectorAll('.mp-ctl [data-v]').forEach(b => { b.classList.toggle('on', b.dataset.v === vista); b.onclick = () => cambiaVista(b.dataset.v); });
   $('#mp-tutti').onclick = () => { chiudiCard(); vediTutti(); };
   $('#mp-add').onclick = cercaPosto;
@@ -1963,11 +1943,20 @@ async function avviaMappa() {
     const tocco = () => { mp.gira = false; clearTimeout(mp.tg); };
     map.on('mousedown', tocco); map.on('touchstart', tocco); map.on('wheel', tocco);
     map.on('moveend', e => { if (mp.gira) giraAncora(); else if (e.originalEvent) giroDopo(9000); });
+    // tocco: su una tappa, un posto, un gruppo di posti (si avvicina) o un tragitto; altrove chiude la scheda
+    const toccabili = ['tappe-punto', 'scelto-punto', 'posti-punto', 'posti-gruppo', 'viaggi-bordo'];
     map.on('click', e => {
-      if (e.originalEvent && e.originalEvent.target.closest('.mp-pin,.mp-tappa')) return;
-      const f = map.getLayer('viaggi-alone') ? map.queryRenderedFeatures([[e.point.x - 14, e.point.y - 14], [e.point.x + 14, e.point.y + 14]], { layers: ['viaggi-alone'] }) : [];
-      if (f.length) selezionaLuogo(f[0].properties.id); else if (mp.sel) chiudiCard();
+      const lay = toccabili.filter(x => map.getLayer(x)), f = lay.length ? map.queryRenderedFeatures([[e.point.x - 12, e.point.y - 12], [e.point.x + 12, e.point.y + 12]], { layers: lay }) : [];
+      const pr = x => toccabili.indexOf(x.layer.id), g = f.sort((a, b) => pr(a) - pr(b))[0];
+      if (!g) { if (mp.sel) chiudiCard(); return; }
+      if (g.layer.id === 'posti-gruppo') {
+        map.getSource('posti').getClusterExpansionZoom(g.properties.cluster_id).then(z => map.easeTo({ center: g.geometry.coordinates, zoom: Math.min(z + .3, 12), duration: 700 })).catch(() => {});
+        return;
+      }
+      if (g.layer.id === 'tappe-punto' && mp.sel === g.properties.id) return vaiTappa(S.luoghi.find(l => l.id === g.properties.id), g.properties.n - 1);
+      selezionaLuogo(g.properties.id);
     });
+    toccabili.forEach(x => { map.on('mouseenter', x, () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', x, () => { map.getCanvas().style.cursor = ''; }); });
   } catch (e) {
     const m = msgEl(); if (!m) return;
     m.hidden = false; m.innerHTML = `<p>😕 La mappa non si carica (controlla la connessione).</p><button class="btn ghost sm" id="mp-riprova">Riprova</button>`;
@@ -2001,36 +1990,49 @@ function vediTutti(subito, palla) {
   if (L.length === 1) return m.easeTo({ center: [L[0].lon, L[0].lat], zoom: 4, duration: d });
   m.fitBounds(b, { padding: { top: 70, bottom: 40, left: 40, right: 40 }, maxZoom: 5, duration: d });
 }
+// i posti e i road trip disegnati dalla mappa stessa (Ricky, 18/11/2026: "che si capiscano meglio i punti e i road trip non si accavallino"):
+// - posti vicini raggruppati in un tondo col numero (toccandolo si avvicina), il nome compare avvicinandosi
+// - ogni road trip ha il suo colore e la sua linea, scostata da quelle vicine; le tappe numerate si vedono solo per il viaggio scelto (gli altri si attenuano)
+const SCOSTA = [0, 5, -5, 10, -10, 15, -15];
 function disegnaPuntine() {
-  const mp = S.mp; if (!mp || !mp.map || !mp.pronta || !S.luoghi) return;
-  // una puntina per ogni posto; per i road trip una pallina numerata per ogni tappa (chiave con le coordinate: se le tappe cambiano si rifà)
-  const vis = luoghiVisibili(), voci = [];
-  vis.forEach(l => { if (eRoadTrip(l)) l.tappe.forEach((t, i) => voci.push({ k: l.id + '#' + i + '#' + t.lat + ',' + t.lon, l, t, i })); else voci.push({ k: l.id, l }); });
-  const chiavi = new Set(voci.map(v => v.k));
-  for (const [k, mk] of mp.markers) if (!chiavi.has(k)) { mk.remove(); mp.markers.delete(k); }
-  voci.forEach(({ k, l, t, i }) => {
-    let mk = mp.markers.get(k);
-    if (!mk) {
-      const el = document.createElement('button'); el.dataset.l = l.id;
-      if (t) { el.className = 'mp-tappa'; el.textContent = i + 1; el.style.setProperty('--c', coloreViaggio(l.id)); } else { el.className = 'mp-pin'; el.innerHTML = '<i></i>'; }
-      el.addEventListener('click', ev => { ev.stopPropagation(); selezionaLuogo(el.dataset.l); });
-      mk = new maplibregl.Marker({ element: el }).setLngLat(t ? [t.lon, t.lat] : [l.lon, l.lat]).addTo(mp.map); mp.markers.set(k, mk);
-    }
-    const el = mk.getElement(); el.setAttribute('aria-label', t ? `${l.nome}: tappa ${i + 1}, ${t.nome}` : l.nome); el.classList.toggle('sel', mp.sel === l.id);
-  });
-  disegnaTragitti();
-}
-// i tragitti dei road trip: una linea al neon del colore del viaggio (con alone), più spessa se è quello scelto
-function disegnaTragitti() {
-  const mp = S.mp, m = mp && mp.map; if (!m || !mp.pronta || !m.isStyleLoaded()) return;
-  const fc = { type: 'FeatureCollection', features: luoghiVisibili().filter(eRoadTrip).map(l => ({ type: 'Feature',
-    properties: { id: l.id, c: coloreViaggio(l.id), sel: mp.sel === l.id ? 1 : 0 },
-    geometry: { type: 'LineString', coordinates: Array.isArray(l.percorso) && l.percorso.length > 1 ? l.percorso : l.tappe.map(t => [t.lon, t.lat]) } })) };
-  const src = m.getSource('viaggi'); if (src) return src.setData(fc);
-  m.addSource('viaggi', { type: 'geojson', data: fc });
-  const lay = { 'line-cap': 'round', 'line-join': 'round' };
-  m.addLayer({ id: 'viaggi-alone', type: 'line', source: 'viaggi', layout: lay, paint: { 'line-color': ['get', 'c'], 'line-width': ['case', ['==', ['get', 'sel'], 1], 16, 10], 'line-opacity': .3, 'line-blur': 6 } });
-  m.addLayer({ id: 'viaggi', type: 'line', source: 'viaggi', layout: lay, paint: { 'line-color': ['get', 'c'], 'line-width': ['case', ['==', ['get', 'sel'], 1], 4.5, 2.8] } });
+  const mp = S.mp, m = mp && mp.map; if (!m || !mp.pronta || !S.luoghi) return;
+  const vis = luoghiVisibili(), sel = mp.sel, punto = (c, p) => ({ type: 'Feature', properties: p, geometry: { type: 'Point', coordinates: c } });
+  const lsel = sel && vis.find(l => l.id === sel), rtSel = lsel && eRoadTrip(lsel);
+  const posti = vis.filter(l => l.id !== sel).map(l => punto([l.lon, l.lat], { id: l.id, nome: l.nome, c: eRoadTrip(l) ? coloreViaggio(l.id) : COL_POSTO }));
+  const scelto = lsel && !rtSel ? [punto([lsel.lon, lsel.lat], { id: lsel.id, nome: lsel.nome, c: COL_POSTO })] : [];
+  const tappe = rtSel ? lsel.tappe.map((t, i) => punto([t.lon, t.lat], { id: lsel.id, n: i + 1, nome: t.nome, c: coloreViaggio(lsel.id) })) : [];
+  const viaggi = vis.filter(eRoadTrip).map((l, i) => ({ type: 'Feature', properties: { id: l.id, c: coloreViaggio(l.id), off: SCOSTA[i % SCOSTA.length], sel: sel === l.id ? 1 : 0, spento: sel && sel !== l.id ? 1 : 0 },
+    geometry: { type: 'LineString', coordinates: Array.isArray(l.percorso) && l.percorso.length > 1 ? l.percorso : l.tappe.map(t => [t.lon, t.lat]) } }));
+  mp.fc = { posti, scelto, tappe, viaggi };
+  const fc = f => ({ type: 'FeatureCollection', features: f });
+  if (m.getSource('posti')) {
+    m.getSource('posti').setData(fc(posti)); m.getSource('scelto').setData(fc(scelto)); m.getSource('tappe').setData(fc(tappe)); m.getSource('viaggi').setData(fc(viaggi));
+    return;
+  }
+  const font = ['Noto Sans Bold'], alone = { 'text-halo-color': '#ffffff', 'text-halo-width': 1.8, 'text-color': '#1d2433' };
+  m.addSource('viaggi', { type: 'geojson', data: fc(viaggi) });
+  m.addSource('posti', { type: 'geojson', data: fc(posti), cluster: true, clusterRadius: 38, clusterMaxZoom: 7 });
+  m.addSource('scelto', { type: 'geojson', data: fc(scelto) });
+  m.addSource('tappe', { type: 'geojson', data: fc(tappe) });
+  // tragitti: bordo bianco + colore del viaggio, scostati; quello scelto più spesso, gli altri attenuati
+  const lin = { 'line-cap': 'round', 'line-join': 'round' }, op = ['case', ['==', ['get', 'spento'], 1], .28, 1];
+  m.addLayer({ id: 'viaggi-bordo', type: 'line', source: 'viaggi', layout: lin, paint: { 'line-color': '#ffffff', 'line-width': ['case', ['==', ['get', 'sel'], 1], 10, 7], 'line-offset': ['get', 'off'], 'line-opacity': op } });
+  m.addLayer({ id: 'viaggi', type: 'line', source: 'viaggi', layout: lin, paint: { 'line-color': ['get', 'c'], 'line-width': ['case', ['==', ['get', 'sel'], 1], 6, 4], 'line-offset': ['get', 'off'], 'line-opacity': op } });
+  // posti raggruppati: tondo blu notte col numero
+  m.addLayer({ id: 'posti-gruppo', type: 'circle', source: 'posti', filter: ['has', 'point_count'], paint: { 'circle-color': '#1d2a52', 'circle-radius': ['step', ['get', 'point_count'], 15, 5, 19, 15, 23], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 } });
+  m.addLayer({ id: 'posti-gruppo-n', type: 'symbol', source: 'posti', filter: ['has', 'point_count'], layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-font': font, 'text-size': 13, 'text-allow-overlap': true }, paint: { 'text-color': '#ffffff' } });
+  // un posto: tondo pieno col bordo bianco (rosa i posti, col colore del viaggio i road trip); il nome compare avvicinandosi
+  const tondo = r => ({ 'circle-color': ['get', 'c'], 'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, r, 8, r + 3], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 });
+  m.addLayer({ id: 'posti-punto', type: 'circle', source: 'posti', filter: ['!', ['has', 'point_count']], paint: tondo(7) });
+  m.addLayer({ id: 'posti-nome', type: 'symbol', source: 'posti', filter: ['!', ['has', 'point_count']], minzoom: 3.5, layout: { 'text-field': ['get', 'nome'], 'text-font': font, 'text-size': 12.5, 'text-offset': [0, 1.15], 'text-anchor': 'top', 'text-optional': true }, paint: alone });
+  // il posto scelto: più grande, con l'anello scuro e il nome sempre
+  m.addLayer({ id: 'scelto-anello', type: 'circle', source: 'scelto', paint: { 'circle-radius': 17, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#1d2433', 'circle-stroke-width': 3 } });
+  m.addLayer({ id: 'scelto-punto', type: 'circle', source: 'scelto', paint: tondo(10) });
+  m.addLayer({ id: 'scelto-nome', type: 'symbol', source: 'scelto', layout: { 'text-field': ['get', 'nome'], 'text-font': font, 'text-size': 14, 'text-offset': [0, 1.5], 'text-anchor': 'top', 'text-allow-overlap': true }, paint: alone });
+  // le tappe del road trip scelto: tondi numerati del suo colore, coi nomi
+  m.addLayer({ id: 'tappe-punto', type: 'circle', source: 'tappe', paint: { 'circle-color': ['get', 'c'], 'circle-radius': 12, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 } });
+  m.addLayer({ id: 'tappe-n', type: 'symbol', source: 'tappe', layout: { 'text-field': ['to-string', ['get', 'n']], 'text-font': font, 'text-size': 13, 'text-allow-overlap': true, 'text-ignore-placement': true }, paint: { 'text-color': '#ffffff' } });
+  m.addLayer({ id: 'tappe-nome', type: 'symbol', source: 'tappe', layout: { 'text-field': ['get', 'nome'], 'text-font': font, 'text-size': 12.5, 'text-offset': [0, 1.45], 'text-anchor': 'top', 'text-optional': true }, paint: alone });
 }
 function selIniziale() {
   const mp = S.mp; if (!mp || !mp.selIniz || !mp.pronta || !S.luoghi) return;
