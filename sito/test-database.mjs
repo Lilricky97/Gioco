@@ -809,6 +809,8 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
     'la Verifica dice ✅ Sorteggio regolare: 8 lettere, ognuno fa e riceve un solo regalo, nessuno a se stesso, coppie rispettate')
 }
 
+ok((await one('select _avvento_max(1)')) === 150 && (await one('select _avvento_max(2)')) === 200,'avvento: tetto anti-trucco 150 foto (casella 1) e 200 passate (casella 2, il lavaggio)')
+
 // AMMINISTRATORE RICONOSCIUTO DAL NOME (Ricky, 18/11/2026: niente PIN amministratore ogni volta)
 {
   const W = tok => PW + String.fromCharCode(31) + tok

@@ -741,6 +741,28 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .cam-scatta{width:84px;height:84px;border-radius:50%;border:5px solid #fff;background:radial-gradient(circle,#fff 0 52%,transparent 54%),#ff3ea5;box-shadow:0 0 0 3px #ff3ea5,0 0 26px var(--rosa-g);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .cam-scatta:active{transform:scale(.93)}
 .cam-scatta[disabled]{opacity:.4}
+/* casella 2: "Aiuta il Cava a lavare la macchina" — si striscia il dito su e giù sull'Audi A3 */
+.lavaggio{display:flex;flex-direction:column;align-items:center;gap:12px;user-select:none;-webkit-user-select:none}
+.lav-p{position:relative;width:100%;max-width:380px;aspect-ratio:4/3;max-height:min(48vh,calc(88dvh - 260px));border-radius:12px;overflow:hidden;touch-action:none;cursor:grab;
+  background:linear-gradient(180deg,#9fd3ff 0%,#d9efff 52%,#7f8b99 52%,#6b7684 100%);box-shadow:0 0 0 2px #000,0 0 0 4px #2b3566}
+.lav-p::before{content:"";position:absolute;left:0;right:0;top:52%;height:3px;background:rgba(255,255,255,.35)}
+.lav-auto{position:absolute;left:2%;right:2%;bottom:9%;width:96%;filter:drop-shadow(0 8px 6px rgba(0,0,0,.35))}
+.lav-fango{transition:opacity .25s}
+.lav-spugna{position:absolute;width:62px;height:40px;margin:-20px 0 0 -31px;border-radius:12px;background:radial-gradient(circle at 30% 30%,#fff3a0,#ffd23d 60%,#e8a900);box-shadow:0 3px 8px rgba(0,0,0,.35),inset 0 -6px 0 rgba(0,0,0,.08);
+  pointer-events:none;opacity:0;transition:opacity .15s;z-index:3}
+.lav-spugna::after{content:"";position:absolute;inset:7px 9px;border-radius:8px;background:radial-gradient(circle,rgba(0,0,0,.12) 1.5px,transparent 2px) 0 0/9px 9px}
+.lav-p.tocco .lav-spugna{opacity:1}
+.lav-bolla{position:absolute;width:var(--b);height:var(--b);margin:calc(var(--b) / -2) 0 0 calc(var(--b) / -2);border-radius:50%;pointer-events:none;z-index:2;
+  background:radial-gradient(circle at 35% 30%,#fff,rgba(255,255,255,.75) 40%,rgba(200,230,255,.5));box-shadow:0 0 2px rgba(0,0,0,.15);animation:bolla 1s ease-out forwards}
+@keyframes bolla{0%{transform:scale(.4);opacity:1}100%{transform:translate(var(--dx),-34px) scale(1.15);opacity:0}}
+.lav-chi{position:absolute;left:12px;top:10px;display:flex;align-items:center;gap:6px;font:800 12px Archivo,sans-serif;color:#13213a;background:rgba(255,255,255,.75);border-radius:999px;padding:3px 10px 3px 3px}
+.lav-chi img,.lav-chi .em{width:26px;height:26px;border-radius:50%;object-fit:cover;display:grid;place-items:center;font-size:16px;background:#fff}
+.lav-t{position:absolute;left:50%;top:10px;transform:translateX(-50%);font:800 13px Archivo,sans-serif;color:#13213a;background:rgba(255,255,255,.75);border-radius:999px;padding:4px 10px}
+.lav-n{position:absolute;right:12px;top:4px;font:400 40px/1 "Bebas Neue",sans-serif;color:#ff3ea5;text-shadow:0 0 2px #fff,0 0 8px #fff}
+.lav-pul{position:absolute;right:12px;top:44px;font:800 11px Archivo,sans-serif;color:#13213a;background:rgba(255,255,255,.75);border-radius:999px;padding:2px 8px}
+.lav-cd{position:absolute;inset:0;display:none;place-items:center;font:400 96px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 18px #1e6bff,0 2px 0 #13213a;background:rgba(10,15,36,.35);z-index:4}
+.lav-cd.on{display:grid}
+.lav-aiuto{margin:0;color:var(--muto);font-size:14px;text-align:center}
 .lab{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .lab-r{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .lab-n{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:6px;font:400 26px/1 "Bebas Neue",sans-serif;color:#fff;
@@ -3469,6 +3491,95 @@ GIOCHI_AVVENTO[1] = {
   }
 };
 
+// ---- casella 2: "Aiuta il Cava a lavare la macchina" (idea di Ricky, 18/11/2026) — 10 secondi di passate col dito sull'Audi A3 ----
+// conta ogni passata su o giù fatta per bene (almeno ~1/8 dell'altezza nella stessa direzione); i movimenti piccolissimi non valgono
+GIOCHI_AVVENTO[2] = {
+  nome: 'Aiuta il Cava a lavare la macchina 🧽',
+  regole: 'L\'Audi A3 del Cava è piena di fango! Hai <b>10 secondi</b>: striscia il dito <b>su e giù</b> sulla macchina più veloce che puoi. Ogni passata conta.',
+  unita: ['passata', 'passate'],
+  gioca(box, fine) {
+    const k = Object.keys(S.av || {}).find(x => chiaveNome(x) === 'cava'), foto = k && okPath(S.av[k]) ? S.av[k] : null;
+    // fango: macchie sparse sulla carrozzeria, ognuna sparisce dopo un certo numero di passate
+    const FANGO = [[60, 84, 16, 9], [110, 92, 20, 10], [150, 80, 14, 7], [196, 95, 22, 9], [244, 84, 15, 8], [282, 90, 12, 8], [128, 56, 12, 6], [176, 50, 16, 6], [214, 54, 13, 6], [42, 96, 10, 7], [96, 103, 14, 5], [266, 102, 16, 5], [160, 104, 12, 5], [228, 72, 11, 6]];
+    box.innerHTML = `<div class="lavaggio"><div class="lav-p">
+        <svg class="lav-auto" viewBox="8 30 304 106" aria-label="Audi A3 del Cava">
+          <defs><linearGradient id="lav-c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a96a8"/><stop offset=".45" stop-color="#5b6779"/><stop offset="1" stop-color="#3a4352"/></linearGradient></defs>
+          <path d="M18 100C18 86 26 77 44 74l48-6c16-15 32-27 50-30l88-2c20 1 38 13 54 29 12 4 20 12 20 26v11c0 6-4 10-10 10h-32a26 26 0 0 0-52 0h-98a26 26 0 0 0-52 0H26c-5 0-8-4-8-12z" fill="url(#lav-c)" stroke="#2a313d" stroke-width="2"/>
+          <path d="M104 68l34-25c4-2 8-3 12-3h28v28z" fill="#b7d6ee" stroke="#2a313d" stroke-width="1.5"/>
+          <path d="M186 68V40h40c10 0 20 6 30 18l4 10z" fill="#b7d6ee" stroke="#2a313d" stroke-width="1.5"/>
+          <path d="M182 69v40M100 70c-2 14-1 28 2 40" stroke="#2a313d" stroke-width="1.4" fill="none"/>
+          <rect x="190" y="78" width="16" height="4" rx="2" fill="#2a313d"/><rect x="128" y="78" width="16" height="4" rx="2" fill="#2a313d"/>
+          <path d="M22 84h16l4 6H22z" fill="#fff8d0" stroke="#2a313d"/><path d="M292 70h10v12h-8z" fill="#d6242f" stroke="#2a313d"/>
+          <text x="262" y="96" font-family="Archivo,sans-serif" font-weight="800" font-size="9" fill="#d8dee8">A3</text>
+          ${[86, 236].map(x => `<circle cx="${x}" cy="112" r="21" fill="#1b1f27"/><circle cx="${x}" cy="112" r="12" fill="#aeb6c2" stroke="#2a313d" stroke-width="2"/><circle cx="${x}" cy="112" r="3.5" fill="#2a313d"/>`).join('')}
+          ${FANGO.map(([x, y, rx, ry], i) => `<ellipse class="lav-fango" data-i="${i}" cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#6b4a2a" opacity=".92"/>`).join('')}
+        </svg>
+        <span class="lav-chi">${foto ? `<img src="${esc(pub(foto))}" alt="">` : '<span class="em">🧽</span>'}Cava</span>
+        <span class="lav-t">⏱ <b>10.0</b></span><span class="lav-n">0</span><span class="lav-pul">pulita 0%</span>
+        <div class="lav-spugna"></div><div class="lav-cd"></div></div>
+      <div class="cam-bar"><i></i></div><p class="lav-aiuto">Striscia il dito su e giù sulla macchina ↕️</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.lav-p'), sp = $$('.lav-spugna'), nEl = $$('.lav-n'), tEl = $$('.lav-t b'), bar = $$('.cam-bar i'), cd = $$('.lav-cd'), pul = $$('.lav-pul');
+    const fango = [...box.querySelectorAll('.lav-fango')], TOT = 55;   // dopo 55 passate è tutta pulita
+    let n = 0, t0 = 0, finito = false, ac = null, dito = null, y0 = 0, dir = 0, strada = 0, contata = false, bolle = 0;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const fruscio = () => {   // rumore della spugna
+      if (!ac) return;
+      try {
+        if (ac.state === 'suspended') ac.resume();
+        const b = ac.createBuffer(1, Math.floor(ac.sampleRate * .07), ac.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / d.length) * .6;
+        const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); f.type = 'bandpass'; f.frequency.value = 2400; g.gain.value = .25;
+        s.buffer = b; s.connect(f); f.connect(g); g.connect(ac.destination); s.start();
+      } catch (e) {}
+    };
+    const punto = e => { const r = pan.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const spugna = e => { const [x, y] = punto(e); sp.style.left = x + 'px'; sp.style.top = y + 'px'; };
+    const schiuma = e => {
+      if (bolle > 24) return; const [x, y] = punto(e);
+      for (let i = 0; i < 3; i++) {
+        const b = document.createElement('i'); b.className = 'lav-bolla'; bolle++;
+        b.style.cssText = `left:${x + Math.random() * 40 - 20}px;top:${y + Math.random() * 24 - 12}px;--b:${8 + Math.random() * 12}px;--dx:${Math.round(Math.random() * 30 - 15)}px`;
+        pan.appendChild(b); setTimeout(() => { b.remove(); bolle--; }, 1000);
+      }
+    };
+    const passata = e => {
+      n++; nEl.textContent = n; fruscio(); schiuma(e); if (navigator.vibrate) navigator.vibrate(6);
+      fango.forEach((f, i) => { f.style.opacity = Math.max(0, .92 * (1 - n / (TOT * (.35 + .65 * (i + 1) / fango.length)))).toFixed(2); });
+      pul.textContent = 'pulita ' + Math.min(100, Math.round(n / TOT * 100)) + '%';
+    };
+    pan.addEventListener('pointerdown', e => {
+      e.preventDefault(); if (!t0 || finito || dito !== null) return;
+      dito = e.pointerId; try { pan.setPointerCapture(e.pointerId); } catch (x) {}
+      y0 = e.clientY; dir = 0; strada = 0; contata = false; pan.classList.add('tocco'); spugna(e);
+    });
+    pan.addEventListener('pointermove', e => {
+      if (e.pointerId !== dito || !t0 || finito) return;
+      e.preventDefault(); spugna(e);
+      const dy = e.clientY - y0; y0 = e.clientY; if (!dy) return;
+      const d = Math.sign(dy); if (d !== dir) { dir = d; strada = 0; contata = false; }
+      strada += Math.abs(dy);
+      if (!contata && strada >= Math.max(22, pan.clientHeight / 8)) { contata = true; passata(e); }
+    });
+    const via = e => { if (e.pointerId !== dito) return; dito = null; pan.classList.remove('tocco'); };
+    pan.addEventListener('pointerup', via); pan.addEventListener('pointercancel', via);
+    const giro = now => {
+      if (!box.isConnected) return;
+      const resto = Math.max(0, 10000 - (now - t0));
+      tEl.textContent = (resto / 1000).toFixed(1); bar.style.width = resto / 100 + '%';
+      if (resto > 0) return requestAnimationFrame(giro);
+      finito = true; pan.classList.remove('tocco'); cd.textContent = n >= TOT ? 'BRILLA! ✨' : 'STOP!'; cd.classList.add('on');
+      setTimeout(() => fine(n), 900);
+    };
+    requestAnimationFrame(() => pan.scrollIntoView({ block: 'nearest' }));
+    let c = 3; cd.textContent = c; cd.classList.add('on');   // 3, 2, 1… via!
+    const conta = setInterval(() => {
+      if (!box.isConnected) return clearInterval(conta);
+      if (--c > 0) { cd.textContent = c; return; }
+      clearInterval(conta); cd.classList.remove('on'); pan.classList.add('via'); t0 = performance.now(); requestAnimationFrame(giro);
+    }, 800);
+  }
+};
+
 const unitaAvv = (g, r) => `${r} ${r === 1 ? g.unita[0] : g.unita[1]}`;
 async function caricaAvvento() { S.avv = await rpc('avvento_classifica'); return S.avv; }
 function risultatoAvvHTML(C, n, g) {
@@ -4303,7 +4414,7 @@ function creaDemo() {
       D.avv.push({ giorno: a.p_giorno, name: n, punteggio: null, created_at: t(0) }); return { ok: true };
     },
     avvento_gioca: a => {
-      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > (a.p_giorno === 1 ? 150 : 100000)) throw err('PUNTEGGIO_NON_VALIDO');
+      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200 }[a.p_giorno] || 100000)) throw err('PUNTEGGIO_NON_VALIDO');
       const p = D.avv.find(y => y.giorno === a.p_giorno && stessaPersona(y.name, clean(a.p_name, 30)));
       if (!p) return { err: 'TEMPO_SCADUTO' }; if (p.punteggio != null) return { err: 'GIA_GIOCATO' };
       p.punteggio = a.p_punteggio; return { ok: true };

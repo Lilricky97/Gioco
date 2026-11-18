@@ -2113,7 +2113,7 @@ language sql stable set search_path = public, extensions as $$ select (now() at 
 
 -- tetto di ogni giochino, contro i risultati impossibili (casella 1: 15 scatti al secondo per 10 secondi)
 create or replace function _avvento_max(p_giorno int) returns int
-language sql immutable as $$ select case p_giorno when 1 then 150 else 100000 end $$;
+language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s
 
 create or replace function _avvento_aperta(p_giorno int, p_name text) returns text
 language plpgsql stable security definer set search_path = public, extensions as $$

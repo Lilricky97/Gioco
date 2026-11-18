@@ -785,7 +785,7 @@ ok(true, 'l\'amministratore li toglie: tornano nelle Novità')
 // laboratorio dei giochi dell'avvento: solo per l'amministratore (Area amministratore sbloccata)
 await vai(ricky, 'avvento'); await ricky.waitForSelector('.lab-in')
 await ricky.click('.lab-in'); await ricky.waitForSelector('.lab-r')
-ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('1 su 19') && (await ricky.textContent('.lab-r.pronto')).includes('Ema fotografa la Fra'), 'laboratorio: le 19 caselle, pronto il giochino 1 "Ema fotografa la Fra"')
+ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('2 su 19') && (await ricky.locator('.lab-r.pronto').count()) === 2 && (await ricky.textContent('.lab-r.pronto >> nth=0')).includes('Ema fotografa la Fra') && (await ricky.textContent('.lab-r.pronto >> nth=1')).includes('Cava'), 'laboratorio: le 19 caselle, pronti i giochini 1 "Ema fotografa la Fra" e 2 "Aiuta il Cava a lavare la macchina"')
 // prova del giochino 1 nel laboratorio (a novembre!): i risultati non si salvano
 await ricky.click('.lab-r:has(.lab-n:text-is("1")) [data-prova]'); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via')
 await ricky.waitForSelector('.cam-scatta:not([disabled])', { timeout: 10000 }); await shot(ricky, '42-fotocamera')
@@ -798,6 +798,19 @@ await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !doc
 await ricky.click('.lab-r:has(.lab-n:text-is("19")) [data-prova]'); await ricky.waitForSelector('.avv-test')
 ok((await ricky.textContent('.sheet')).includes('PROVA') && (await ricky.textContent('.sheet')).includes('non è ancora stato creato'), 'laboratorio: anche la casella 19 si prova subito (in PROVA, punti non salvati)')
 await shot(ricky, '41-laboratorio'); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
+// casella 2: "Aiuta il Cava a lavare la macchina" (idea di Ricky, 18/11/2026) — passate su e giù col dito per 10 secondi
+await ricky.click('.lab-r:has(.lab-n:text-is("2")) [data-prova]'); await ricky.waitForSelector('#avv-via')
+ok((await ricky.textContent('.sheet')).includes('Aiuta il Cava a lavare la macchina') && (await ricky.textContent('.sheet')).includes('su e giù'), 'laboratorio: casella 2 "Aiuta il Cava a lavare la macchina" con le regole')
+await ricky.click('#avv-via'); await ricky.waitForSelector('.lav-p.via', { timeout: 10000 })
+{ const r = await ricky.locator('.lav-p').boundingBox(), x = r.x + r.width / 2, y1 = r.y + r.height * .3, y2 = r.y + r.height * .75
+  await ricky.mouse.move(x, y1); await ricky.mouse.down()
+  for (let i = 0; i < 8; i++) await ricky.mouse.move(x, i % 2 ? y1 : y2, { steps: 4 })
+  await ricky.mouse.move(x, y1 + 3, { steps: 1 })   // movimento piccolissimo: non vale
+  await ricky.mouse.up() }
+ok((await ricky.textContent('.lav-n')) === '8' && (await ricky.textContent('.lav-pul')).includes('%'), 'lavaggio: 8 passate su e giù contate (i movimenti piccolissimi no), il fango va via')
+await ricky.waitForSelector('#avv-ri', { timeout: 20000 })
+ok((await ricky.textContent('.avv-ris')).includes('8 passate') && (await ricky.textContent('.avv-ris')).includes('non salvate'), 'laboratorio: lavaggio finito, 8 passate, non salvate')
+await shot(ricky, '41b-lavaggio'); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
 await vai(marco, 'avvento'); await marco.waitForSelector('.avv-c')
 ok(await marco.locator('.lab-in').count() === 0, 'Marco non vede il laboratorio')
 await marco.evaluate(() => { location.hash = '#avvento/lab' }); await marco.waitForSelector('#lab-pin')
