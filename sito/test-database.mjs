@@ -809,6 +809,26 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
     'la Verifica dice ✅ Sorteggio regolare: 8 lettere, ognuno fa e riceve un solo regalo, nessuno a se stesso, coppie rispettate')
 }
 
+// AMMINISTRATORE RICONOSCIUTO DAL NOME (Ricky, 18/11/2026: niente PIN amministratore ogni volta)
+{
+  const W = tok => PW + String.fromCharCode(31) + tok
+  const boss = (await one('select accedi($1,$2,$3)',[PW,'Boss','1357'])).token, zed = (await one('select accedi($1,$2,$3)',[PW,'Zed','2468'])).token
+  ok((await one('select admin_io($1)',[W(boss)])).admin === false && (await one('select member_kick($1,$2,$3,$4)',[W(boss),'','Zed',false])).err === 'PIN_ADMIN_ERRATO','prima: anche Boss senza PIN amministratore non può fare niente')
+  ok((await one('select admin_check($1,$2)',[PW,'4321'])).io === false && (await one('select admin_io($1)',[W(boss)])).admin === false,'col PIN giusto ma senza essere entrati col proprio nome: nessuno viene "riconosciuto"')
+  const r = await one('select admin_check($1,$2)',[W(boss),'4321'])
+  ok(r.ok === true && r.io === true && (await one('select admin_io($1)',[W(boss)])).admin === true,'Boss sblocca UNA volta col PIN amministratore dal suo telefono: da ora è riconosciuto come amministratore')
+  ok((await one('select member_kick($1,$2,$3,$4)',[W(boss),'','Zed',false])).ok === true && (await one('select couples_set($1,$2,$3)',[W(boss),null,JSON.stringify([])])).ok !== false,'Boss fa cose da amministratore senza PIN (riammettere, coppie)')
+  const boss2 = (await one('select accedi($1,$2,$3)',[PW,'boss','1357'])).token
+  ok((await one('select admin_io($1)',[W(boss2)])).admin === true,'…anche da un altro telefono, appena entra col suo nome e PIN personale')
+  ok((await one('select admin_io($1)',[W(zed)])).admin === false && (await one('select member_kick($1,$2,$3,$4)',[W(zed),'boh','Boss',true])).err === 'PIN_ADMIN_ERRATO','Zed no: per lui serve sempre il PIN amministratore')
+  const ev = await one('select ss_create($1,$2,$3,$4,$5,$6,$7)',[PW,'Natale admin','','','Zed','4444',null])
+  ok((await one('select ss_admin_check($1,$2,$3)',[W(boss),ev,''])).ok === true && (await one('select ss_admin_check($1,$2,$3)',[W(zed),ev,'0000'])).err === 'PIN_ORGANIZZATORE_ERRATO','l\'amministratore riconosciuto entra nell\'area organizzatore di ogni Secret Santa senza PIN; gli altri no')
+  ok((await err('select admin_dimentica($1)',[W(zed)])) === 'NON_AUTORIZZATO' && (await one('select admin_dimentica($1)',[W(boss)])).ok === true && (await one('select admin_io($1)',[W(boss)])).admin === false,'"Blocca": Boss non è più riconosciuto (Zed non può farlo al posto suo)')
+  ok((await one('select member_kick($1,$2,$3,$4)',[W(boss),'','Zed',false])).err === 'PIN_ADMIN_ERRATO','…e torna a servire il PIN amministratore')
+  await one('select admin_check($1,$2)',[PW,'4321'])   // azzera i tentativi sbagliati
+  ok((await err('select admin_io($1)',['x'])) === 'PASSWORD_ERRATA','protetto dalla password')
+}
+
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)
 for(let i=0;i<5;i++) await err('select member_kick($1,$2,$3,$4)',[PW,'0000','Luca',true])
 ok((await err('select member_kick($1,$2,$3,$4)',[PW,'4321','Luca',true]))==='PIN_BLOCCATO','5 PIN amministratore sbagliati: blocco di 15 minuti')

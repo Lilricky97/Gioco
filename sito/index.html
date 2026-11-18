@@ -43,6 +43,7 @@ a{color:var(--menta)}
 /* ---------- insegna al neon ---------- */
 .neon{font-family:"Bebas Neue",Archivo,sans-serif;font-weight:400;font-size:60px;line-height:.92;letter-spacing:.03em;margin:14px 0 16px;color:#fff3fa;
   text-shadow:0 0 2px #fff,0 0 8px var(--rosa),0 0 18px var(--rosa),0 0 38px var(--rosa),0 0 70px rgba(255,62,165,.5);animation:ronzio 8s infinite}
+.neon.g{color:#fffbea;text-shadow:0 0 2px #fff,0 0 8px var(--giallo),0 0 18px var(--giallo),0 0 38px rgba(255,216,107,.8),0 0 70px rgba(255,216,107,.4);animation-delay:-5s}
 .neon.m{color:#effff9;text-shadow:0 0 2px #fff,0 0 8px var(--menta),0 0 18px var(--menta),0 0 38px var(--menta),0 0 70px rgba(70,245,192,.45);animation-delay:-3s}
 .neon.sm{font-size:48px;word-break:break-word}
 /* neon che sfarfallano: ronzio = tubo che ogni tanto perde colpi; flick = più nervoso; rotto = lettera difettosa */
@@ -523,6 +524,18 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .pin-who{display:flex;align-items:center;gap:12px;margin-bottom:6px}.pin-who h2{margin:0}
 #pin-f .pin{text-align:center}
 .prs-nopin{font-size:11.5px;color:var(--giallo);white-space:nowrap}
+/* amministratore: riquadro giallo in fondo al menu ☰ (solo per lui) e la sua pagina con la barra delle sezioni */
+.mz-z.adm{border-color:rgba(255,216,107,.45);background:linear-gradient(120deg,rgba(255,216,107,.10),rgba(255,255,255,.02) 70%)}
+.mz-z.adm .ico{color:var(--giallo);filter:drop-shadow(0 0 6px rgba(255,216,107,.6))}
+.mz-z.adm.on{border-color:var(--giallo);box-shadow:0 0 18px -6px rgba(255,216,107,.7)}
+.mz-solo{margin-top:10px}
+.adm-nav{display:flex;gap:6px;overflow-x:auto;margin:2px -2px 14px;padding:2px;scrollbar-width:none}
+.adm-nav::-webkit-scrollbar{display:none}
+.adm-nav button{flex:none;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:6px;color:var(--muto);font:800 12px/1 Archivo,sans-serif;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;cursor:pointer}
+.adm-nav svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.adm-nav button.on{color:#2a2000;background:var(--giallo);border-color:var(--giallo);box-shadow:0 0 12px -2px rgba(255,216,107,.7)}
+.adm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 14px}
+.adm-ss .t{font-weight:800;font-size:18px;margin-bottom:6px}
 .mz-adm{margin-top:8px;background:rgba(255,62,165,.05);border-color:rgba(255,62,165,.3)}
 .mz-adm svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--rosa);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mz-adm b{color:var(--rosa)}
@@ -1305,7 +1318,7 @@ async function renderPin(n, avviso) {
   };
 }
 // chiude l'accesso personale di questo telefono (il codice non vale più neanche nel database)
-function esciPersona() { if (S.tok && !DEMO) rpc('esci').catch(() => {}); S.tok = null; store.del('tok'); }
+function esciPersona() { if (S.tok && !DEMO) rpc('esci').catch(() => {}); S.tok = null; store.del('tok'); S.admin = false; if (store.get('admin') === ADMIN_IO) store.del('admin'); }
 function logout(avviso) {
   S.pw = null; store.del('pw'); S.feed = S.albums = S.ss = null; S.album = {}; S.thread = {};
   clearInterval(S.tick); S.people = S.storie = null;
@@ -1326,6 +1339,7 @@ const ZONE = [
   { id: 'sondaggi', t: 'Sondaggi', d: 'Vota e fai votare', f: viewSondaggi, ico: svg('<path d="M4 6.5h9M4 12h16M4 17.5h6"/><circle cx="17" cy="6.5" r="1.4"/><circle cx="13.5" cy="17.5" r="1.4"/>') },
   { id: 'gioco', t: 'Gioco', d: 'Senza Filtro', f: viewGioco, ico: svg('<rect x="4" y="5.5" width="10.5" height="14.5" rx="2" transform="rotate(-9 9.2 12.7)"/><path d="m14.6 5.4 3.7.7a2 2 0 0 1 1.6 2.3l-2 11a2 2 0 0 1-2.3 1.6l-3.2-.6"/>') },
   { id: 'santa', t: 'Secret Santa', d: 'I regali di Natale', f: viewSanta, ico: svg('<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20h14v-7.5M12 8.5V20M12 8.5C10.6 5.3 7 4.6 7 6.8 7 8.3 9.6 8.5 12 8.5zm0 0c1.4-3.2 5-3.9 5-1.7 0 1.5-2.6 1.7-5 1.7z"/>') },
+  { id: 'admin', t: 'Amministratore', d: 'Secret Santa, coppie, avvento, persone', menu: false, f: viewAdmin, ico: svg('<circle cx="8" cy="15.5" r="4"/><path d="M11 12.5 19.5 4M16.2 7.3l2.6 2.6M13.8 9.7l2 2"/>') },
   { id: 'fanta', t: 'Fanta Sanremo', d: 'In arrivo', f: viewFanta, ico: svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>') }
 ];
 const BARRA = ['novita', 'pin'];   // in basso solo icone: casetta (Novità) e puntina (In evidenza). La Mappa sta nel menu ☰ (Ricky, 17/11/2026: "non la voglio in basso")
@@ -1343,7 +1357,8 @@ function start() {
   $('#cal-btn').onclick = apriProssimi; drawMiniCal();
   $('#menu-btn').onclick = apriMenu;
   clearInterval(S.tick); S.tick = setInterval(() => { if (!document.hidden) { ping(); if ($('#st-hub')) loadStorie(); } }, 45000);
-  route(); ping(); rinnovaNotifiche(); puliziaFoto();
+  S.admin = store.get('admin') === ADMIN_IO;
+  route(); ping(); rinnovaNotifiche(); puliziaFoto(); controllaAdmin();
 }
 // foto scadute (storie dopo 24 ore, foto dei post dopo 7 giorni se non in evidenza): il sito le cancella dallo spazio foto,
 // al massimo una volta l'ora per telefono. Lo spazio foto permette di cancellare SOLO quelle (regole in storage.sql)
@@ -1365,9 +1380,10 @@ function apriMenu() {
     <div class="mz-top"><button class="mz-av" data-a="foto" aria-label="La tua foto utente">${avatar(S.me)}<span class="cam">${ICO_CAM}</span></button><div class="mz-me"><b>${esc(S.me)}</b><span><button class="link" data-a="nome">Cambia nome</button> · <button class="link" data-a="esci">Esci</button></span></div><button class="mz-x" data-close aria-label="Chiudi">✕</button></div>
     <div class="mz-k">Zone del sito</div>
     <div class="mz-grid">${ZONE.filter(z => z.menu !== false).map(z => `<button class="mz-z ${z.id === attiva ? 'on' : ''}" data-zona="${z.id}"><span class="ico">${z.ico}</span><b>${esc(z.t)}</b><small>${esc(z.d)}</small></button>`).join('')}</div>
+    ${S.admin ? `<div class="mz-grid mz-solo"><button class="mz-z adm ${attiva === 'admin' ? 'on' : ''}" data-zona="admin"><span class="ico">${zona('admin').ico}</span><b>Amministratore</b><small>${esc(zona('admin').d)}</small></button></div>` : ''}
     <button class="mz-grp" data-a="gruppo"><i class="dot"></i><span>Chi c'è nel gruppo</span>${S.people ? `<b>${on} online</b>` : ''}</button>
     <button class="mz-grp mz-not" data-a="notifiche">${ICO_CAMPANA}<span>Notifiche</span><b>${notifAttive() ? 'attive' : 'spente'}</b></button>
-    <button class="mz-grp mz-adm" data-a="admin">${ICO_CHIAVE}<span>Amministratore</span><b>${adminPin() ? 'sbloccato' : 'bloccato'}</b></button>
+    ${S.admin ? '' : `<button class="mz-grp mz-adm" data-a="admin">${ICO_CHIAVE}<span>Amministratore</span><b>${adminPin() ? 'sbloccato' : 'bloccato'}</b></button>`}
     <button class="mz-rel" data-a="ricarica">${ICO_RICARICA}<span>Ricarica il sito</span></button>
   </nav>`;
   document.body.appendChild(ov); document.body.classList.add('noscroll');
@@ -1381,11 +1397,12 @@ function apriMenu() {
   ov.querySelector('[data-a=foto]').onclick = () => { chiudi(); setTimeout(apriFoto, 220); };
   ov.querySelector('[data-a=ricarica]').onclick = () => location.reload();
   ov.querySelector('[data-a=notifiche]').onclick = () => { chiudi(); setTimeout(apriNotifiche, 220); };
-  ov.querySelector('[data-a=admin]').onclick = () => { chiudi(); setTimeout(() => adminPin() ? apriAdminAttivo() : chiediAdmin(route), 220); };
+  const ad = ov.querySelector('[data-a=admin]'); if (ad) ad.onclick = () => { chiudi(); setTimeout(() => adminPin() ? apriAdminAttivo() : chiediAdmin(route), 220); };
   ov.querySelector('[data-a=esci]').onclick = () => { chiudi(); esciPersona(); logout(); };
 }
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
+  { const c = cur(); if (!(c.sec === 'admin' || (c.sec === 'santa' && c.arg) || (c.sec === 'avvento' && c.arg === 'lab'))) S.daAdmin = false; }
   // "#storie" (es. tocco sulla notifica di una storia): Novità + si aprono le storie nuove
   if (cur().sec === 'storie') { S.apriStorie = cur().arg || true; history.replaceState(null, '', '#novita'); }
   document.querySelectorAll('.ov,.lb,.sv').forEach(x => x.remove()); document.body.classList.remove('noscroll');
@@ -1652,7 +1669,20 @@ async function sbloccaAdmin(pin) {
   try { r = await rpc('admin_check', { p_admin: pin }); }
   catch (e) { throw err(e.message === 'PIN_BLOCCATO' ? 'ADMIN_BLOCCATO' : e.message); }
   if (!r.set) throw err('ADMIN_NON_IMPOSTATO'); if (!r.ok) throw err('PIN_ADMIN_ERRATO');
-  store.set('admin', pin);
+  segnaAdmin(r, pin);
+}
+// dopo il PIN giusto: il database ha segnato il nome (r.io) → sul telefono resta solo un segnaposto, mai il PIN
+function segnaAdmin(r, pin) { if (r && r.io) { S.admin = true; store.set('admin', ADMIN_IO); } else store.set('admin', pin); }
+// "Blocca": il database smette di riconoscermi; per tornare amministratore serve di nuovo il PIN
+async function bloccaAdmin() { if (S.admin) { try { await rpc('admin_dimentica'); } catch (e) {} } S.admin = false; store.del('admin'); }
+// all'avvio: il database mi riconosce come amministratore? (database vecchio: niente, si va col PIN come prima)
+const ADMIN_IO = 'io';
+async function controllaAdmin() {
+  const prima = !!S.admin;
+  try { const r = await rpc('admin_io'); S.admin = !!(r && r.admin); } catch (e) { return; }
+  if (S.admin && !adminPin()) store.set('admin', ADMIN_IO);
+  if (!S.admin && adminPin() === ADMIN_IO) store.del('admin');
+  if (S.admin !== prima && ['admin', 'pin', 'avvento', 'santa'].includes(cur().sec)) route();
 }
 function chiediAdmin(dopo) {
   sheet(`<h3>🔑 Amministratore</h3><p class="muto">Scrivi il tuo PIN amministratore: potrai mettere i post in evidenza, entrare nel Laboratorio dei giochi e gestire il gruppo.</p>
@@ -1669,8 +1699,89 @@ function chiediAdmin(dopo) {
 function apriAdminAttivo() {
   sheet(`<h3>🔑 Amministratore sbloccato</h3><p class="muto">Su questo telefono puoi mettere e togliere i post in evidenza (la puntina sotto i post), entrare nel Laboratorio dei giochi e gestire il gruppo.</p>
     <div class="row end"><button class="btn ghost rosso" id="adm-blocca">Blocca</button><button class="btn" data-close>Ok</button></div>`, (s, close) => {
-    s.querySelector('#adm-blocca').onclick = () => { store.del('admin'); close(); toast('Amministratore bloccato'); route(); };
+    s.querySelector('#adm-blocca').onclick = async () => { await bloccaAdmin(); close(); toast('Amministratore bloccato'); route(); };
   });
+}
+// ===================== AMMINISTRATORE (Ricky, 18/11/2026) =====================
+// riconosciuto dal nome (niente PIN da rimettere); una pagina con tutto quello che si amministra e una barra per passare da una cosa all'altra
+function admSez() {
+  return [
+    { id: 'santa', t: 'Secret Santa', d: 'Area organizzatore, verifica, chi ha guardato', go: '#admin/santa', ico: zona('santa').ico },
+    { id: 'coppie', t: 'Coppie', d: 'Chi non si pesca nel Secret Santa', go: '#admin/coppie', ico: svg('<path d="M9 19.5s-5.5-3.4-5.5-7.6A3.2 3.2 0 0 1 9 9.9a3.2 3.2 0 0 1 5.5 2c0 4.2-5.5 7.6-5.5 7.6z"/><path d="M13.3 6.6A3.2 3.2 0 0 1 20.5 8.9c0 3.2-3.1 5.9-4.7 7.1"/>') },
+    { id: 'avvento', t: 'Avvento', d: 'Laboratorio: prova i giochini', go: '#avvento/lab', ico: zona('avvento').ico },
+    { id: 'persone', t: 'Persone', d: 'PIN dimenticati, rimuovi o riammetti', go: '#admin/persone', ico: svg('<circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="16.8" cy="9.5" r="2.5"/><path d="M15.4 14.3a4.6 4.6 0 0 1 5.6 4.5"/>') }
+  ];
+}
+function barraAdmin(att) {
+  return `<nav class="adm-nav" aria-label="Amministratore"><button data-go="#admin" class="${att === '' ? 'on' : ''}">${zona('admin').ico}<span>Admin</span></button>${admSez().map(x => `<button data-go="${x.go}" class="${att === x.id ? 'on' : ''}">${x.ico}<span>${x.t}</span></button>`).join('')}</nav>`;
+}
+function viewAdmin(arg) {
+  if (!adminPin()) {
+    $('#view').innerHTML = `<h1 class="neon g">Amministratore</h1>
+      <form class="card lab-pin" id="adm-entra" novalidate><p class="muto" style="margin-top:0">🔒 Solo per l'amministratore. Scrivi il PIN amministratore <b>una volta</b>: da quel momento, quando entri col tuo nome e il tuo PIN personale, il sito ti riconosce da solo.</p>
+        <input name="p" class="pin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="PIN amministratore"><p class="err" hidden></p>
+        <button class="btn wide" type="submit">Entra</button></form>`;
+    $('#adm-entra').onsubmit = async e => {
+      e.preventDefault(); const f = e.target, er = f.querySelector('.err'); er.hidden = true;
+      try { await sbloccaAdmin(f.p.value.trim()); toast(S.admin ? 'Da ora ti riconosco come amministratore 🔑' : 'Amministratore sbloccato 🔑'); viewAdmin(arg); } catch (ex) { er.textContent = msg(ex); er.hidden = false; }
+    };
+    return;
+  }
+  S.daAdmin = true;
+  if (arg === 'santa') return adminSanta();
+  if (arg === 'coppie') return adminCoppie();
+  if (arg === 'persone') return adminPersone();
+  $('#view').innerHTML = `${barraAdmin('')}<h1 class="neon g">Amministratore</h1>
+    <p class="intro">${S.admin ? `Ti riconosco come amministratore quando entri come <b>${esc(S.me)}</b>: niente più PIN amministratore.` : 'Amministratore sbloccato su questo telefono.'}</p>
+    <div class="adm-grid">${admSez().map(x => `<button class="mz-z adm" data-go="${x.go}"><span class="ico">${x.ico}</span><b>${x.t}</b><small>${x.d}</small></button>`).join('')}</div>
+    <p class="hint">E in più: la puntina sotto i post per metterli in evidenza, ⋯ per eliminare eventi del calendario e posti della mappa.</p>
+    <button class="link" id="adm-lock">🔒 Blocca: non riconoscermi più (servirà di nuovo il PIN)</button>`;
+  $('#adm-lock').onclick = async () => {
+    if (!await ask('Bloccare l\'amministratore?', 'Per tornare amministratore dovrai rimettere il PIN amministratore.', 'Blocca', true)) return;
+    await bloccaAdmin(); toast('Amministratore bloccato'); route();
+  };
+}
+function adminSanta() {
+  $('#view').innerHTML = `${barraAdmin('santa')}<h1 class="neon g sm">Secret Santa</h1>
+    <p class="intro">Entri nell'area organizzatore di ogni Secret Santa senza PIN. Gli abbinamenti non li vede nessuno, nemmeno tu: per controllarli c'è la verifica con le lettere finte.</p><div id="adm-ss"><div class="loading">Carico</div></div>`;
+  const disegna = () => {
+    const el = $('#adm-ss'); if (!el || !S.ss) return;
+    el.innerHTML = S.ss.length ? S.ss.map(e => `<section class="card adm-ss"><div class="t">🎅 ${esc(e.name)}</div>
+      <div class="meta"><span>👥 ${e.people.length} ${e.people.length === 1 ? 'iscritto' : 'iscritti'}</span>${(e.pending || []).length ? `<span>⏳ ${e.pending.length} in attesa</span>` : ''}<span>👑 ${esc(e.organizer)}</span></div>
+      <span class="pill ${e.status === 'drawn' ? 'menta' : 'rosa'}">${e.status === 'drawn' ? 'Sorteggio fatto' + (e.draw_no > 1 ? ' · n° ' + e.draw_no : '') : 'Iscrizioni aperte'}</span>
+      <div class="row wrap" style="margin-top:12px"><button class="btn sm" data-gest="${esc(e.id)}">Gestisci</button>${e.status === 'drawn' ? `<button class="btn ghost sm" data-ver="${esc(e.id)}">🔍 Verifica</button>` : ''}</div></section>`).join('')
+      : '<div class="empty">Nessun Secret Santa ancora.</div>';
+    el.querySelectorAll('[data-gest]').forEach(b => b.onclick = () => { S.ui.adm[b.dataset.gest] = true; location.hash = '#santa/' + b.dataset.gest; });
+    el.querySelectorAll('[data-ver]').forEach(b => b.onclick = () => { S.ui.apriVer = b.dataset.ver; location.hash = '#santa/' + b.dataset.ver; });
+  };
+  disegna(); S.refresh = async () => { await loadSS(); disegna(); }; S.refresh();
+}
+function adminCoppie() {
+  $('#view').innerHTML = `${barraAdmin('coppie')}<h1 class="neon g sm">Coppie</h1><section class="card" id="adm-cp"><div class="loading">Carico</div></section>`;
+  const disegna = () => {
+    const el = $('#adm-cp'); if (!el || !S.people || !S.couples) return;
+    el.innerHTML = coppieHTML(S.people.filter(p => !p.banned).slice().sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1));
+    const add = el.querySelector('[data-couple]');
+    if (add) add.onclick = async () => { const a = el.querySelector('#cp-a').value, b = el.querySelector('#cp-b').value; if (same(a, b)) return toast(MSG.STESSA_PERSONA, 'err'); await salvaCoppie((S.couples || []).concat([[a, b]])); disegna(); };
+    el.querySelectorAll('[data-uncouple]').forEach(x => x.onclick = async () => { await salvaCoppie((S.couples || []).filter((_, i) => i !== +x.dataset.uncouple)); disegna(); });
+  };
+  S.refresh = async () => { try { await Promise.all([ping(), rpc('couples_list').then(c => { S.couples = c; })]); } catch (e) { const el = $('#adm-cp'); if (el) el.innerHTML = errBox(e); return; } disegna(); };
+  disegna(); S.refresh();
+}
+function adminPersone() {
+  $('#view').innerHTML = `${barraAdmin('persone')}<h1 class="neon g sm">Persone</h1>
+    <p class="intro"><b>PIN ↺</b> azzera il PIN personale di chi l'ha dimenticato (al prossimo ingresso ne sceglie uno nuovo). <b>Rimuovi</b> lo fa uscire dal sito e non può rientrare con quel nome (si può riammettere).</p>
+    <section class="card" id="adm-pp"><div class="loading">Carico</div></section>`;
+  const disegna = () => {
+    const el = $('#adm-pp'); if (!el || !S.people) return;
+    const ppl = S.people.filter(p => !p.banned).slice().sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1), rim = S.people.filter(p => p.banned);
+    el.innerHTML = `<div class="grp-k" style="margin-top:0">Iscritti · ${ppl.length}</div>${ppl.map(p => personaHTML(p, true, azioniAdm(p))).join('')}
+      ${rim.length ? `<div class="grp-k">Rimossi · ${rim.length}</div>${rim.map(p => personaHTML(p, false, `<button class="btn ghost xs" data-unkick="${esc(p.name)}">Riammetti</button>`)).join('')}` : ''}`;
+    el.querySelectorAll('[data-pinreset]').forEach(b => b.onclick = async () => { await azzeraPin(b.dataset.pinreset); disegna(); });
+    el.querySelectorAll('[data-kick]').forEach(b => b.onclick = async () => { await kick(b.dataset.kick, true); disegna(); });
+    el.querySelectorAll('[data-unkick]').forEach(b => b.onclick = async () => { await kick(b.dataset.unkick, false); disegna(); });
+  };
+  disegna(); S.refresh = async () => { await ping(); disegna(); }; S.refresh();
 }
 // mette o toglie un post da "In evidenza": solo l'amministratore (PIN)
 async function fissaPost(id) {
@@ -2558,7 +2669,7 @@ async function caricaMe(id, mine) {
 }
 
 function viewEvento(id) {
-  $('#view').innerHTML = `<button class="back" data-go="#santa">‹ Secret Santa</button><div id="ev" style="margin-top:8px"><div class="loading">Carico</div></div>`;
+  $('#view').innerHTML = `${S.daAdmin && adminPin() ? barraAdmin('santa') : '<button class="back" data-go="#santa">‹ Secret Santa</button>'}<div id="ev" style="margin-top:8px"><div class="loading">Carico</div></div>`;
   if (S.ss) drawEvento();
   S.refresh = async () => { delete S.ui.qa[id]; delete S.ui.stat[id]; delete S.ui.me[id]; await loadSS(); drawEvento(true); };
   loadSS();
@@ -2584,7 +2695,7 @@ function drawEvento(force) {
   if (!ev) { box.innerHTML = `<div class="empty">Questo Secret Santa non esiste più.</div>`; return; }
   const mine = getMine(ev);
   if (mine && !S.ui.me[id]) caricaMe(id, mine);
-  const sig = JSON.stringify([ev, mine, S.ui.rev[id], S.ui.me[id], S.ui.tab[id], S.ui.stat[id], S.ui.logAll[id], !!store.get('ssadm_' + id), S.couples]);
+  const sig = JSON.stringify([ev, mine, S.ui.rev[id], S.ui.me[id], S.ui.tab[id], S.ui.stat[id], S.ui.logAll[id], !!store.get('ssadm_' + id), S.couples, !!S.admin]);
   if (!force && box.dataset.sig === sig) return; box.dataset.sig = sig;
   conserva(box, () => disegnaEvento(box, ev, mine));
 }
@@ -2606,6 +2717,8 @@ function disegnaEvento(box, ev, mine) {
     <details class="card adm" id="ss-adm" ${S.ui.adm[id] ? 'open' : ''}><summary>🔒 Area organizzatore</summary><div id="adm-body"></div></details>`;
   wireMe(ev, mine);
   const vo = $('#ver-open'); if (vo) vo.onclick = () => apriVerifica(ev);
+  // arrivati da "🔍 Verifica" nella pagina Amministratore: si apre da sola
+  if (S.ui.apriVer === id) { delete S.ui.apriVer; if (vo) apriVerifica(ev).then(() => { const v = $('#ss-ver'); if (v) v.scrollIntoView({ block: 'start' }); }); }
   const la = $('#log-all'); if (la) la.onclick = () => { S.ui.logAll[id] = !S.ui.logAll[id]; drawEvento(true); };
   const det = $('#ss-adm'); det.addEventListener('toggle', () => { S.ui.adm[id] = det.open; });
   drawAdm(ev);
@@ -2832,7 +2945,7 @@ function nuovoPinOrg(ev) {
 }
 function drawAdm(ev) {
   const el = $('#adm-body'); if (!el) return;
-  const id = ev.id, apin = store.get('ssadm_' + id), drawn = ev.status === 'drawn', n = ev.people.length, att = ev.pending || [];
+  const id = ev.id, apin = store.get('ssadm_' + id) || (S.admin ? ADMIN_IO : null), drawn = ev.status === 'drawn', n = ev.people.length, att = ev.pending || [];
   if (!apin) {
     const ae = S.ui.admErr && S.ui.admErr.id === id ? S.ui.admErr.t : '';
     el.innerHTML = `<p class="muto" style="margin-top:12px">Solo per chi ha creato questo Secret Santa (${esc(ev.organizer)}).${DEMO ? ' <b>Nel Secret Santa di prova il PIN è 0000.</b>' : ''}</p>
@@ -2873,7 +2986,7 @@ function drawAdm(ev) {
     <div class="adm-sec"><h4>👥 Partecipanti</h4>${n ? ev.people.map(p => `<div class="prow"><b>${esc(p)}</b><span><button class="btn ghost xs" data-x="reset" data-n="${esc(p)}">Nuovo PIN</button><button class="btn ghost rosso xs" data-x="kick" data-n="${esc(p)}">Togli</button></span></div>`).join('') : '<p class="hint" style="margin:0">Nessuno ancora.</p>'}
       <p class="hint">“Nuovo PIN” serve a chi ha dimenticato il suo: non ti fa vedere a chi fa il regalo e finisce nel diario.${drawn ? ' “Togli” dopo il sorteggio cambia l\'abbinamento di 1 o 2 persone.' : ''}</p></div>
     ${drawn ? `<div class="adm-sec"><h4>📅 L'anno prossimo</h4><p class="muto">Crea il prossimo Secret Santa: nessuno ripescherà la stessa persona di quest'anno.</p><button class="btn ghost sm" data-x="next">Rifai per il prossimo anno</button></div>` : ''}
-    <div class="adm-sec row wrap"><button class="btn ghost sm" data-x="lock">🔒 Blocca</button><button class="btn ghost rosso sm" data-x="del">🗑️ Elimina Secret Santa</button></div>`;
+    <div class="adm-sec row wrap">${store.get('ssadm_' + id) ? '<button class="btn ghost sm" data-x="lock">🔒 Blocca</button>' : ''}<button class="btn ghost rosso sm" data-x="del">🗑️ Elimina Secret Santa</button></div>`;
   const run = async (f, ok) => {
     try { const r = await f(); if (ok) toast(typeof ok === 'function' ? ok(r) : ok); await loadSS(); drawEvento(true); }
     catch (ex) { if (/PIN_ORGANIZZATORE_ERRATO|PIN_BLOCCATO/.test(ex.message)) { store.del('ssadm_' + id); drawEvento(true); } toast(msg(ex), 'err'); }
@@ -3472,6 +3585,7 @@ function viewLab() {
         <button class="btn ghost xs" data-prova="${n}">▶ Prova</button></div>`;
     }).join('')}</div>`;
   $('#view').querySelectorAll('[data-prova]').forEach(b => b.onclick = () => apriCasella(+b.dataset.prova, true));
+  $('#view').insertAdjacentHTML('afterbegin', barraAdmin('avvento'));
 }
 
 // ===================== FANTASANREMO =====================
@@ -3711,11 +3825,12 @@ function personaHTML(p, conIscrizione, azione) {
   return `<div class="prs">${avatar(p.name, 's')}<span class="prs-n">${esc(p.name)}${same(p.name, S.me) ? ' <small>(tu)</small>' : ''}${conIscrizione ? `<small class="prs-i">iscritto ${esc(quando(p.created_at))}</small>` : ''}</span>${azione || `<span class="prs-s ${p.online ? 'on' : ''}">${stato}</span>`}</div>`;
 }
 const adminPin = () => store.get('admin');
+const azioniAdm = p => `<span class="prs-a"><span class="prs-s ${p.online ? 'on' : ''}">${p.online ? '<i class="dot"></i>' : ''}</span>${p.pin ? `<button class="btn ghost xs" data-pinreset="${esc(p.name)}" title="Azzera il PIN personale">PIN ↺</button>` : 'pin' in p ? '<span class="prs-nopin" title="Non ha ancora scelto il PIN personale">senza PIN</span>' : ''}${!same(p.name, S.me) ? `<button class="btn ghost rosso xs" data-kick="${esc(p.name)}">Rimuovi</button>` : ''}</span>`;
 function gruppoHTML() {
   if (S.noPresenza) return '<p class="muto">Per vedere chi è online bisogna aggiornare il database: ricopia <b>installa.sql</b> nel SQL Editor di Supabase e premi Run (non cancella niente).</p>';
   const tuttiConRimossi = S.people || [], ppl = tuttiConRimossi.filter(p => !p.banned), rimossi = tuttiConRimossi.filter(p => p.banned), on = ppl.filter(p => p.online), adm = !!adminPin();
   const tutti = ppl.slice().sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1);
-  const kick = p => adm ? `<span class="prs-a"><span class="prs-s ${p.online ? 'on' : ''}">${p.online ? '<i class="dot"></i>' : ''}</span>${p.pin ? `<button class="btn ghost xs" data-pinreset="${esc(p.name)}" title="Azzera il PIN personale">PIN ↺</button>` : 'pin' in p ? '<span class="prs-nopin" title="Non ha ancora scelto il PIN personale">senza PIN</span>' : ''}${!same(p.name, S.me) ? `<button class="btn ghost rosso xs" data-kick="${esc(p.name)}">Rimuovi</button>` : ''}</span>` : '';
+  const kick = p => adm ? azioniAdm(p) : '';
   return `<div class="grp-k"><i class="dot"></i>Online ora · ${on.length}</div>${on.map(p => personaHTML(p)).join('') || '<p class="hint">Nessuno online in questo momento.</p>'}
     <div class="grp-k">Tutti gli iscritti · ${ppl.length}</div>${tutti.map(p => personaHTML(p, true, kick(p))).join('')}
     ${adm && rimossi.length ? `<div class="grp-k">Rimossi · ${rimossi.length}</div>${rimossi.map(p => personaHTML(p, false, `<button class="btn ghost xs" data-unkick="${esc(p.name)}">Riammetti</button>`)).join('')}` : ''}
@@ -3767,7 +3882,7 @@ function apriGruppo() {
       if (t.dataset.kick) kick(t.dataset.kick, true);
       else if (t.dataset.unkick) kick(t.dataset.unkick, false);
       else if (t.hasAttribute('data-adm-open')) { const f = s.querySelector('#adm-form'); f.hidden = false; t.hidden = true; f.elements.p.focus(); }
-      else { store.del('admin'); drawOnline(); }
+      else bloccaAdmin().then(drawOnline);
     });
     s.addEventListener('submit', async e => {
       if (e.target.id !== 'adm-form') return; e.preventDefault();
@@ -3776,7 +3891,7 @@ function apriGruppo() {
         const r = await rpc('admin_check', { p_admin: pin });
         if (!r.set) throw err('ADMIN_NON_IMPOSTATO');
         if (!r.ok) throw err('PIN_ADMIN_ERRATO');
-        store.set('admin', pin); e.target.hidden = true;
+        segnaAdmin(r, pin); e.target.hidden = true;
         S.couples = await rpc('couples_list').catch(() => S.couples || []);
         drawOnline();
       } catch (ex) { er.textContent = msg(ex); er.hidden = false; }
@@ -4081,11 +4196,13 @@ function creaDemo() {
     p.pin_fail = 0; return p;
   };
   const admE = (e, pin) => {
+    if (D.adminNome && same(D.adminNome, S.me)) return null;   // l'amministratore riconosciuto
     if (e.admin_lock > Date.now()) return 'PIN_BLOCCATO';
     if (e.admin_pin !== pin) { if (++e.admin_fail >= 5) { e.admin_fail = 0; e.admin_lock = Date.now() + 15 * 60000; return 'PIN_BLOCCATO'; } return 'PIN_ORGANIZZATORE_ERRATO'; }
     e.admin_fail = 0; return null;
   };
   const admG = pin => {
+    if (D.adminNome && same(D.adminNome, S.me)) return null;   // l'amministratore riconosciuto dal nome
     if (D.adminLock > Date.now()) return 'PIN_BLOCCATO';
     if (pin !== ADMIN) { if (++D.adminFail >= 5) { D.adminFail = 0; D.adminLock = Date.now() + 15 * 60000; return 'PIN_BLOCCATO'; } return 'PIN_ADMIN_ERRATO'; }
     D.adminFail = 0; return null;
@@ -4144,7 +4261,9 @@ function creaDemo() {
     },
     esci: a => { need(a); return { ok: true }; },
     member_pin_reset: a => { need(a); const x = admG(a.p_admin); if (x) return { err: x }; const m = D.members.find(y => same(y.name, clean(a.p_name, 30))); if (!m) throw err('NOME_NON_TROVATO'); m.pin = null; return { ok: true }; },
-    admin_check: a => { need(a); const x = admG(a.p_admin); return { set: true, ok: !x, err: x }; },
+    admin_check: a => { need(a); if (D.adminNome && same(D.adminNome, S.me)) return { set: true, ok: true, io: true }; const x = admG(a.p_admin); if (!x && S.me) D.adminNome = S.me; return { set: true, ok: !x, err: x, io: !x && !!S.me }; },
+    admin_io: a => { need(a); return { admin: !!D.adminNome && same(D.adminNome, S.me) }; },
+    admin_dimentica: a => { need(a); if (!(D.adminNome && same(D.adminNome, S.me))) throw err('NON_AUTORIZZATO'); D.adminNome = null; return { ok: true }; },
     member_kick: a => { need(a); const x = admG(a.p_admin); if (x) return { err: x }; const m = D.members.find(y => same(y.name, clean(a.p_name, 30))); if (!m) throw err('NOME_NON_TROVATO'); m.banned = a.p_ban !== false; return { ok: true }; },
     member_add: a => { need(a); const n = clean(a.p_name, 30); if (!n) throw err('NOME_VUOTO'); if (D.members.some(m => same(m.name, n) && m.banned)) throw err('NOME_BLOCCATO'); if (!D.members.some(m => m.name === n)) D.members.push({ name: n, created_at: t(0), last_seen: null }); },
     presenza: a => {

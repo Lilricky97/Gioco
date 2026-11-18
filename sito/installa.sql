@@ -518,10 +518,21 @@ begin
 end $$;
 
 -- PIN amministratore con blocco (5 errori → 15 minuti): null se giusto, altrimenti il codice d'errore
+-- l'amministratore riconosciuto dal suo nome (Ricky, 18/11/2026: "non voglio mettere sempre il PIN amministratore"):
+-- chi è entrato col PIN personale col nome segnato in app_config 'admin_nome' non deve rimettere il PIN amministratore (né quello organizzatore).
+-- Il nome si segna la prima volta che si sblocca col PIN amministratore da dentro il sito (admin_check); "Blocca" lo toglie (admin_dimentica).
+create or replace function _admin_io() returns boolean
+language sql stable security definer set search_path = public, extensions as $$
+  select coalesce(current_setting('pip.io', true), '') <> ''
+     and exists (select 1 from app_config where k = 'admin')
+     and exists (select 1 from app_config where k = 'admin_nome' and lower(v) = lower(current_setting('pip.io', true)))
+$$;
+
 create or replace function _admin_try(p_admin text) returns text
 language plpgsql volatile security definer set search_path = public, extensions as $$
 declare f int; l timestamptz;
 begin
+  if _admin_io() then return null; end if;
   if not exists (select 1 from app_config where k = 'admin') then return 'ADMIN_NON_IMPOSTATO'; end if;
   select v::timestamptz into l from app_config where k = 'admin_lock';
   if l is not null and l > now() then return 'PIN_BLOCCATO'; end if;
@@ -539,11 +550,35 @@ end $$;
 -- amministratore: controlla il PIN (set = esiste un PIN, ok = è giusto, err = sbagliato/bloccato)
 create or replace function admin_check(p_pw text, p_admin text) returns json
 language plpgsql volatile security definer set search_path = public, extensions as $$
-declare e text;
+declare e text; io text := '';
 begin
   perform _need(p_pw);
+  io := coalesce(current_setting('pip.io', true), '');
+  if _admin_io() then return json_build_object('set', true, 'ok', true, 'err', null, 'io', true); end if;
   e := _admin_try(p_admin);
-  return json_build_object('set', e is distinct from 'ADMIN_NON_IMPOSTATO', 'ok', e is null, 'err', e);
+  -- PIN giusto da dentro il sito (entrato col PIN personale): da ora questo nome è riconosciuto come amministratore
+  if e is null and io <> '' then
+    insert into app_config(k, v) values ('admin_nome', io) on conflict (k) do update set v = excluded.v;
+  end if;
+  return json_build_object('set', e is distinct from 'ADMIN_NON_IMPOSTATO', 'ok', e is null, 'err', e, 'io', e is null and io <> '');
+end $$;
+
+-- sono riconosciuto come amministratore? (il sito lo chiede all'avvio)
+create or replace function admin_io(p_pw text) returns json
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  return json_build_object('admin', _admin_io());
+end $$;
+
+-- "Blocca": non riconoscermi più come amministratore (per tornarlo serve di nuovo il PIN amministratore)
+create or replace function admin_dimentica(p_pw text) returns json
+language plpgsql volatile security definer set search_path = public, extensions as $$
+begin
+  perform _need(p_pw);
+  if not _admin_io() then raise exception 'NON_AUTORIZZATO'; end if;
+  delete from app_config where k = 'admin_nome';
+  return json_build_object('ok', true);
 end $$;
 
 -- rimuove (p_ban = true) o riammette (false) una persona; i suoi post restano
@@ -1230,6 +1265,7 @@ declare ev ss_events%rowtype;
 begin
   select * into ev from ss_events where id = p_event;
   if not found then return 'EVENTO_NON_TROVATO'; end if;
+  if _admin_io() then return null; end if;   -- l'amministratore riconosciuto gestisce ogni Secret Santa (non vede comunque gli abbinamenti)
   if ev.admin_lock is not null and ev.admin_lock > now() then return 'PIN_BLOCCATO'; end if;
   if ev.admin_pin <> extensions.crypt(coalesce(p_admin_pin, ''), ev.admin_pin) then
     if ev.admin_fail + 1 >= 5 then
@@ -2521,7 +2557,7 @@ end $$;
 
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
-grant execute on function check_pw, members_list, member_add, presenza, accesso_info, accedi, esci, member_pin_reset, avatars_list, member_avatar, admin_check, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_like, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
+grant execute on function check_pw, members_list, member_add, presenza, accesso_info, accedi, esci, member_pin_reset, avatars_list, member_avatar, admin_check, admin_io, admin_dimentica, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_like, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
   reply_add, reply_del, albums_list, album_create,
   album_photos, photo_add, photo_del, album_del, photo_comments, photo_comment_add, photo_comment_del, photo_vote,
   polls_list, poll_create, poll_vote, poll_close, poll_del, ss_list, ss_create, ss_join, ss_leave, ss_kick, ss_set_excl,
@@ -2535,11 +2571,11 @@ drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _avvento_oggi, _avvento_max, _avvento_aperta, _io from anon, authenticated;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_aperta, _io from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _avvento_oggi, _avvento_max, _avvento_aperta, _io from public;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_aperta, _io from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin
