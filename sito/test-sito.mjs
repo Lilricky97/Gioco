@@ -785,7 +785,7 @@ ok(true, 'l\'amministratore li toglie: tornano nelle Novità')
 // laboratorio dei giochi dell'avvento: solo per l'amministratore (Area amministratore sbloccata)
 await vai(ricky, 'avvento'); await ricky.waitForSelector('.lab-in')
 await ricky.click('.lab-in'); await ricky.waitForSelector('.lab-r')
-ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('3 su 19') && (await ricky.locator('.lab-r.pronto').count()) === 3 && (await ricky.textContent('.lab-r.pronto >> nth=0')).includes('Ema fotografa la Fra') && (await ricky.textContent('.lab-r.pronto >> nth=1')).includes('Cava') && (await ricky.textContent('.lab-r.pronto >> nth=2')).includes('Memory'), 'laboratorio: le 19 caselle, pronti i giochini 1 (Ema fotografa la Fra), 2 (il lavaggio del Cava) e 3 (il memory)')
+ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('4 su 19') && (await ricky.locator('.lab-r.pronto').count()) === 4 && (await ricky.textContent('.lab-r.pronto >> nth=3')).includes('transenne') && (await ricky.textContent('.lab-r.pronto >> nth=0')).includes('Ema fotografa la Fra') && (await ricky.textContent('.lab-r.pronto >> nth=1')).includes('Cava') && (await ricky.textContent('.lab-r.pronto >> nth=2')).includes('Memory'), 'laboratorio: le 19 caselle, pronti i giochini 1 (Ema fotografa la Fra), 2 (il lavaggio del Cava), 3 (il memory) e 4 (le transenne della Nicole)')
 // prova del giochino 1 nel laboratorio (a novembre!): i risultati non si salvano
 await ricky.click('.lab-r:has(.lab-n:text-is("1")) [data-prova]'); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via')
 await ricky.waitForSelector('.cam-scatta:not([disabled])', { timeout: 10000 }); await shot(ricky, '42-fotocamera')
@@ -823,6 +823,43 @@ await ricky.waitForSelector('.memo-c:not([disabled])', { timeout: 10000 })
   for (let i = 0; i < 10; i++) { if (fatti.has(i)) continue; const j = nomi.findIndex((n, k) => k !== i && n === nomi[i]); fatti.add(i); fatti.add(j); await ricky.click(`.memo-c[data-i="${i}"]`); await ricky.click(`.memo-c[data-i="${j}"]`); await ricky.waitForTimeout(500) } }
 await ricky.waitForSelector('#avv-ri', { timeout: 20000 })
 ok(/\d+,\d s/.test(await ricky.textContent('.avv-ris')) && (await ricky.textContent('.avv-ris')).includes('non salvate'), 'laboratorio: memory finito, il risultato è il tempo in secondi (non salvato)')
+await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
+// casella 4: le transenne della Nicole (idea di Ricky, 19/11/2026) — percorso ad ostacoli stile Allegro Chirurgo, vince chi fa meno colpi
+// il "robot" trova la strada più larga fino al QUI (con percTocca del sito) e la percorre col mouse: così si prova anche che le 3 strade sono fattibili
+const STRADA_ROBOT = `(liv) => {
+  const W = 300, H = 360, D = new Float32Array(W * H).fill(1e9), r2 = Math.SQRT2
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (percTocca(liv, x, y)) D[y * W + x] = 0
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (x) D[i] = Math.min(D[i], D[i - 1] + 1); if (y) D[i] = Math.min(D[i], D[i - W] + 1); if (x && y) D[i] = Math.min(D[i], D[i - W - 1] + r2); if (y && x < W - 1) D[i] = Math.min(D[i], D[i - W + 1] + r2) }
+  for (let y = H - 1; y >= 0; y--) for (let x = W - 1; x >= 0; x--) { const i = y * W + x; if (x < W - 1) D[i] = Math.min(D[i], D[i + 1] + 1); if (y < H - 1) D[i] = Math.min(D[i], D[i + W] + 1); if (x < W - 1 && y < H - 1) D[i] = Math.min(D[i], D[i + W + 1] + r2); if (y < H - 1 && x) D[i] = Math.min(D[i], D[i + W - 1] + r2) }
+  const t = document.querySelector('.pc-tr').getAttribute('transform').match(/[-\\d.]+/g).map(Number), [ex, ey] = PERCORSI[liv].via.at(-1)
+  const s0 = Math.round(t[1]) * W + Math.round(t[0]), best = new Float32Array(W * H).fill(-1), prev = new Int32Array(W * H).fill(-1); best[s0] = D[s0]
+  const heap = [[D[s0], s0]], push = e => { heap.push(e); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (heap[p][0] >= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p } }
+  const pop = () => { const r = heap[0], l = heap.pop(); if (heap.length) { heap[0] = l; let i = 0; for (;;) { const a = 2 * i + 1, b = a + 1; let m = i; if (a < heap.length && heap[a][0] > heap[m][0]) m = a; if (b < heap.length && heap[b][0] > heap[m][0]) m = b; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m } } return r }
+  let fin = -1
+  while (heap.length) { const [v, i] = pop(); if (v < best[i]) continue; const x = i % W, y = (i - x) / W; if (Math.hypot(x - ex, y - ey) < 4) { fin = i; break } for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue; const j = ny * W + nx, nv = Math.min(v, D[j]); if (nv > best[j]) { best[j] = nv; prev[j] = i; push([nv, j]) } } }
+  const p = []; for (let i = fin; i >= 0; i = prev[i]) p.push([i % W, Math.floor(i / W)]); p.reverse()
+  return { minimo: best[fin], passi: p.filter((q, k) => k % 3 === 0 || k === p.length - 1).concat([[ex, ey]]) }
+}`
+await ricky.click('.lab-r:has(.lab-n:text-is("4")) [data-prova]'); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via')
+await ricky.waitForSelector('.perc-p'); await ricky.waitForFunction(() => !document.querySelector('.perc-cd.on'), null, { timeout: 10000 })
+{ const schermo = async ([x, y]) => { const r = await ricky.locator('.perc-p').boundingBox(); return [r.x + x * r.width / 300, r.y + y * r.height / 360] }
+  const dove = () => ricky.evaluate(() => document.querySelector('.pc-tr').getAttribute('transform').match(/[-\d.]+/g).map(Number))
+  const t = await dove(); let [a, c] = await schermo(t); await ricky.mouse.move(a, c); await ricky.mouse.down()
+  for (let k = 1; k <= 10; k++) { [a, c] = await schermo([t[0] - k * 4, t[1]]); await ricky.mouse.move(a, c) }
+  await ricky.mouse.up()
+  ok((await ricky.textContent('.perc-c')) === '1' && (await dove()).join() === t.join() && (await ricky.textContent('.perc-aiuto')).includes('Bzzz'), 'transenne: contro il bordo fa bzzz, conta 1 colpo e la transenna torna indietro')
+  ;[a, c] = await schermo([t[0] + 80, t[1] - 60]); await ricky.mouse.click(a, c)
+  ok((await ricky.textContent('.perc-aiuto')).includes('Tocca proprio la'), 'transenne: toccando lontano dalla transenna non la prendi')
+  for (let liv = 0; liv < 3; liv++) {
+    await ricky.waitForFunction(l => document.querySelector('.perc-n').textContent === (l + 1) + '/3' && !document.querySelector('.perc-cd.on'), liv, { timeout: 5000 })
+    const { minimo, passi } = await ricky.evaluate(`(${STRADA_ROBOT})(${liv})`)
+    ;[a, c] = await schermo(await dove()); await ricky.mouse.move(a, c); await ricky.mouse.down()
+    for (const q of passi) { [a, c] = await schermo(q); await ricky.mouse.move(a, c) }
+    await ricky.mouse.up()
+    ok(minimo >= 3.5 && (await ricky.textContent('.perc-c')) === '1', `transenne: strada ${liv + 1} fattibile (passaggio più stretto ±${minimo.toFixed(1)}) e fatta dal robot senza colpi`)
+  } }
+await ricky.waitForSelector('#avv-ri', { timeout: 20000 })
+ok(/^1 colpo · \d+,\d s$/.test((await ricky.textContent('.avv-ris b')).trim()) && (await ricky.textContent('.avv-ris')).includes('non salvate'), 'laboratorio: transenne finite, risultato "1 colpo · secondi" (non salvato)')
 await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
 await vai(marco, 'avvento'); await marco.waitForSelector('.avv-c')
 ok(await marco.locator('.lab-in').count() === 0, 'Marco non vede il laboratorio')

@@ -672,6 +672,15 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
   await gioca(3,'Sara',254)
   const g3 = (await classifica()).giorni.filter(x=>x.giorno===3)
   ok(g3.map(x=>x.name+':'+x.pos+':'+x.punti).join()==='Marco:1:5,Anna:2:4,Sara:3:3','memory: vince chi fa meno tempo (Marco 19,8 s), a pari tempo chi ha iniziato prima (Anna prima di Sara), chi non finisce niente punti')
+  // casella 4, le transenne della Nicole: colpi × 10000 + decimi; vince chi fa meno colpi, a pari colpi chi è più veloce
+  await oggi('2026-12-04')
+  for (const n of ['Anna','Marco','Luca','Sara','Paolo','Giulia']) await inizia(4,n)
+  await gioca(4,'Anna',10200); await gioca(4,'Marco',600); await gioca(4,'Luca',450); await gioca(4,'Sara',0)
+  const no4 = async v => (await err('select avvento_gioca($1,$2,$3,$4)',[PW,4,'Paolo',v]))==='PUNTEGGIO_NON_VALIDO'
+  ok(await no4(30) && await no4(10030) && await no4(1201) && await no4(20000) && await no4(991201) && await no4(-1),'transenne: meno di 4 secondi, più di 120 secondi o più di 99 colpi rifiutati')
+  await gioca(4,'Paolo',10200); await gioca(4,'Giulia',30900)
+  const g4 = (await classifica()).giorni.filter(x=>x.giorno===4)
+  ok(g4.map(x=>x.name+':'+x.pos+':'+x.punti).join()==='Luca:1:5,Marco:2:4,Anna:3:3,Paolo:4:2,Giulia:5:1','transenne: prima chi fa meno colpi (Luca e Marco 0, Luca più veloce), poi Anna e Paolo (1 colpo, pari tempo: Anna ha iniziato prima), Giulia 3 colpi; chi non finisce niente punti')
   await oggi('2026-12-20')
   ok((await inizia(5,'Anna')).err==='AVVENTO_FINITO','dopo il 19 dicembre non si gioca più')
   ok((await err('select avvento_classifica($1)',['x']))==='PASSWORD_ERRATA' && (await err('select avvento_inizia($1,$2,$3)',['x',1,'Anna']))==='PASSWORD_ERRATA','avvento protetto dalla password')
