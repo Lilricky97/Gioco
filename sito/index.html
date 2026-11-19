@@ -763,6 +763,26 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .lav-cd{position:absolute;inset:0;display:none;place-items:center;font:400 96px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 18px #1e6bff,0 2px 0 #13213a;background:rgba(10,15,36,.35);z-index:4}
 .lav-cd.on{display:grid}
 .lav-aiuto{margin:0;color:var(--muto);font-size:14px;text-align:center}
+/* casella 3: memory con le foto utente — 10 carte che si girano, vince chi finisce in meno tempo */
+.memo{display:flex;flex-direction:column;align-items:center;gap:10px;user-select:none;-webkit-user-select:none;position:relative}
+.memo-top{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:360px;font:800 14px Archivo,sans-serif;color:var(--muto)}
+.memo-top b{font:400 30px/1 "Bebas Neue",sans-serif;color:var(--giallo);text-shadow:0 0 10px rgba(255,216,107,.6);letter-spacing:.04em}
+.memo-g{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:100%;max-width:360px}
+.memo-c{width:calc(25% - 6px);aspect-ratio:3/3.7;perspective:700px;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation}
+.memo-c>i{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transition:transform .32s ease-out}
+.memo-c.su>i{transform:rotateY(180deg)}
+.memo-r,.memo-f{position:absolute;inset:0;border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.memo-r{display:grid;place-items:center;background:repeating-linear-gradient(45deg,#c21d32 0 8px,#a8172a 8px 16px);box-shadow:inset 0 0 0 3px #ffd86b,0 4px 10px rgba(0,0,0,.4);font-size:26px}
+.memo-f{transform:rotateY(180deg);background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+.memo-f img{width:100%;height:100%;object-fit:cover}
+.memo-f .em{display:grid;place-items:center;width:100%;height:100%;font-size:40px;background:linear-gradient(160deg,#fff,#ffe9ef)}
+.memo-f small{position:absolute;left:0;right:0;bottom:0;padding:2px 4px;background:rgba(10,15,36,.72);color:#fff;font:800 11px Archivo,sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.memo-c.ok .memo-f{box-shadow:0 0 0 3px var(--menta),0 0 16px var(--menta-g)}
+.memo-c.no>i{animation:scossa .35s}
+.memo-cd{position:absolute;inset:0;display:none;place-items:center;font:400 90px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 22px var(--rosa);background:rgba(10,15,36,.55);border-radius:10px;z-index:3;text-align:center}
+.memo-cd.on{display:grid}
+@keyframes scossa{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.memo-cd small{display:block;font:800 16px Archivo,sans-serif;color:var(--giallo);text-shadow:none;margin-top:6px}
 .lab{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .lab-r{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .lab-n{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:6px;font:400 26px/1 "Bebas Neue",sans-serif;color:#fff;
@@ -2469,7 +2489,7 @@ async function loadPolls() {
 function pollHTML(p) {
   const persone = new Set(p.options.flatMap(o => o.voters.map(n => n.toLowerCase()))).size;
   return `<article class="card poll ${p.closed ? 'chiuso' : ''}" data-poll="${esc(p.id)}">
-    <div class="tw-h">${avatar(p.author, 's')}<b>${esc(p.author)}</b><span>· ${esc(quando(p.created_at))}</span>${same(p.author, S.me) ? `<button class="icon del pmenu" data-pmenu aria-label="Opzioni del sondaggio">${ICO_PUNTINI}</button>` : ''}</div>
+    <div class="tw-h">${avatar(p.author, 's')}<b>${esc(p.author)}</b><span>· ${esc(quando(p.created_at))}</span>${same(p.author, S.me) || S.admin ? `<button class="icon del pmenu" data-pmenu aria-label="Opzioni del sondaggio">${ICO_PUNTINI}</button>` : ''}</div>
     <h3 class="pq">${esc(p.question)}</h3>
     <div class="ph">${p.closed ? 'Sondaggio chiuso' : p.multi ? 'Puoi scegliere più risposte' : 'Scegli una risposta'}</div>
     ${p.options.map(o => {
@@ -2521,16 +2541,17 @@ function votiSondaggio(p) {
     <div class="row end"><button class="btn" data-close>Ok</button></div>`);
 }
 function menuSondaggio(p) {
-  sheet(`<h3>${esc(p.question)}</h3><div class="col" style="margin-top:14px"><button class="btn ghost wide" data-a="chiudi">${p.closed ? 'Riapri il sondaggio' : 'Chiudi il sondaggio'}</button>
+  const mio = same(p.author, S.me);   // gli altri sondaggi: l'amministratore può solo eliminarli
+  sheet(`<h3>${esc(p.question)}</h3>${mio ? '' : `<p class="muto">Sondaggio di ${esc(p.author)} · lo puoi eliminare perché sei l'amministratore.</p>`}<div class="col" style="margin-top:14px">${mio ? `<button class="btn ghost wide" data-a="chiudi">${p.closed ? 'Riapri il sondaggio' : 'Chiudi il sondaggio'}</button>` : ''}
     <button class="btn ghost rosso wide" data-a="del">Elimina il sondaggio</button><button class="btn wide" data-close>Annulla</button></div>`, (s, close) => {
-    s.querySelector('[data-a=chiudi]').onclick = async () => {
+    const ch = s.querySelector('[data-a=chiudi]'); if (ch) ch.onclick = async () => {
       close();
       try { await rpc('poll_close', { p_poll: p.id, p_author: S.me, p_closed: !p.closed }); toast(p.closed ? 'Sondaggio riaperto' : 'Sondaggio chiuso'); await loadPolls(); } catch (e) { toast(msg(e), 'err'); }
     };
     s.querySelector('[data-a=del]').onclick = async () => {
       close();
       if (!await ask('Eliminare il sondaggio?', 'Spariscono anche tutti i voti.', 'Elimina', true)) return;
-      try { await rpc('poll_del', { p_poll: p.id, p_author: S.me }); toast('Sondaggio eliminato'); await loadPolls(); } catch (e) { toast(msg(e), 'err'); }
+      try { await rpc('poll_del', { p_poll: p.id, p_author: S.me }); await loadPolls(); toast((S.polls || []).some(x => x.id === p.id) ? 'Non è stato eliminato: rientra come amministratore' : 'Sondaggio eliminato', (S.polls || []).some(x => x.id === p.id) ? 'err' : undefined); } catch (e) { toast(msg(e), 'err'); }
     };
   });
 }
@@ -3580,7 +3601,65 @@ GIOCHI_AVVENTO[2] = {
   }
 };
 
-const unitaAvv = (g, r) => `${r} ${r === 1 ? g.unita[0] : g.unita[1]}`;
+// ---- casella 3: memory con 5 foto utente (idea di Ricky, 19/11/2026) — vince chi trova tutte le coppie in MENO tempo ----
+// risultato = decimi di secondo (il database li ordina al contrario: _avvento_asc); oltre 150 secondi = non finito, niente punti
+const memoTempo = r => r ? (r / 10).toFixed(1).replace('.', ',') + ' s' : 'non finito';
+GIOCHI_AVVENTO[3] = {
+  nome: 'Memory pippegoso 🧠',
+  regole: 'Gira le carte e trova le <b>5 coppie</b> di foto del gruppo. Il tempo parte al “via”: chi finisce <b>prima</b> vince!',
+  unita: ['decimo', 'decimi'], formato: memoTempo,
+  gioca(box, fine) {
+    // le stesse 5 foto utente per tutti (scelte sempre nello stesso modo); se ne mancano, carte natalizie
+    const h = t => { let x = 7; for (const c of t) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x; };
+    const nomeVero = k => ((S.people || []).find(p => same(p.name, k)) || {}).name || cap(k);
+    const foto = Object.entries(S.av || {}).filter(([k, v]) => okPath(v)).sort((a, b) => h(chiaveNome(a[0]) + 'memo') - h(chiaveNome(b[0]) + 'memo')).slice(0, 5)
+      .map(([k, v]) => ({ k: chiaveNome(k), html: `<img src="${esc(pub(v))}" alt="">`, nome: nomeVero(k) }));
+    ['🎅', '🎄', '⛄', '🎁', '🦌'].forEach((e, i) => { if (foto.length < 5) foto.push({ k: 'x' + i, html: `<span class="em">${e}</span>`, nome: ['Babbo', 'Albero', 'Pupazzo', 'Regalo', 'Renna'][i] }); });
+    const carte = foto.concat(foto).map(f => Object.assign({}, f)).sort(() => Math.random() - .5);
+    for (let i = carte.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [carte[i], carte[j]] = [carte[j], carte[i]]; }
+    box.innerHTML = `<div class="memo"><div class="memo-top"><span>Mosse <b class="memo-m">0</b></span><span>⏱ <b class="memo-t">0,0</b></span><span>Coppie <b class="memo-p">0/5</b></span></div>
+      <div class="memo-g">${carte.map((c, i) => `<button class="memo-c" data-i="${i}" aria-label="Carta ${i + 1}" disabled><i><span class="memo-r">⭐</span><span class="memo-f">${c.html}<small>${esc(c.nome)}</small></span></i></button>`).join('')}</div>
+      <div class="memo-cd"></div></div>`;
+    const $$ = c => box.querySelector(c), bott = [...box.querySelectorAll('.memo-c')], tEl = $$('.memo-t'), mEl = $$('.memo-m'), pEl = $$('.memo-p'), cd = $$('.memo-cd');
+    let t0 = 0, aperte = [], mosse = 0, trovate = 0, finito = false, ferma = false;
+    const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+    const chiudi = (ris, testo) => {
+      finito = true; bott.forEach(b => b.disabled = true);
+      cd.innerHTML = testo; cd.classList.add('on'); setTimeout(() => fine(ris), 1100);
+    };
+    bott.forEach(b => b.addEventListener('click', () => {
+      const i = +b.dataset.i;
+      if (!t0 || finito || ferma || b.classList.contains('su')) return;
+      b.classList.add('su'); aperte.push(i);
+      if (aperte.length < 2) return;
+      mosse++; mEl.textContent = mosse;
+      const [a, c] = aperte; aperte = [];
+      if (carte[a].k === carte[c].k) {
+        bott[a].classList.add('ok'); bott[c].classList.add('ok'); trovate++; pEl.textContent = trovate + '/5';
+        if (navigator.vibrate) navigator.vibrate(15);
+        if (trovate === 5) { const r = decimi(); chiudi(r, `FATTO!<small>${memoTempo(r)} · ${mosse} mosse</small>`); }
+      } else {
+        ferma = true;
+        setTimeout(() => { [a, c].forEach(x => { bott[x].classList.remove('su'); bott[x].classList.add('no'); setTimeout(() => bott[x].classList.remove('no'), 360); }); ferma = false; }, 650);
+      }
+    }));
+    const giro = () => {
+      if (!box.isConnected || finito) return;
+      const r = decimi(); tEl.textContent = (r / 10).toFixed(1).replace('.', ',');
+      if (r >= 1500) return chiudi(0, 'TEMPO SCADUTO<small>oltre 150 secondi: niente punti</small>');
+      requestAnimationFrame(giro);
+    };
+    requestAnimationFrame(() => box.querySelector('.memo').scrollIntoView({ block: 'nearest' }));
+    let c = 3; cd.textContent = c; cd.classList.add('on');   // 3, 2, 1… via!
+    const conta = setInterval(() => {
+      if (!box.isConnected) return clearInterval(conta);
+      if (--c > 0) { cd.textContent = c; return; }
+      clearInterval(conta); cd.classList.remove('on'); bott.forEach(b => b.disabled = false); t0 = performance.now(); requestAnimationFrame(giro);
+    }, 800);
+  }
+};
+
+const unitaAvv = (g, r) => g.formato ? g.formato(r) : `${r} ${r === 1 ? g.unita[0] : g.unita[1]}`;
 async function caricaAvvento() { S.avv = await rpc('avvento_classifica'); return S.avv; }
 function risultatoAvvHTML(C, n, g) {
   const L = C.giorni.filter(x => x.giorno === n), mio = L.find(x => stessaPersona(x.name, S.me));
@@ -4414,7 +4493,7 @@ function creaDemo() {
       D.avv.push({ giorno: a.p_giorno, name: n, punteggio: null, created_at: t(0) }); return { ok: true };
     },
     avvento_gioca: a => {
-      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200 }[a.p_giorno] || 100000)) throw err('PUNTEGGIO_NON_VALIDO');
+      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30 }[a.p_giorno] || 0))) throw err('PUNTEGGIO_NON_VALIDO');
       const p = D.avv.find(y => y.giorno === a.p_giorno && stessaPersona(y.name, clean(a.p_name, 30)));
       if (!p) return { err: 'TEMPO_SCADUTO' }; if (p.punteggio != null) return { err: 'GIA_GIOCATO' };
       p.punteggio = a.p_punteggio; return { ok: true };
@@ -4422,7 +4501,7 @@ function creaDemo() {
     avvento_classifica: a => {
       need(a); const fuori = n => D.avvFuori.has(chiaveNome(n)), giorni = [];
       for (let g = 1; g <= 19; g++) D.avv.filter(p => p.giorno === g && p.punteggio > 0 && !fuori(p.name))
-        .sort((x, y) => y.punteggio - x.punteggio || (x.created_at < y.created_at ? -1 : x.created_at > y.created_at ? 1 : alfa(x.name, y.name)))
+        .sort((x, y) => (g === 3 ? x.punteggio - y.punteggio : y.punteggio - x.punteggio) || (x.created_at < y.created_at ? -1 : x.created_at > y.created_at ? 1 : alfa(x.name, y.name)))
         .forEach((p, i) => giorni.push({ giorno: g, name: p.name, punteggio: p.punteggio, pos: i + 1, punti: i < 5 ? 5 - i : 0, at: p.created_at }));
       const tot = new Map();
       for (const x of giorni) { const k = chiaveNome(x.name), v = tot.get(k) || { name: x.name, punti: 0, giochi: 0, primi: 0, primo: x.at }; v.punti += x.punti; v.giochi++; if (x.pos === 1) v.primi++; if (x.at < v.primo) v.primo = x.at; tot.set(k, v); }
@@ -4498,7 +4577,7 @@ function creaDemo() {
       return p;
     },
     poll_close: a => { need(a); const p = D.polls.find(x => x.id === a.p_poll && x.author === a.p_author); if (p) p.closed = a.p_closed !== false; },
-    poll_del: a => { need(a); D.polls = D.polls.filter(x => !(x.id === a.p_poll && x.author === a.p_author)); },
+    poll_del: a => { need(a); const adm = D.adminNome && same(D.adminNome, S.me); D.polls = D.polls.filter(x => !(x.id === a.p_poll && (x.author === a.p_author || adm))); },
     post_pin: a => {
       need(a); const x = admG(a.p_admin); if (x) return { err: x };
       const p = D.posts.find(y => y.id === a.p_id); if (!p) return { err: 'POST_NON_TROVATO' };

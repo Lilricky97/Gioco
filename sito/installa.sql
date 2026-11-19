@@ -1050,7 +1050,7 @@ create or replace function poll_del(p_pw text, p_poll uuid, p_author text) retur
 language plpgsql security definer set search_path = public, extensions as $$
 begin
   perform _need(p_pw); perform _io(p_author);
-  delete from polls where id = p_poll and author = p_author;
+  delete from polls where id = p_poll and (author = p_author or _admin_io());   -- l'amministratore riconosciuto elimina anche quelli degli altri
 end $$;
 
 -- ---------- SECRET SANTA ----------
@@ -2118,7 +2118,14 @@ language sql stable set search_path = public, extensions as $$ select (now() at 
 
 -- tetto di ogni giochino, contro i risultati impossibili (casella 1: 15 scatti al secondo per 10 secondi)
 create or replace function _avvento_max(p_giorno int) returns int
-language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s
+language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 when 3 then 1500 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s · 3: memory, decimi di secondo (max 150 s)
+
+-- giochini dove vince chi fa MENO (il memory della casella 3: il tempo in decimi di secondo); 0 = non finito, niente punti
+create or replace function _avvento_asc(p_giorno int) returns boolean
+language sql immutable as $$ select p_giorno in (3) $$;
+-- il minimo credibile (memory: sotto i 3 secondi è impossibile girare 10 carte)
+create or replace function _avvento_min(p_giorno int) returns int
+language sql immutable as $$ select case p_giorno when 3 then 30 else 0 end $$;
 
 create or replace function _avvento_aperta(p_giorno int, p_name text) returns text
 language plpgsql stable security definer set search_path = public, extensions as $$
@@ -2148,7 +2155,8 @@ language plpgsql security definer set search_path = public, extensions as $$
 declare n text := _clean(p_name, 30);
 begin
   perform _need(p_pw); perform _io(p_name);
-  if p_punteggio is null or p_punteggio < 0 or p_punteggio > _avvento_max(p_giorno) then raise exception 'PUNTEGGIO_NON_VALIDO'; end if;
+  if p_punteggio is null or p_punteggio < 0 or p_punteggio > _avvento_max(p_giorno)
+     or (p_punteggio > 0 and p_punteggio < _avvento_min(p_giorno)) then raise exception 'PUNTEGGIO_NON_VALIDO'; end if;
   update avvento_punti set punteggio = p_punteggio, finito_at = now()
   where giorno = p_giorno and _nome_chiave(name) = _nome_chiave(n) and punteggio is null and created_at > now() - interval '3 minutes';
   if not found then
@@ -2167,7 +2175,7 @@ begin
   perform _need(p_pw);
   return (with r as (
       select p.giorno, p.name, p.punteggio, p.created_at,
-        row_number() over (partition by p.giorno order by p.punteggio desc, p.created_at, p.name) as pos
+        row_number() over (partition by p.giorno order by case when _avvento_asc(p.giorno) then p.punteggio else -p.punteggio end, p.created_at, p.name) as pos
       from avvento_punti p
       where p.punteggio > 0 and not exists (select 1 from avvento_fuori f where f.chiave = _nome_chiave(p.name))),
     pt as (select r.*, case when pos <= 5 then 6 - pos else 0 end as punti from r),
@@ -2571,11 +2579,11 @@ drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_aperta, _io from anon, authenticated;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _io from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_aperta, _io from public;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _io from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin

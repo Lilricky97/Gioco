@@ -174,6 +174,14 @@ await q('select poll_close($1,$2,$3,$4)',[PW,pl,'Ricky',true])
 ok((await err('select poll_vote($1,$2,$3,$4)',[PW,pl,o1,'Luca']))?.includes('SONDAGGIO_CHIUSO'),'sondaggio chiuso: niente più voti')
 await q('select poll_del($1,$2,$3)',[PW,pl,'Giulia']); ok((await one('select polls_list($1)',[PW])).some(x=>x.id===pl),'Giulia non può eliminare il sondaggio di Ricky')
 await q('select poll_del($1,$2,$3)',[PW,pl,'Ricky']); ok(!(await one('select polls_list($1)',[PW])).some(x=>x.id===pl) && (await q('select count(*)::int n from poll_votes where poll_id=$1',[pl]))[0].n===0,'Ricky lo elimina (con i voti)')
+{ // l'amministratore riconosciuto dal nome elimina anche i sondaggi degli altri (Ricky, 19/11/2026)
+  const capo = (await one('select accedi($1,$2,$3)',[PW,'Capo','9753'])).token, W = t => PW + String.fromCharCode(31) + t
+  const p2 = await one('select poll_create($1,$2,$3,$4,$5)',[PW,'Giulia','Pizza o sushi?',['Pizza','Sushi'],false])
+  await q('select poll_del($1,$2,$3)',[W(capo),p2,'Capo']); ok((await one('select polls_list($1)',[PW])).some(x=>x.id===p2),'chi non è amministratore non elimina il sondaggio di un altro')
+  await one('select admin_check($1,$2)',[W(capo),'4321'])
+  await q('select poll_del($1,$2,$3)',[W(capo),p2,'Capo']); ok(!(await one('select polls_list($1)',[PW])).some(x=>x.id===p2),'l\'amministratore (riconosciuto dal nome) elimina il sondaggio di Giulia')
+  await q(`delete from app_config where k = 'admin_nome'`)
+}
 ok((await err('select polls_list($1)',['x']))?.includes('PASSWORD_ERRATA'),'sondaggi protetti dalla password')
 // SECRET SANTA — regola d'oro: tutto a caso, ognuno fa UN regalo e ne riceve UNO, nessuno a se stesso, coppie escluse
 const names=['Ricky','Marco','Giulia','Sara','Luca','Anna','Paolo','Elena','Gianni','Chiara','Fede']
@@ -656,6 +664,14 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
   c = await classifica()
   ok(!c.giorni.some(x=>x.name==='Ricky') && !c.totale.some(x=>x.name==='Ricky') && c.giorni.find(x=>x.giorno===1&&x.pos===1).name==='Marco','Ricky sparisce dalla classifica, Marco torna primo')
   ok((await inizia(3,'RICKY')).err==='FUORI_CLASSIFICA','Ricky non può più giocare per la classifica (solo in prova)')
+  // casella 3, il memory: vince chi fa MENO tempo (decimi di secondo), 0 = non finito
+  await oggi('2026-12-03')
+  for (const n of ['Anna','Marco','Luca','Sara','Paolo']) await inizia(3,n)
+  await gioca(3,'Anna',254); await gioca(3,'Marco',198); await gioca(3,'Luca',0)
+  ok((await err('select avvento_gioca($1,$2,$3,$4)',[PW,3,'Sara',25]))==='PUNTEGGIO_NON_VALIDO' && (await err('select avvento_gioca($1,$2,$3,$4)',[PW,3,'Paolo',1501]))==='PUNTEGGIO_NON_VALIDO','memory: meno di 3 secondi o più di 150 secondi rifiutati')
+  await gioca(3,'Sara',254)
+  const g3 = (await classifica()).giorni.filter(x=>x.giorno===3)
+  ok(g3.map(x=>x.name+':'+x.pos+':'+x.punti).join()==='Marco:1:5,Anna:2:4,Sara:3:3','memory: vince chi fa meno tempo (Marco 19,8 s), a pari tempo chi ha iniziato prima (Anna prima di Sara), chi non finisce niente punti')
   await oggi('2026-12-20')
   ok((await inizia(5,'Anna')).err==='AVVENTO_FINITO','dopo il 19 dicembre non si gioca più')
   ok((await err('select avvento_classifica($1)',['x']))==='PASSWORD_ERRATA' && (await err('select avvento_inizia($1,$2,$3)',['x',1,'Anna']))==='PASSWORD_ERRATA','avvento protetto dalla password')
