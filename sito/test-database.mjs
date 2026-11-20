@@ -742,7 +742,7 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
 // ACCESSO PERSONALE: ognuno entra col suo PIN, e il database controlla CHI fa ogni azione
 {
   // ogni funzione che agisce a nome di qualcuno controlla l'identità (controllo sul testo di schema.sql)
-  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like','luogo_add','luogo_edit','luogo_cero','luogo_del']
+  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like','luogo_add','luogo_edit','luogo_cero','luogo_del','medaglia_add','medaglia_del']
   const senzaIo = AZIONI.filter(f => { const m = SCHEMA.match(new RegExp('create or replace function ' + f + '\\([\\s\\S]*?end \\$\\$;')); return !m || !/perform _io\(p_(name|author|organizer)\)/.test(m[0]) })
   ok(senzaIo.length === 0, `tutte le ${AZIONI.length} funzioni che agiscono a nome di qualcuno controllano chi sei` + (senzaIo.length ? ': mancano ' + senzaIo : ''))
   await db.exec(IO_VERO)   // da qui il controllo è quello vero
@@ -854,6 +854,39 @@ ok((await one('select _avvento_max(1)')) === 150 && (await one('select _avvento_
   ok((await one('select member_kick($1,$2,$3,$4)',[W(boss),'','Zed',false])).err === 'PIN_ADMIN_ERRATO','…e torna a servire il PIN amministratore')
   await one('select admin_check($1,$2)',[PW,'4321'])   // azzera i tentativi sbagliati
   ok((await err('select admin_io($1)',['x'])) === 'PASSWORD_ERRATA','protetto dalla password')
+}
+
+// MEDAGLIERE PIPPEGOSO (Ricky, 20/11/2026): medaglie date solo dall'amministratore, si apre il 19 dicembre
+{
+  const W = tok => PW + String.fromCharCode(31) + tok
+  const oggi = d => q(`create or replace function _avvento_oggi() returns date language sql stable as $$ select '${d}'::date $$`)
+  const boss = (await one('select accedi($1,$2,$3)',[PW,'Boss','1357'])).token, zed = (await one('select accedi($1,$2,$3)',[PW,'Zed','2468'])).token
+  await one('select admin_check($1,$2)',[W(boss),'4321'])   // Boss torna amministratore riconosciuto
+  await oggi('2026-12-18')
+  const m1 = await one('select medagliere($1)',[W(zed)])
+  ok(m1.aperto === false && m1.apre === '2026-12-19' && m1.medaglie === null && m1.admin === false,'il 18 dicembre il medagliere è chiuso: Zed non vede niente')
+  ok((await one('select medagliere($1)',[W(boss)])).medaglie.length === 0,'…l\'amministratore invece lo vede già (per prepararlo)')
+  ok((await err('select medaglia_add($1,$2,$3,$4,$5,$6)',[W(zed),'Zed','Zed','oro','',null])) === 'NON_AUTORIZZATO' && (await one('select medaglia_add($1,$2,$3,$4,$5,$6)',[W(zed),'Zed','Zed','oro','','0000'])).err === 'PIN_ADMIN_ERRATO',
+    'Zed non può darsi medaglie (né senza PIN né con un PIN sbagliato)')
+  await one('select admin_check($1,$2)',[PW,'4321'])   // azzera i tentativi sbagliati
+  const a1 = await one('select medaglia_add($1,$2,$3,$4,$5,$6)',[W(boss),'Boss','marco','oro','Miglior cena dell\'anno',null])
+  ok(a1.ok === true && a1.name === 'Marco','l\'amministratore dà un oro a "marco" (diventa Marco, il nome del sito)')
+  ok((await one("select count(*)::int from attivita where tipo = 'medaglia'")) === 0,'prima dell\'apertura niente campanella (nessuno scopre niente)')
+  ok((await err('select medaglia_add($1,$2,$3,$4,$5,$6)',[W(boss),'Boss','Nessuno','oro','',null])) === 'PERSONA_SCONOSCIUTA' && (await err('select medaglia_add($1,$2,$3,$4,$5,$6)',[W(boss),'Boss','Marco','platino','',null])) === 'MEDAGLIA_NON_VALIDA',
+    'medaglia a chi non è nel gruppo o di un tipo strano: rifiutata')
+  await oggi('2026-12-19')
+  await one('select medaglia_add($1,$2,$3,$4,$5,$6)',[W(boss),'Boss','Giulia','argento','x'.repeat(200),null])
+  const a3 = await one('select medaglia_add($1,$2,$3,$4,$5,$6)',[W(boss),'Boss','Marco','bronzo','Karaoke',null])
+  const m2 = await one('select medagliere($1)',[W(zed)])
+  ok(m2.aperto === true && m2.medaglie.length === 3 && m2.medaglie[0].tipo === 'bronzo' && m2.medaglie.find(x => x.tipo === 'argento').motivo.length === 140,'il 19 dicembre si apre: Zed vede tutte le medaglie (le più nuove prima, motivo di massimo 140 lettere)')
+  const att = await q("select dest, chi, tipo, cosa, testo from attivita where tipo = 'medaglia' order by created_at")
+  ok(att.length === 2 && att.some(x => x.dest === 'marco' && x.cosa === 'bronzo' && x.testo === 'Karaoke' && x.chi === 'Boss'),'da aperto: campanella a chi riceve la medaglia')
+  ok((await one('select medaglia_del($1,$2,$3,$4)',[W(boss),'Boss',a3.id,null])).ok === true && (await one('select medagliere($1)',[W(zed)])).medaglie.length === 2
+    && (await one("select count(*)::int from attivita where tipo = 'medaglia' and dest = 'marco'")) === 0,'l\'amministratore toglie una medaglia: sparisce anche dalla campanella')
+  ok((await err('select medaglia_del($1,$2,$3,$4)',[W(zed),'Zed',a1.id,null])) === 'NON_AUTORIZZATO','Zed non può togliere medaglie')
+  ok((await err('select medagliere($1)',['x'])) === 'PASSWORD_ERRATA','medagliere protetto dalla password')
+  { await db.exec('set role anon'); let no = false; try { await db.query('select * from medaglie') } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no,'tabella medaglie chiusa alla chiave pubblica') }
+  await one('select admin_dimentica($1)',[W(boss)]); await oggi('2026-11-20')
 }
 
 // blocco del PIN amministratore (alla fine: blocca tutto per 15 minuti)

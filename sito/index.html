@@ -806,6 +806,59 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .perc-cd{position:absolute;inset:0;display:none;place-items:center;font:400 90px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 22px var(--rosa);background:rgba(10,15,36,.55);z-index:5;text-align:center}
 .perc-cd.on{display:grid}.perc-cd small{display:block;font:800 16px Archivo,sans-serif;color:var(--giallo);text-shadow:none;margin-top:6px;padding:0 10px;line-height:1.4}.perc-cd small b{color:#fff}
 .perc-aiuto{margin:0;font:700 13px Archivo,sans-serif;color:var(--muto);text-align:center;min-height:2.6em}
+/* ---------- medagliere ---------- */
+.neon.oro{color:#fff8e6;text-shadow:0 0 2px #fff,0 0 8px #ffc83d,0 0 18px #ffc83d,0 0 38px rgba(255,200,61,.8),0 0 70px rgba(255,160,40,.45);animation-delay:-2s}
+.tw.k-medaglia{--k:#ffb627;--kt:rgba(255,182,39,.12);--kb:rgba(255,182,39,.5)}
+.med-av{padding:10px 12px;border:1px dashed rgba(255,216,107,.5);border-radius:8px;background:rgba(255,216,107,.07);color:var(--giallo);font-size:14px;margin:0 0 12px}
+#med-add{margin:0 0 12px}
+.med-tab{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:15px;table-layout:fixed}
+.med-tab th{font:800 11px Archivo,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muto);text-align:center;padding:0 2px;font-size:13px}
+.med-tab th:nth-child(1){width:34px}.med-tab th:nth-child(2){text-align:left;padding-left:8px;width:auto}.med-tab th:nth-child(n+3){width:38px}.med-tab th:last-child{width:42px}
+.med-tab td{background:var(--card);padding:7px 2px;text-align:center;font-weight:800;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.med-tab td.pos{border-left:1px solid var(--line);border-radius:8px 0 0 8px;font:400 24px/1 "Bebas Neue",sans-serif;color:var(--muto)}
+.med-tab td.tot{border-right:1px solid var(--line);border-radius:0 8px 8px 0;color:#fff;font-size:16px}
+.med-tab td.chi{text-align:left;padding-left:6px;overflow:hidden}
+.med-tab .chi-in{display:flex;align-items:center;gap:8px;min-width:0}.med-tab .chi-in .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.med-tab td.z{color:var(--muto2);font-weight:500}
+.med-tab tr[data-chi]{cursor:pointer}
+.med-tab tr.p1 td{--mc:#ffc83d}.med-tab tr.p2 td{--mc:#cfd6e2}.med-tab tr.p3 td{--mc:#d08a4a}
+.med-tab tr.p1 td,.med-tab tr.p2 td,.med-tab tr.p3 td{border-color:color-mix(in srgb,var(--mc) 55%,transparent);background:color-mix(in srgb,var(--mc) 9%,var(--card))}
+.med-tab tr.p1 td.pos,.med-tab tr.p2 td.pos,.med-tab tr.p3 td.pos{color:var(--mc);text-shadow:0 0 10px var(--mc)}
+.med-h{font:400 26px/1 "Bebas Neue",sans-serif;letter-spacing:.05em;color:#ffd86b;margin:22px 0 8px}
+.med-ult{display:flex;flex-direction:column;gap:6px}
+.med-r{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:8px}
+.med-e{font-size:24px;line-height:1}
+.med-rb{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.med-rb span{font-size:14px;color:var(--testo);overflow-wrap:anywhere}.med-rb small{color:var(--muto);font-size:12px}
+.med-chiuso{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;padding:22px 16px}
+.med-chiuso>b{font:400 34px/1 "Bebas Neue",sans-serif;letter-spacing:.04em;color:#ffd86b;text-shadow:0 0 12px rgba(255,200,61,.6)}
+.med-chiuso p{margin:6px 0 0;color:var(--muto)}.med-manca b{color:#fff}
+.med-big svg{width:64px;height:64px;stroke:#ffc83d;filter:drop-shadow(0 0 10px rgba(255,200,61,.7))}
+.podio-w{position:sticky;bottom:calc(var(--bar) + env(safe-area-inset-bottom) + 8px);z-index:6;margin:18px -4px 0;padding:12px 8px 0;border-radius:14px 14px 10px 10px;overflow:hidden;
+  background:rgba(10,15,36,.93);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,200,61,.35);box-shadow:0 -8px 30px rgba(0,0,0,.5),0 0 22px rgba(255,200,61,.12)}
+.podio{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:6px}
+.pod{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;background:none;border:0;padding:0;color:var(--testo);font:inherit;cursor:pointer}
+.pod.p1{--mc:#ffc83d}.pod.p2{--mc:#cfd6e2}.pod.p3{--mc:#d08a4a}
+.pod .av{width:50px;height:50px;font-size:21px;border:3px solid var(--mc);box-shadow:0 0 14px color-mix(in srgb,var(--mc) 70%,transparent)}
+.pod.p1 .av{width:64px;height:64px;font-size:27px}
+.pod.vuoto .av{opacity:.45;box-shadow:none}
+.pod .corona{position:absolute;top:-17px;font-size:22px;line-height:1;z-index:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.pod b.n{font:800 13px Archivo,sans-serif;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
+.pod small{font-size:11px;color:var(--muto);white-space:nowrap;min-height:15px}
+.pod .blocco{width:100%;margin-top:5px;border-radius:8px 8px 0 0;display:grid;place-items:center;font:400 30px/1 "Bebas Neue",sans-serif;color:#1b1406;
+  background:linear-gradient(180deg,var(--mc),color-mix(in srgb,var(--mc) 55%,#000));box-shadow:inset 0 2px 0 rgba(255,255,255,.45)}
+.pod.p1 .blocco{height:54px}.pod.p2 .blocco{height:40px}.pod.p3 .blocco{height:30px}
+.pod.vuoto .blocco{opacity:.35}
+.podio-w{padding-top:20px}.podio-w.fermo{position:static}
+.med-s{text-align:center}.med-s .av.xl{margin:0 auto 8px}.med-s h3{margin:0 0 8px}
+.med-cnt{display:flex;justify-content:center;gap:18px;margin:0 0 12px;font:400 30px/1 "Bebas Neue",sans-serif}.med-cnt b{font-size:24px;margin-right:4px}
+.med-s .med-ult{text-align:left;margin-bottom:12px}
+.med-ps{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px;max-height:180px;overflow:auto}
+.med-p{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:20px;border:1px solid var(--line);background:var(--campo);color:var(--testo);font:600 14px Archivo,sans-serif;cursor:pointer}
+.med-p.on{border-color:#ffc83d;background:rgba(255,200,61,.14);box-shadow:0 0 0 1px #ffc83d}
+.med-ts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 12px}
+.med-t{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:8px;border:1px solid var(--line);background:var(--campo);color:var(--testo);font:800 12px Archivo,sans-serif;text-transform:uppercase;letter-spacing:.06em;cursor:pointer}
+.med-t span{font-size:28px;line-height:1}
+.med-t.on{border-color:#ffc83d;background:rgba(255,200,61,.14);box-shadow:0 0 0 1px #ffc83d}
 .lab{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .lab-r{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .lab-n{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:6px;font:400 26px/1 "Bebas Neue",sans-serif;color:#fff;
@@ -991,6 +1044,8 @@ const MSG = {
   VOTAZIONE_CHIUSA: 'La data è già stata fissata.',
   RISPOSTA_NON_VALIDA: 'Risposta non valida.',
   NON_AUTORIZZATO: 'Può farlo solo chi l\'ha creato.',
+  PERSONA_SCONOSCIUTA: 'Questa persona non è nel gruppo.',
+  MEDAGLIA_NON_VALIDA: 'Scegli oro, argento o bronzo.',
   TROPPI_FISSATI: 'Puoi mettere in evidenza al massimo 5 post: prima togline uno (puntina in basso, poi tocca la 📌 sotto il post).',
   NOTIFICHE_NEGATE: 'Non hai dato il permesso. Se hai toccato "Non consentire", riattivale dalle impostazioni del telefono.',
   NOTIFICHE_NON_PRONTE: 'Le notifiche non sono ancora pronte (manca un passaggio su Supabase che deve fare Ricky). Riprova più tardi.',
@@ -1391,6 +1446,7 @@ const ZONE = [
   { id: 'novita', t: 'Novità', d: 'Post, risposte e #tendenze', menu: false, f: () => viewNovita(''), ico: svg('<path d="M4 10.2 12 4l8 6.2V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/>') },
   { id: 'pin', t: 'In evidenza', d: 'I post fissati', menu: false, f: viewPin, ico: svg('<path d="M8.5 3.5h7l-1.2 5.8 3.7 3.7v1.8H6v-1.8l3.7-3.7z"/><path d="M12 14.8v6"/>') },
   { id: 'avvento', t: 'Avvento', d: '19 giochini fino al 19 dicembre', f: viewAvvento, ico: svg('<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="m12 7.4 1.4 2.8 3.1.5-2.2 2.2.5 3.1-2.8-1.5-2.8 1.5.5-3.1-2.2-2.2 3.1-.5z"/>') },
+  { id: 'medagliere', t: 'Medagliere', d: 'Le medaglie del gruppo · dal 19 dicembre', f: viewMedagliere, ico: svg('<path d="M8 3.5h3l1 4.2M16 3.5h-3l-1 4.2"/><circle cx="12" cy="14.5" r="6"/><path d="m12 11.4.95 1.95 2.15.3-1.55 1.5.37 2.13L12 16.27l-1.92 1.01.37-2.13-1.55-1.5 2.15-.3z"/>') },
   { id: 'calendario', t: 'Calendario', d: 'Cene, feste e serate', f: viewCalendario, ico: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/>') },
   { id: 'mappa', t: 'Mappa pippegosa', d: 'I posti dove siamo stati', f: viewMappa, ico: svg('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/>') },
   { id: 'foto', t: 'Foto', d: 'Le cartelle del gruppo', menu: false, f: viewFoto, ico: svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5"/>') },
@@ -1460,7 +1516,7 @@ function apriMenu() {
 }
 function route() {
   if (!S.pw || !S.me || !$('#view')) return;
-  { const c = cur(); if (!(c.sec === 'admin' || (c.sec === 'santa' && c.arg) || (c.sec === 'avvento' && c.arg === 'lab'))) S.daAdmin = false; }
+  { const c = cur(); if (!(c.sec === 'admin' || (c.sec === 'santa' && c.arg) || (c.sec === 'avvento' && c.arg === 'lab') || c.sec === 'medagliere')) S.daAdmin = false; }
   // "#storie" (es. tocco sulla notifica di una storia): Novità + si aprono le storie nuove
   if (cur().sec === 'storie') { S.apriStorie = cur().arg || true; history.replaceState(null, '', '#novita'); }
   document.querySelectorAll('.ov,.lb,.sv').forEach(x => x.remove()); document.body.classList.remove('noscroll');
@@ -1528,7 +1584,7 @@ function richText(t) {
 function trends() {
   const c = new Map(), lim = Date.now() - 3 * 864e5;
   const posts = (S.feed || []).filter(p => new Date(p.created_at) > lim);
-  const auto = new Set(['evento', 'secretsanta', 'sondaggio', 'album', 'mappa']);   // hashtag degli annunci automatici: non sono "tendenze"
+  const auto = new Set(['evento', 'secretsanta', 'sondaggio', 'album', 'mappa', 'medagliere']);   // hashtag degli annunci automatici: non sono "tendenze"
   for (const p of posts) for (const t of tagsOf(p.body)) if (!auto.has(t)) c.set(t, (c.get(t) || 0) + 1);
   return [...c].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 8);
 }
@@ -1550,7 +1606,7 @@ function votiHTML(x, attr) {
   return `<button class="act up ${v === 1 ? 'on' : ''}" data-like="${esc(attr)}" aria-label="Mi piace">${ICO.up}<span>${(x.likes || []).length || ''}</span></button><button class="act down ${v === -1 ? 'on' : ''}" data-dislike="${esc(attr)}" aria-label="Non mi piace">${ICO.down}<span>${(x.dislikes || []).length || ''}</span></button>`;
 }
 // colore del blocco nelle Novità: post azzurro, evento verde, Secret Santa rosso, sondaggio giallo, foto viola
-const TIPI_POST = { post: 'Post', evento: 'Evento', santa: 'Secret Santa', sondaggio: 'Sondaggio', foto: 'Foto', mappa: 'Mappa' };
+const TIPI_POST = { post: 'Post', evento: 'Evento', santa: 'Secret Santa', sondaggio: 'Sondaggio', foto: 'Foto', mappa: 'Mappa', medaglia: 'Medagliere' };
 function tipoPost(t) {
   t = String(t || '');
   if (/#secretsanta(?![\p{L}\p{N}_])/iu.test(t)) return 'santa';
@@ -1558,6 +1614,7 @@ function tipoPost(t) {
   if (/#sondaggio(?![\p{L}\p{N}_])/iu.test(t)) return 'sondaggio';
   if (/#album(?![\p{L}\p{N}_])/iu.test(t)) return 'foto';
   if (/#mappa(?![\p{L}\p{N}_])/iu.test(t)) return 'mappa';
+  if (/#medagliere(?![\p{L}\p{N}_])/iu.test(t)) return 'medaglia';
   return 'post';
 }
 function tweetHTML(p, big) {
@@ -1760,6 +1817,107 @@ function apriAdminAttivo() {
     s.querySelector('#adm-blocca').onclick = async () => { await bloccaAdmin(); close(); toast('Amministratore bloccato'); route(); };
   });
 }
+// ===================== MEDAGLIERE PIPPEGOSO (Ricky, 20/11/2026) =====================
+// l'amministratore dà medaglie d'oro, d'argento e di bronzo (con un motivo); tutti vedono la classifica a tabella
+// (prima contano gli ori, poi gli argenti, poi i bronzi, come alle Olimpiadi) e sotto il podio con le foto, sempre visibile.
+// Si apre a tutti il 19 dicembre 2026 (lo decide il database); prima lo vede solo l'amministratore, che può già prepararlo.
+const MED = { oro: { e: '🥇', t: 'Oro', di: "d'oro" }, argento: { e: '🥈', t: 'Argento', di: "d'argento" }, bronzo: { e: '🥉', t: 'Bronzo', di: 'di bronzo' } };
+const TIPI_MED = ['oro', 'argento', 'bronzo'];
+function classificaMedaglie(L) {
+  const P = new Map();
+  for (const m of L || []) {
+    const k = chiaveNome(m.name) || m.name.toLowerCase();
+    const x = P.get(k) || { name: m.name, oro: 0, argento: 0, bronzo: 0, tot: 0 };
+    x[m.tipo]++; x.tot++; P.set(k, x);
+  }
+  const R = [...P.values()].sort((a, b) => b.oro - a.oro || b.argento - a.argento || b.bronzo - a.bronzo || a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
+  R.forEach((x, i) => { const p = R[i - 1]; x.pos = p && p.oro === x.oro && p.argento === x.argento && p.bronzo === x.bronzo ? p.pos : i + 1; });   // stesse medaglie = stesso posto
+  return R;
+}
+const contoMed = x => TIPI_MED.filter(t => x[t]).map(t => `${MED[t].e}${x[t]}`).join(' ');
+function podioHTML(R) {
+  const posto = i => {
+    const x = R[i], k = 'p' + (i + 1);
+    if (!x) return `<div class="pod ${k} vuoto"><span class="av" style="--c:#59617f">?</span><b class="n">—</b><small>&nbsp;</small><div class="blocco">${i + 1}</div></div>`;
+    return `<button class="pod ${k}" data-chi="${esc(x.name)}" aria-label="${x.pos}° ${esc(x.name)}">${i === 0 ? '<span class="corona" aria-hidden="true">👑</span>' : ''}${avatar(x.name)}<b class="n">${esc(x.name)}</b><small>${contoMed(x)}</small><div class="blocco">${x.pos}</div></button>`;
+  };
+  return `<div class="podio-w" aria-label="Podio"><div class="podio">${posto(1)}${posto(0)}${posto(2)}</div></div>`;
+}
+function medRigaHTML(m, adm, sua) {   // sua = nella scheda della persona (niente foto e nome ripetuti)
+  return `<div class="med-r"><span class="med-e" title="${MED[m.tipo].t}">${MED[m.tipo].e}</span>${sua ? '' : avatar(m.name, 's')}<span class="med-rb">${sua ? `<b>${esc(m.motivo || 'Medaglia ' + MED[m.tipo].di)}</b>` : `<b>${esc(m.name)}</b>${m.motivo ? `<span>${esc(m.motivo)}</span>` : ''}`}<small>${esc(quando(m.created_at))}</small></span>
+    ${adm ? `<button class="icon del" data-mdel="${esc(m.id)}" aria-label="Togli la medaglia">${ICO.del}</button>` : ''}</div>`;
+}
+async function viewMedagliere() {
+  $('#view').innerHTML = `${S.daAdmin && adminPin() ? barraAdmin('medagliere') : ''}<h1 class="neon oro">Medagliere</h1><div id="med"><div class="loading">Carico</div></div>`;
+  let M;
+  try { M = await rpc('medagliere'); }
+  catch (e) { const el = $('#med'); if (el) el.innerHTML = `<div class="empty">${esc(e.message === 'NO_DB' ? 'Il medagliere arriva col prossimo aggiornamento del database.' : msg(e))}</div>`; return; }
+  if (cur().sec !== 'medagliere' || !$('#med')) return;
+  S.med = M; drawMedagliere(M);
+}
+function drawMedagliere(M) {
+  const el = $('#med'); if (!el) return;
+  const adm = !!(S.admin || adminPin());
+  if (!M.medaglie) {   // chiuso: si apre il 19 dicembre
+    const giorni = Math.max(1, Math.ceil((new Date(M.apre + 'T00:00:00') - Date.now()) / 864e5));
+    el.innerHTML = `<div class="card med-chiuso"><span class="med-big">${zona('medagliere').ico}</span><b>Si apre il 19 dicembre</b><span class="med-manca">${giorni === 1 ? 'manca <b>1 giorno</b>' : `mancano <b>${giorni} giorni</b>`}</span>
+      <p>Qui l'amministratore darà medaglie d'oro 🥇, d'argento 🥈 e di bronzo 🥉 per le imprese del gruppo. Chi ne ha di più sale sul podio!</p></div>${podioHTML([]).replace('podio-w', 'podio-w fermo')}`;
+    return;
+  }
+  const R = classificaMedaglie(M.medaglie);
+  el.innerHTML = `${!M.aperto ? '<div class="med-av">🔒 Si apre a tutti il <b>19 dicembre</b>: per ora lo vedi solo tu. Le medaglie che dai adesso le vedranno tutti da quel giorno.</div>' : ''}
+    <p class="intro">Le medaglie del gruppo, date dall'amministratore. In classifica conta prima l'oro, poi l'argento, poi il bronzo.</p>
+    ${adm ? `<button class="btn wide" id="med-add">+ Dai una medaglia</button>` : ''}
+    ${R.length ? `<table class="med-tab"><thead><tr><th>#</th><th>Chi</th><th title="Oro">🥇</th><th title="Argento">🥈</th><th title="Bronzo">🥉</th><th>Tot</th></tr></thead><tbody>
+      ${R.map(x => `<tr class="${x.pos <= 3 ? 'p' + x.pos : ''}" data-chi="${esc(x.name)}"><td class="pos">${x.pos}</td><td class="chi"><span class="chi-in">${avatar(x.name, 's')}<span class="n">${esc(x.name)}</span></span></td>${TIPI_MED.map(t => `<td class="${x[t] ? '' : 'z'}">${x[t]}</td>`).join('')}<td class="tot">${x.tot}</td></tr>`).join('')}
+      </tbody></table>`
+      : `<div class="empty">Ancora nessuna medaglia.<br><span class="muto">${adm ? 'Dai la prima! 🥇' : 'L\'amministratore le darà presto 😉'}</span></div>`}
+    ${M.medaglie.length ? `<h2 class="med-h">Ultime medaglie</h2><div class="med-ult">${M.medaglie.slice(0, 30).map(m => medRigaHTML(m, adm)).join('')}</div>` : ''}
+    ${podioHTML(R)}`;
+  el.querySelectorAll('[data-chi]').forEach(b => b.onclick = () => apriMedaglie(b.dataset.chi, M.medaglie));
+  const add = el.querySelector('#med-add'); if (add) add.onclick = () => formMedaglia(M);
+  el.querySelectorAll('[data-mdel]').forEach(b => b.onclick = async () => {
+    const m = M.medaglie.find(x => x.id === b.dataset.mdel); if (!m) return;
+    if (!await ask('Togliere la medaglia?', `${MED[m.tipo].e} ${esc(m.name)}${m.motivo ? ` · ${esc(m.motivo)}` : ''}`, 'Togli', true)) return;
+    try { await rpc('medaglia_del', { p_author: S.me, p_id: m.id, p_admin: adminPin() || null }); toast('Medaglia tolta'); viewMedagliere(); }
+    catch (e) { toast(msg(e), 'err'); }
+  });
+}
+function apriMedaglie(nome, L) {
+  const mie = (L || []).filter(m => stessaPersona(m.name, nome)), x = classificaMedaglie(mie)[0] || { oro: 0, argento: 0, bronzo: 0, tot: 0 };
+  sheet(`<div class="med-s">${avatar(nome, 'xl')}<h3>${esc(nome)}</h3><div class="med-cnt">${TIPI_MED.map(t => `<span><b>${MED[t].e}</b>${x[t]}</span>`).join('')}</div>
+    <div class="med-ult">${mie.map(m => medRigaHTML(m, false, true)).join('') || '<p class="muto">Nessuna medaglia.</p>'}</div>
+    <div class="row end"><button class="btn" data-close>Ok</button></div></div>`);
+}
+function formMedaglia(M) {
+  sheet(`<form class="med-f" novalidate><h3>Dai una medaglia</h3>
+    <label>A chi?</label><div class="med-ps"><div class="loading">Carico</div></div>
+    <label>Che medaglia?</label><div class="med-ts">${TIPI_MED.map((t, i) => `<button type="button" class="med-t${i === 0 ? ' on' : ''}" data-t="${t}" aria-pressed="${i === 0}"><span>${MED[t].e}</span>${MED[t].t}</button>`).join('')}</div>
+    <label>Per cosa? <small class="muto">(facoltativo)</small><input name="m" maxlength="140" autocomplete="off" placeholder="es. Miglior cena dell'anno"></label>
+    ${M.aperto ? '<label class="check"><input type="checkbox" name="a" checked> Annuncialo nelle Novità</label>' : '<p class="hint">Fino al 19 dicembre la medaglia resta segreta: niente annuncio e niente campanella.</p>'}
+    <p class="err" hidden></p>
+    <div class="row end"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn" type="submit">Dai la medaglia</button></div></form>`, async (s, close) => {
+    const f = s.querySelector('form'), er = f.querySelector('.err'), ps = f.querySelector('.med-ps');
+    let chi = '', tipo = 'oro';
+    f.querySelectorAll('.med-t').forEach(b => b.onclick = () => { tipo = b.dataset.t; f.querySelectorAll('.med-t').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); });
+    try {
+      const nomi = await rpc('members_list');
+      ps.innerHTML = nomi.map(n => `<button type="button" class="med-p" data-n="${esc(n)}" aria-pressed="false">${avatar(n, 's')}<span>${esc(n)}</span></button>`).join('') || '<p class="muto">Nessuno nel gruppo.</p>';
+      ps.querySelectorAll('.med-p').forEach(b => b.onclick = () => { chi = b.dataset.n; ps.querySelectorAll('.med-p').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); });
+    } catch (e) { ps.innerHTML = `<p class="err">${esc(msg(e))}</p>`; }
+    f.onsubmit = async e => {
+      e.preventDefault(); er.hidden = true;
+      if (!chi) { er.textContent = 'Scegli a chi darla.'; er.hidden = false; return; }
+      const motivo = f.m.value.trim(), btn = f.querySelector('[type=submit]'); btn.disabled = true;
+      try {
+        const r = await rpc('medaglia_add', { p_author: S.me, p_name: chi, p_tipo: tipo, p_motivo: motivo, p_admin: adminPin() || null });
+        if (f.a && f.a.checked) annuncia(`${MED[tipo].e} Medaglia ${MED[tipo].di} a ${r.name || chi}${motivo ? ': ' + motivo : ''} #medagliere`);
+        close(); toast(`${MED[tipo].e} Medaglia data a ${r.name || chi}`); viewMedagliere();
+      } catch (ex) { er.textContent = msg(ex); er.hidden = false; btn.disabled = false; }
+    };
+  });
+}
+
 // ===================== AMMINISTRATORE (Ricky, 18/11/2026) =====================
 // riconosciuto dal nome (niente PIN da rimettere); una pagina con tutto quello che si amministra e una barra per passare da una cosa all'altra
 function admSez() {
@@ -1767,6 +1925,7 @@ function admSez() {
     { id: 'santa', t: 'Secret Santa', d: 'Area organizzatore, verifica, chi ha guardato', go: '#admin/santa', ico: zona('santa').ico },
     { id: 'coppie', t: 'Coppie', d: 'Chi non si pesca nel Secret Santa', go: '#admin/coppie', ico: svg('<path d="M9 19.5s-5.5-3.4-5.5-7.6A3.2 3.2 0 0 1 9 9.9a3.2 3.2 0 0 1 5.5 2c0 4.2-5.5 7.6-5.5 7.6z"/><path d="M13.3 6.6A3.2 3.2 0 0 1 20.5 8.9c0 3.2-3.1 5.9-4.7 7.1"/>') },
     { id: 'avvento', t: 'Avvento', d: 'Laboratorio: prova i giochini', go: '#avvento/lab', ico: zona('avvento').ico },
+    { id: 'medagliere', t: 'Medagliere', d: 'Dai e togli le medaglie', go: '#medagliere', ico: zona('medagliere').ico },
     { id: 'persone', t: 'Persone', d: 'PIN dimenticati, rimuovi o riammetti', go: '#admin/persone', ico: svg('<circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="16.8" cy="9.5" r="2.5"/><path d="M15.4 14.3a4.6 4.6 0 0 1 5.6 4.5"/>') }
   ];
 }
@@ -4003,7 +4162,8 @@ const ATT = {
   cuore_risposta: a => `ha messo ❤️ al tuo commento al post${q8(a.cosa)}`,
   cuore_commento_storia: a => same(a.cosa, S.me) ? 'ha messo ❤️ al tuo commento alla tua storia' : `ha messo ❤️ al tuo commento alla storia di ${esc(a.cosa)}`,
   cuore_commento_foto: a => `ha messo ❤️ al tuo commento a una foto in${q8(a.cosa)}`,
-  cuore_commento_evento: a => `ha messo ❤️ al tuo commento in${q8(a.cosa)}`
+  cuore_commento_evento: a => `ha messo ❤️ al tuo commento in${q8(a.cosa)}`,
+  medaglia: a => `ti ha dato una medaglia ${(MED[a.cosa] || MED.oro).di} ${(MED[a.cosa] || MED.oro).e}`
 };
 function attHTML(a, nuova) {
   const t = (ATT[a.tipo] || (() => 'ha interagito con te'))(a);
@@ -4432,7 +4592,7 @@ function guardaStorie(tutte, gi, opz = {}) {
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], luoghi: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], luoghi: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], medaglie: [], files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
@@ -4454,6 +4614,9 @@ function creaDemo() {
   };
   [['Anna', 60 * 72, null], ['Giulia', 60 * 70, 0], ['Luca', 60 * 60, 60 * 26], ['Marco', 60 * 71, 0], ['Sara', 60 * 50, 20]]
     .forEach(([name, iscr, visto]) => D.members.push({ name, created_at: t(iscr), last_seen: visto == null ? null : t(visto) }));
+  [['Marco', 'oro', 'Miglior cena dell\'anno', 900], ['Giulia', 'oro', 'Regina del karaoke', 800], ['Marco', 'bronzo', 'Ultimo a lasciare la festa', 700], ['Luca', 'argento', 'Fotografo ufficiale', 600],
+   ['Giulia', 'argento', '', 500], ['Sara', 'bronzo', 'Torta più buona', 400], ['Marco', 'argento', 'Organizzatore della gita', 300]]
+    .forEach(([name, tipo, motivo, min], i) => D.medaglie.push({ id: 'med' + i, name, tipo, motivo, dato_da: 'Ricky', created_at: t(min) }));
   [['Giulia', '🌸', 330], ['Marco', '😎', 200]].forEach(([n, emo, hue]) => {   // foto utente finte
     const c = document.createElement('canvas'); c.width = c.height = 240; const x = c.getContext('2d');
     const g = x.createLinearGradient(0, 0, 240, 240); g.addColorStop(0, `hsl(${hue},85%,60%)`); g.addColorStop(1, `hsl(${hue + 60},80%,30%)`);
@@ -4744,6 +4907,23 @@ function creaDemo() {
       return p;
     },
     poll_close: a => { need(a); const p = D.polls.find(x => x.id === a.p_poll && x.author === a.p_author); if (p) p.closed = a.p_closed !== false; },
+    medagliere: a => {
+      need(a); const d = new Date(), oggi = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const ap = oggi >= '2026-12-19', adm = !!D.adminNome && same(D.adminNome, S.me);
+      return { apre: '2026-12-19', aperto: ap, admin: adm, medaglie: ap || adm ? D.medaglie.slice().sort((x, y) => x.created_at < y.created_at ? 1 : -1) : null };
+    },
+    medaglia_add: a => {
+      need(a); if (!(D.adminNome && same(D.adminNome, S.me)) && !a.p_admin) throw err('NON_AUTORIZZATO');
+      const x = admG(a.p_admin); if (x) return { err: x };
+      if (!TIPI_MED.includes(a.p_tipo)) throw err('MEDAGLIA_NON_VALIDA');
+      const m = D.members.find(p => same(p.name, clean(a.p_name, 30)) && !p.banned); if (!m) throw err('PERSONA_SCONOSCIUTA');
+      const id = uid(); D.medaglie.push({ id, name: m.name, tipo: a.p_tipo, motivo: clean(a.p_motivo, 140), dato_da: clean(a.p_author, 30), created_at: new Date().toISOString() });
+      return { ok: true, id, name: m.name };
+    },
+    medaglia_del: a => {
+      need(a); if (!(D.adminNome && same(D.adminNome, S.me)) && !a.p_admin) throw err('NON_AUTORIZZATO');
+      const x = admG(a.p_admin); if (x) return { err: x }; D.medaglie = D.medaglie.filter(m => m.id !== a.p_id); return { ok: true };
+    },
     poll_del: a => { need(a); const adm = D.adminNome && same(D.adminNome, S.me); D.polls = D.polls.filter(x => !(x.id === a.p_poll && (x.author === a.p_author || adm))); },
     post_pin: a => {
       need(a); const x = admG(a.p_admin); if (x) return { err: x };

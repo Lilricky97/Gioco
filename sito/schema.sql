@@ -2560,6 +2560,76 @@ begin
   return json_build_object('ok', true);
 end $$;
 
+-- ---------- MEDAGLIERE PIPPEGOSO (Ricky, 20/11/2026) ----------
+-- L'amministratore assegna medaglie d'oro, d'argento e di bronzo (con un motivo); tutti vedono la classifica.
+-- Si apre il 19 dicembre 2026 (ora italiana): prima lo vede solo l'amministratore, che può già prepararlo. Per ora non si chiude (Ricky: "fino a quando non te lo dirò io").
+create table if not exists medaglie (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,                                   -- chi la riceve (nome del sito)
+  tipo text not null check (tipo in ('oro', 'argento', 'bronzo')),
+  motivo text not null default '',
+  dato_da text not null,
+  created_at timestamptz not null default now()
+);
+alter table medaglie enable row level security;
+create index if not exists medaglie_quando on medaglie(created_at desc);
+
+create or replace function _medagliere_apre() returns date
+language sql immutable as $$ select date '2026-12-19' $$;
+create or replace function _medagliere_aperto() returns boolean
+language sql stable security definer set search_path = public, extensions as $$ select _avvento_oggi() >= _medagliere_apre() $$;
+
+-- tutte le medaglie (la classifica la fa il sito); prima del 19 dicembre solo per l'amministratore riconosciuto
+create or replace function medagliere(p_pw text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare ap boolean; adm boolean;
+begin
+  perform _need(p_pw);
+  ap := _medagliere_aperto(); adm := _admin_io();
+  return json_build_object('apre', _medagliere_apre(), 'aperto', ap, 'admin', adm,
+    'medaglie', case when ap or adm then coalesce((select json_agg(json_build_object('id', m.id, 'name', m.name, 'tipo', m.tipo, 'motivo', m.motivo,
+        'dato_da', m.dato_da, 'created_at', m.created_at) order by m.created_at desc) from medaglie m), '[]'::json) end);
+end $$;
+
+create or replace function medaglia_add(p_pw text, p_author text, p_name text, p_tipo text, p_motivo text, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text; n text; nuovo uuid;
+begin
+  perform _need(p_pw); perform _io(p_author);
+  if not _admin_io() and coalesce(p_admin, '') = '' then raise exception 'NON_AUTORIZZATO'; end if;
+  x := _admin_try(p_admin);
+  if x is not null then return json_build_object('err', x); end if;
+  if coalesce(p_tipo, '') not in ('oro', 'argento', 'bronzo') then raise exception 'MEDAGLIA_NON_VALIDA'; end if;
+  select name into n from members where lower(name) = lower(_clean(p_name, 30)) and not banned;
+  if n is null then raise exception 'PERSONA_SCONOSCIUTA'; end if;
+  insert into medaglie(name, tipo, motivo, dato_da) values (n, p_tipo, _clean(p_motivo, 140), _clean(p_author, 30)) returning id into nuovo;
+  return json_build_object('ok', true, 'id', nuovo, 'name', n);
+end $$;
+
+create or replace function medaglia_del(p_pw text, p_author text, p_id uuid, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text;
+begin
+  perform _need(p_pw); perform _io(p_author);
+  if not _admin_io() and coalesce(p_admin, '') = '' then raise exception 'NON_AUTORIZZATO'; end if;
+  x := _admin_try(p_admin);
+  if x is not null then return json_build_object('err', x); end if;
+  delete from medaglie where id = p_id;
+  return json_build_object('ok', true);
+end $$;
+
+-- campanella: "Ricky ti ha dato una medaglia d'oro" (solo da quando il medagliere è aperto, così prima nessuno scopre niente)
+create or replace function _att_medaglia() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_op = 'DELETE' then perform _att_via('md:' || old.id); return null; end if;
+  if _medagliere_aperto() then perform _att(new.name, new.dato_da, 'medaglia', new.tipo, new.motivo, '#medagliere', 'md:' || new.id); end if;
+  return null;
+exception when others then return null;
+end $$;
+drop trigger if exists att_medaglia on medaglie;
+create trigger att_medaglia after insert or delete on medaglie for each row execute function _att_medaglia();
+
 -- ---------- permessi ----------
 revoke all on all tables in schema public from anon, authenticated;
 grant execute on function check_pw, members_list, member_add, presenza, accesso_info, accedi, esci, member_pin_reset, avatars_list, member_avatar, admin_check, admin_io, admin_dimentica, member_kick, couples_list, couples_set, stories_list, story_add, story_seen, story_like, story_del, story_comments, story_comment_add, story_comment_del, feed, post_add, post_del, post_like, post_vote, post_thread, post_pin, foto_scadute, foto_cancellabile,
@@ -2571,16 +2641,16 @@ grant execute on function check_pw, members_list, member_add, presenza, accesso_
   events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
   event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste,
   avvento_inizia, avvento_gioca, avvento_classifica, avvento_fuori, comment_like,
-  luoghi_list, luogo_add, luogo_edit, luogo_cero, luogo_del to anon, authenticated;
+  luoghi_list, luogo_add, luogo_edit, luogo_cero, luogo_del, medagliere, medaglia_add, medaglia_del to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _io from anon, authenticated;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _medagliere_apre, _medagliere_aperto, _att_medaglia, _io from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _io from public;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _medagliere_apre, _medagliere_aperto, _att_medaglia, _io from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin
