@@ -787,6 +787,8 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .perc-top{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:360px;font:800 13px Archivo,sans-serif;color:var(--muto)}
 .perc-top b{font:400 28px/1 "Bebas Neue",sans-serif;color:var(--giallo);text-shadow:0 0 10px rgba(255,216,107,.6);letter-spacing:.04em}
 .perc-top .perc-c{color:var(--rosa);text-shadow:0 0 10px var(--rosa)}.perc-top .perc-t.poco{color:#ff5d6c;text-shadow:0 0 10px #ff5d6c}
+.perc-top .perc-t.malus{animation:perc-malus .5s}@keyframes perc-malus{0%,60%{color:#ff2040;text-shadow:0 0 14px #ff2040;transform:scale(1.18)}}
+.perc-top b{display:inline-block}
 .perc-p{position:relative;width:min(100%,360px,calc((88dvh - 235px) * 5 / 6));aspect-ratio:5/6;border-radius:12px;overflow:hidden;touch-action:none;cursor:grab;box-shadow:0 0 0 2px rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.45)}
 .perc-s,.perc-s svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .perc-p::after{content:"";position:absolute;inset:0;background:#ff2040;opacity:0;pointer-events:none;z-index:3}
@@ -802,7 +804,7 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .perc-nic img,.perc-nic .em{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #ffc400;background:#fff;display:grid;place-items:center;font-size:20px;line-height:1}
 .perc-nic small{margin-top:2px;padding:1px 6px;border-radius:6px;background:rgba(10,15,36,.8);color:#fff;font:800 10px Archivo,sans-serif}
 .perc-cd{position:absolute;inset:0;display:none;place-items:center;font:400 90px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 22px var(--rosa);background:rgba(10,15,36,.55);z-index:5;text-align:center}
-.perc-cd.on{display:grid}.perc-cd small{display:block;font:800 16px Archivo,sans-serif;color:var(--giallo);text-shadow:none;margin-top:6px}
+.perc-cd.on{display:grid}.perc-cd small{display:block;font:800 16px Archivo,sans-serif;color:var(--giallo);text-shadow:none;margin-top:6px;padding:0 10px;line-height:1.4}.perc-cd small b{color:#fff}
 .perc-aiuto{margin:0;font:700 13px Archivo,sans-serif;color:var(--muto);text-align:center;min-height:2.6em}
 .lab{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .lab-r{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
@@ -3680,19 +3682,19 @@ GIOCHI_AVVENTO[3] = {
   }
 };
 // ---- casella 4: "Aiuta la Nicole con le transenne" (idea di Ricky, 19/11/2026) — percorso ad ostacoli stile Allegro Chirurgo ----
-// 3 strade sempre più difficili (disegno 300×360): si trascina la transenna fino al riquadro QUI senza toccare bordi, coni, buche e tombini.
-// Ogni tocco = 1 colpo (bzzz, la transenna torna un po' indietro e va ripresa). Risultato = colpi × 10000 + decimi di secondo:
-// vince chi fa meno colpi, a pari colpi chi ci mette meno (il database lo ordina al contrario: _avvento_asc). Oltre 120 secondi = non finito.
-// Larghezza dei passaggi più stretti (gioco del centro della transenna, misurato al computer): strada 1 ±8, strada 2 ±4,9, strada 3 ±4.
+// 3 strade (disegno 300×360): si trascina la transenna fino al riquadro QUI. Bordi, coni, buche e tombini la FERMANO (scivola lungo il bordo),
+// non si perde mai (Ricky: "se tocchi non deve accadere"): ogni tocco = bzzz e +3 secondi; se si resta appoggiati al bordo, +3 secondi ogni secondo.
+// Risultato = decimi di secondo + 30 per ogni tocco: vince chi ci mette meno (il database lo ordina al contrario: _avvento_asc). Oltre 120 secondi = non finito.
+// Passaggi più stretti (gioco del centro della transenna, misurato al computer): strada 1 ±12, strada 2 ±8, strada 3 ±6,8.
 const PERC_T = { L: 11, H: 4 };   // mezza lunghezza e mezza altezza della transenna
-const PERCORSI = [   // w = mezza larghezza della strada, via = linea centrale (dal via al QUI), ost = [x, y, raggio, tipo], nic = dove sta la Nicole
-  { w: 26, nic: [180, 34], via: [[52, 332], [52, 262], [248, 262], [248, 176], [52, 176], [52, 92], [248, 92], [248, 30]],
-    ost: [[150, 258, 8, 'buca'], [266, 220, 8, 'cono'], [104, 166, 8, 'tombino'], [34, 134, 8, 'cono'], [196, 96, 8, 'buca']] },
-  { w: 23, nic: [90, 40], via: [[150, 334], [150, 290], [56, 248], [56, 172], [150, 146], [244, 172], [244, 98], [150, 62], [150, 28]],
-    ost: [[111, 251, 8, 'cono'], [37, 225, 8, 'cono'], [75, 195, 8, 'cono'], [150, 157, 7, 'buca'], [192, 178, 8, 'cono'], [222, 146, 8, 'cono'], [263, 112, 8, 'cono'], [193, 90, 8, 'buca'], [169, 45, 8, 'cono']] },
-  { w: 22, nic: [88, 44], via: [[40, 334], [260, 334], [260, 262], [40, 262], [40, 186], [260, 186], [260, 110], [150, 110], [150, 28]],
-    ost: [[100, 338, 8, 'cono'], [175, 330, 8, 'cono'], [278, 298, 8, 'cono'], [150, 255, 9, 'buca'], [80, 268, 8, 'tombino'], [25, 240, 8, 'cono'], [55, 206, 8, 'cono'],
-      [110, 180, 8, 'cono'], [180, 193, 8, 'buca'], [243, 150, 8, 'cono'], [205, 104, 8, 'buca'], [166, 78, 8, 'cono'], [134, 46, 8, 'cono']] },
+const PERC_MALUS = 30;            // +3 secondi (in decimi) per ogni tocco
+const PERCORSI = [   // w = mezza larghezza della strada, via = linea centrale (dal VIA al QUI), ost = [x, y, raggio, tipo], nic = dove sta la Nicole
+  { w: 30, nic: [180, 34], via: [[52, 326], [52, 262], [248, 262], [248, 176], [52, 176], [52, 92], [248, 92], [248, 30]],
+    ost: [[150, 252, 8, 'buca'], [274, 220, 8, 'cono'], [110, 186, 8, 'tombino'], [28, 134, 8, 'cono'], [180, 100, 8, 'buca']] },
+  { w: 27, nic: [90, 40], via: [[150, 328], [150, 290], [56, 248], [56, 172], [150, 146], [244, 172], [244, 98], [150, 62], [150, 28]],
+    ost: [[112, 248, 8, 'cono'], [33, 222, 8, 'cono'], [79, 192, 8, 'cono'], [150, 160, 7, 'buca'], [222, 148, 8, 'cono'], [266, 112, 8, 'cono'], [192, 94, 8, 'buca']] },
+  { w: 25, nic: [88, 44], via: [[40, 330], [260, 330], [260, 258], [40, 258], [40, 184], [260, 184], [260, 110], [150, 110], [150, 28]],
+    ost: [[110, 334, 8, 'cono'], [190, 318, 8, 'cono'], [150, 250, 8, 'buca'], [18, 222, 8, 'cono'], [120, 190, 7, 'tombino'], [282, 148, 8, 'cono'], [205, 102, 8, 'buca'], [172, 60, 8, 'cono']] },
 ];
 const PERC_PUNTI = [-1, -.5, 0, .5, 1].flatMap(a => [[a * PERC_T.L, -PERC_T.H], [a * PERC_T.L, PERC_T.H]]).concat([[-PERC_T.L, 0], [PERC_T.L, 0]]);   // il contorno della transenna
 const percSeg = (x, y, [ax, ay], [bx, by]) => { const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1))); return Math.hypot(x - ax - t * dx, y - ay - t * dy); };
@@ -3706,7 +3708,6 @@ function percTocca(liv, x, y) {   // la transenna col centro in (x, y) tocca un 
   }
   return false;
 }
-const percRis = r => { if (!r) return 'non finito'; const c = Math.floor(r / 10000); return `${c} ${c === 1 ? 'colpo' : 'colpi'} · ${(r % 10000 / 10).toFixed(1).replace('.', ',')} s`; };
 const ICO_CASCO = '<svg viewBox="0 0 40 22" aria-hidden="true"><path d="M6 18a14 14 0 0 1 28 0z" fill="#ffc400" stroke="#7a5a00" stroke-width="1.5"/><path d="M20 5v13M13 7.5l2 10M27 7.5l-2 10" stroke="#7a5a00" stroke-width="1.2"/><rect x="1.5" y="16.5" width="37" height="4" rx="2" fill="#ffd23f" stroke="#7a5a00" stroke-width="1.2"/></svg>';
 function percSVG(liv) {
   const P = PERCORSI[liv], d = 'M' + P.via.map(p => p.join(' ')).join('L'), [ex, ey] = P.via.at(-1), [sx, sy] = P.via[0], strada = (c, w, x = '') => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"${x}/>`;
@@ -3719,7 +3720,7 @@ function percSVG(liv) {
       <pattern id="pc-str" width="5" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="2.5" height="10" fill="#e5193c"/><rect x="2.5" width="2.5" height="10" fill="#fff"/></pattern></defs>
     <rect width="300" height="360" fill="#1d3b26"/><rect width="300" height="360" fill="url(#pc-erba)"/>
     ${strada('#ececec', P.w * 2 + 7)}${strada('#e5193c', P.w * 2 + 7, ' stroke-dasharray="7 7"')}${strada('#3d414b', P.w * 2)}${strada('#f5d142', 1.6, ' stroke-dasharray="6 9" opacity=".7" stroke-linecap="butt"')}
-    <text x="${sx}" y="${sy + 15}" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="800" font-size="8" fill="#fff" opacity=".55">VIA</text>
+    <text x="${sx}" y="${sy + 17}" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="800" font-size="8" fill="#fff" opacity=".55">VIA</text>
     <rect x="${ex - 15}" y="${ey - 8}" width="30" height="16" rx="2" fill="rgba(255,255,255,.08)" stroke="#fff" stroke-width="1.4" stroke-dasharray="3 3"/>
     <text x="${ex}" y="${ey - 11}" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="800" font-size="8" fill="#fff">QUI</text>
     ${ost}
@@ -3728,16 +3729,17 @@ function percSVG(liv) {
 }
 GIOCHI_AVVENTO[4] = {
   nome: 'Aiuta la Nicole con le transenne 🚧',
-  regole: 'La Nicole deve mettere <b>3 transenne</b> in fondo a 3 strade piene di ostacoli. Trascina la transenna col dito fino a <b>QUI</b> senza toccare bordi, coni, buche e tombini: ogni tocco fa <b>bzzz</b> e conta <b>un colpo</b>. Vince chi fa <b>meno colpi</b>; a pari colpi, chi ci mette meno. Hai 2 minuti.<br><small>Consiglio: prendila un po’ da sotto, così il dito non la copre 😉</small>',
-  unita: ['colpo', 'colpi'], formato: percRis,
+  regole: 'La Nicole deve mettere <b>3 transenne</b> in fondo a 3 strade. Trascina la transenna col dito fino a <b>QUI</b> il più veloce che puoi. Se tocchi un bordo, un cono, una buca o un tombino fa <b>bzzz</b> e prendi <b>+3 secondi</b> (se ci strisci contro, +3 secondi ogni secondo). Vince chi ci mette <b>meno tempo</b>. Hai 2 minuti.<br><small>Consiglio: prendila un po’ da sotto, così il dito non la copre 😉</small>',
+  unita: ['decimo', 'decimi'], formato: memoTempo,
   gioca(box, fine) {
     const k = Object.keys(S.av || {}).find(x => chiaveNome(x) === 'nicole'), foto = k && okPath(S.av[k]) ? S.av[k] : null;
     const DI = 'Tocca la transenna 🚧 e portala fino a <b>QUI</b>';
-    box.innerHTML = `<div class="perc"><div class="perc-top"><span>Transenna <b class="perc-n">1/3</b></span><span>Colpi <b class="perc-c">0</b></span><span>⏱ <b class="perc-t">0,0</b></span></div>
+    box.innerHTML = `<div class="perc"><div class="perc-top"><span>Transenna <b class="perc-n">1/3</b></span><span>Tocchi <b class="perc-c">0</b></span><span>⏱ <b class="perc-t">0,0</b></span></div>
       <div class="perc-p"><div class="perc-s"></div><span class="perc-nic">${ICO_CASCO}${foto ? `<img src="${esc(pub(foto))}" alt="">` : '<span class="em">👷‍♀️</span>'}<small>Nicole</small></span><div class="perc-cd"></div></div>
       <p class="perc-aiuto">${DI}</p></div>`;
     const $$ = c => box.querySelector(c), pan = $$('.perc-p'), sEl = $$('.perc-s'), nic = $$('.perc-nic'), nEl = $$('.perc-n'), cEl = $$('.perc-c'), tEl = $$('.perc-t'), cd = $$('.perc-cd'), aiuto = $$('.perc-aiuto');
-    let liv = 0, x = 0, y = 0, tr = null, dito = null, off = [0, 0], storia = [], colpi = 0, t0 = 0, finito = false, pausa = true, ac = null;
+    let liv = 0, x = 0, y = 0, tr = null, dito = null, off = [0, 0], tocchi = 0, t0 = 0, finito = false, pausa = true, ac = null;
+    let aContatto = false, liberoDa = 0, ultimoMalus = -1e9;   // il contatto finisce solo dopo 3 unità percorse libere (così il tremolio del dito non conta come tanti tocchi)
     try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
     const suona = (f, tipo, dur, vol, dopo = 0) => {
       if (!ac) return;
@@ -3747,57 +3749,69 @@ GIOCHI_AVVENTO[4] = {
         g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + .02);
       } catch (e) {}
     };
-    const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+    const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));   // tempo vero
+    const totale = () => decimi() + PERC_MALUS * Math.min(tocchi, 99);              // tempo + i +3 secondi
     const metti = () => tr.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
     const lascia = () => { dito = null; if (tr) tr.classList.remove('su'); };
     const livello = () => {
       const P = PERCORSI[liv]; sEl.innerHTML = percSVG(liv); tr = sEl.querySelector('.pc-tr');
-      [x, y] = P.via[0]; storia = [[x, y]]; metti();
+      [x, y] = P.via[0]; aContatto = false; liberoDa = 0; metti();
       nic.style.left = P.nic[0] / 3 + '%'; nic.style.top = P.nic[1] / 3.6 + '%'; nEl.textContent = (liv + 1) + '/3';
     };
     const punto = e => { const r = pan.getBoundingClientRect(); return [(e.clientX - r.left) * 300 / r.width, (e.clientY - r.top) * 360 / r.height]; };
-    const chiudi = (ris, testo) => { finito = true; lascia(); cd.innerHTML = testo; cd.classList.add('on'); setTimeout(() => fine(ris), 1300); };
-    const colpo = (hx, hy) => {
-      colpi++; cEl.textContent = colpi; suona(95, 'sawtooth', .35, .16); suona(142, 'square', .35, .07); if (navigator.vibrate) navigator.vibrate(160);
+    const chiudi = (ris, testo) => { finito = true; lascia(); cd.innerHTML = testo; cd.classList.add('on'); setTimeout(() => fine(ris), 1500); };
+    const malus = () => {   // bzzz: +3 secondi, la transenna resta in mano
+      ultimoMalus = performance.now(); tocchi++; cEl.textContent = tocchi;
+      suona(95, 'sawtooth', .3, .14); suona(142, 'square', .3, .06); if (navigator.vibrate) navigator.vibrate(120);
       pan.classList.remove('zap'); void pan.offsetWidth; pan.classList.add('zap');
-      const z = document.createElement('span'); z.className = 'perc-zz'; z.textContent = 'BZZZ!'; z.style.left = hx / 3 + '%'; z.style.top = hy / 3.6 + '%';
-      pan.appendChild(z); setTimeout(() => z.remove(), 700);
-      let d = 0, i = storia.length - 1;   // torna indietro di un pezzetto lungo la strada già fatta (lì era tutto libero)
-      while (i > 0 && d < 16) { d += Math.hypot(storia[i][0] - storia[i - 1][0], storia[i][1] - storia[i - 1][1]); i--; }
-      storia.length = i + 1; [x, y] = storia[i]; metti(); lascia();
-      aiuto.innerHTML = '⚡ <b>Bzzz!</b> Hai toccato: riprendi la transenna';
+      tEl.classList.remove('malus'); void tEl.offsetWidth; tEl.classList.add('malus');
+      const z = document.createElement('span'); z.className = 'perc-zz'; z.textContent = '+3 s'; z.style.left = x / 3 + '%'; z.style.top = y / 3.6 + '%';
+      pan.appendChild(z); setTimeout(() => z.remove(), 800);
+      aiuto.innerHTML = '⚡ <b>Bzzz!</b> Hai toccato: <b>+3 secondi</b>';
     };
     const arrivata = () => {
       pausa = true; lascia(); [x, y] = PERCORSI[liv].via.at(-1); metti(); tr.classList.add('ok');
       suona(880, 'sine', .18, .2); suona(1320, 'sine', .3, .2, .12); if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
-      if (liv === PERCORSI.length - 1) { const r = Math.min(colpi, 99) * 10000 + Math.min(decimi(), 1200); return chiudi(r, `FATTO!<small>${percRis(r)}</small>`); }
+      if (liv === PERCORSI.length - 1) {
+        const vero = decimi(), r = totale();
+        return chiudi(r, `FATTO!<small>${tocchi ? `${memoTempo(vero)} + ${tocchi} ${tocchi === 1 ? 'tocco' : 'tocchi'} × 3 s = <b>${memoTempo(r)}</b>` : `${memoTempo(r)} · nessun tocco! 🎉`}</small>`);
+      }
       cd.innerHTML = `✓<small>Transenna ${liv + 1} a posto!</small>`; cd.classList.add('on'); aiuto.innerHTML = 'Arriva la prossima strada… 🚧';
       setTimeout(() => { if (finito || !box.isConnected) return; cd.classList.remove('on'); liv++; livello(); pausa = false; aiuto.innerHTML = DI; }, 900);
     };
-    const muovi = (tx, ty) => {   // a passettini, così anche un movimento veloce non "salta" un ostacolo
+    const muovi = (tx, ty) => {   // a passettini: gli ostacoli fermano la transenna, che prova a scivolare lungo il bordo
       tx = Math.max(0, Math.min(300, tx)); ty = Math.max(0, Math.min(360, ty));
-      const x0 = x, y0 = y, [ex, ey] = PERCORSI[liv].via.at(-1), n = Math.ceil(Math.hypot(tx - x0, ty - y0) / 1.5);
-      for (let i = 1; i <= n; i++) {
-        const nx = x0 + (tx - x0) * i / n, ny = y0 + (ty - y0) * i / n;
-        if (percTocca(liv, nx, ny)) return colpo(nx, ny);
-        x = nx; y = ny; storia.push([nx, ny]); if (storia.length > 600) storia.splice(0, 300);
-        if (Math.hypot(nx - ex, ny - ey) < 8) return arrivata();
+      const [ex, ey] = PERCORSI[liv].via.at(-1), passi = Math.ceil(Math.hypot(tx - x, ty - y) / 1.5) + 2;
+      let urto = false;
+      for (let i = 0; i < passi; i++) {
+        const rx = tx - x, ry = ty - y, d = Math.hypot(rx, ry); if (d < .05) break;
+        const k = Math.min(1, 1.5 / d), sx = rx * k, sy = ry * k;
+        if (!percTocca(liv, x + sx, y + sy)) { x += sx; y += sy; if (!urto) liberoDa += Math.hypot(sx, sy); }
+        else {
+          urto = true; liberoDa = 0;
+          if (Math.abs(sx) > .05 && !percTocca(liv, x + sx, y)) x += sx;
+          else if (Math.abs(sy) > .05 && !percTocca(liv, x, y + sy)) y += sy;
+          else break;
+        }
+        if (Math.hypot(x - ex, y - ey) < 8) { metti(); return arrivata(); }
       }
       metti();
+      if (urto) { if (!aContatto || performance.now() - ultimoMalus >= 1000) malus(); aContatto = true; }
+      else if (aContatto && liberoDa >= 3) aContatto = false;
     };
     pan.addEventListener('pointerdown', e => {
       e.preventDefault(); if (!t0 || finito || pausa || dito !== null) return;
       const [bx, by] = punto(e);
       if (Math.hypot(bx - x, by - y) > 32) { aiuto.innerHTML = '👆 Tocca proprio la <b>transenna</b> per prenderla'; return; }
       dito = e.pointerId; try { pan.setPointerCapture(e.pointerId); } catch (z) {}
-      off = [x - bx, y - by]; tr.classList.add('su'); aiuto.innerHTML = 'Piano piano… 🤏';
+      off = [x - bx, y - by]; tr.classList.add('su'); aiuto.innerHTML = 'Vai, vai! 🏃‍♀️';
     });
     pan.addEventListener('pointermove', e => { if (e.pointerId !== dito || finito || pausa) return; e.preventDefault(); const [bx, by] = punto(e); muovi(bx + off[0], by + off[1]); });
     const su = e => { if (e.pointerId === dito) lascia(); };
     pan.addEventListener('pointerup', su); pan.addEventListener('pointercancel', su);
     const giro = () => {
       if (!box.isConnected || finito) return;
-      const r = decimi(); tEl.textContent = (r / 10).toFixed(1).replace('.', ','); tEl.classList.toggle('poco', r >= 1000);
+      const r = decimi(); tEl.textContent = (totale() / 10).toFixed(1).replace('.', ','); tEl.classList.toggle('poco', r >= 1000);
       if (r >= 1200) return chiudi(0, 'TEMPO SCADUTO<small>oltre 2 minuti: niente punti</small>');
       requestAnimationFrame(giro);
     };
@@ -4646,8 +4660,7 @@ function creaDemo() {
       D.avv.push({ giorno: a.p_giorno, name: n, punteggio: null, created_at: t(0) }); return { ok: true };
     },
     avvento_gioca: a => {
-      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500, 4: 991200 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30 }[a.p_giorno] || 0))
-        || (a.p_giorno === 4 && a.p_punteggio > 0 && (a.p_punteggio % 10000 < 40 || a.p_punteggio % 10000 > 1200))) throw err('PUNTEGGIO_NON_VALIDO');
+      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500, 4: 4200 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30, 4: 40 }[a.p_giorno] || 0))) throw err('PUNTEGGIO_NON_VALIDO');
       const p = D.avv.find(y => y.giorno === a.p_giorno && stessaPersona(y.name, clean(a.p_name, 30)));
       if (!p) return { err: 'TEMPO_SCADUTO' }; if (p.punteggio != null) return { err: 'GIA_GIOCATO' };
       p.punteggio = a.p_punteggio; return { ok: true };

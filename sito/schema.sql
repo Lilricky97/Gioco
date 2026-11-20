@@ -2113,16 +2113,16 @@ language sql stable set search_path = public, extensions as $$ select (now() at 
 
 -- tetto di ogni giochino, contro i risultati impossibili (casella 1: 15 scatti al secondo per 10 secondi)
 create or replace function _avvento_max(p_giorno int) returns int
-language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 when 3 then 1500 when 4 then 991200 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s · 3: memory, decimi di secondo (max 150 s) · 4: transenne, colpi × 10000 + decimi (max 99 colpi, 120 s)
+language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 when 3 then 1500 when 4 then 4200 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s · 3: memory, decimi di secondo (max 150 s) · 4: transenne, decimi + 30 per tocco (max 120 s + 99 tocchi)
 
 -- giochini dove vince chi fa MENO; 0 = non finito, niente punti
 --   casella 3, il memory: il tempo in decimi di secondo
---   casella 4, le transenne della Nicole: colpi × 10000 + decimi di secondo (vince chi tocca meno ostacoli, a pari colpi chi è più veloce)
+--   casella 4, le transenne della Nicole: decimi di secondo + 30 (= 3 secondi) per ogni tocco di un ostacolo
 create or replace function _avvento_asc(p_giorno int) returns boolean
 language sql immutable as $$ select p_giorno in (3, 4) $$;
 -- il minimo credibile (memory: sotto i 3 secondi è impossibile girare 10 carte)
 create or replace function _avvento_min(p_giorno int) returns int
-language sql immutable as $$ select case p_giorno when 3 then 30 else 0 end $$;
+language sql immutable as $$ select case p_giorno when 3 then 30 when 4 then 40 else 0 end $$;
 
 create or replace function _avvento_aperta(p_giorno int, p_name text) returns text
 language plpgsql stable security definer set search_path = public, extensions as $$
@@ -2153,8 +2153,7 @@ declare n text := _clean(p_name, 30);
 begin
   perform _need(p_pw); perform _io(p_name);
   if p_punteggio is null or p_punteggio < 0 or p_punteggio > _avvento_max(p_giorno)
-     or (p_punteggio > 0 and p_punteggio < _avvento_min(p_giorno))
-     or (p_giorno = 4 and p_punteggio > 0 and p_punteggio % 10000 not between 40 and 1200) then raise exception 'PUNTEGGIO_NON_VALIDO'; end if;   -- transenne: tra 4 e 120 secondi
+     or (p_punteggio > 0 and p_punteggio < _avvento_min(p_giorno)) then raise exception 'PUNTEGGIO_NON_VALIDO'; end if;
   update avvento_punti set punteggio = p_punteggio, finito_at = now()
   where giorno = p_giorno and _nome_chiave(name) = _nome_chiave(n) and punteggio is null and created_at > now() - interval '3 minutes';
   if not found then
