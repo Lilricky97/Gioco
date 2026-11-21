@@ -806,6 +806,56 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .perc-cd{position:absolute;inset:0;display:none;place-items:center;font:400 90px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 22px var(--rosa);background:rgba(10,15,36,.55);z-index:5;text-align:center}
 .perc-cd.on{display:grid}.perc-cd small{display:block;font:800 16px Archivo,sans-serif;color:var(--giallo);text-shadow:none;margin-top:6px;padding:0 10px;line-height:1.4}.perc-cd small b{color:#fff}
 .perc-aiuto{margin:0;font:700 13px Archivo,sans-serif;color:var(--muto);text-align:center;min-height:2.6em}
+/* ---------- avvento: giochini 5 (comignoli), 6 (torre di regali), 7 (palla di neve) ---------- */
+.acc,.torre,.pdn{display:flex;flex-direction:column;align-items:center;gap:8px;user-select:none;-webkit-user-select:none}
+.acc-top{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:360px;font:800 13px Archivo,sans-serif;color:var(--muto)}
+.acc-top b{display:inline-block;font:400 28px/1 "Bebas Neue",sans-serif;color:var(--giallo);text-shadow:0 0 10px rgba(255,216,107,.6);letter-spacing:.04em}
+.acc-aiuto{margin:0;font:700 13px Archivo,sans-serif;color:var(--muto);text-align:center}
+.acc-cd{position:absolute;inset:0;display:none;place-items:center;font:400 90px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 22px var(--rosa);background:rgba(10,15,36,.55);z-index:9;text-align:center}
+.acc-cd.on{display:grid}.acc-cd small{display:block;font:800 16px Archivo,sans-serif;color:var(--giallo);text-shadow:none;margin-top:6px}
+.acc-p,.torre-p,.pdn-p{position:relative;width:min(100%,360px,calc((88dvh - 250px) * .8));aspect-ratio:4/5;border-radius:12px;overflow:hidden;touch-action:none;
+  box-shadow:0 0 0 2px rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.45);background:linear-gradient(#0b1636,#1d2d62 70%)}
+.torre-p{aspect-ratio:3/4;width:min(100%,360px,calc((88dvh - 250px) * .75));cursor:pointer}
+.acc-sf{position:absolute;inset:0;width:100%;height:100%;display:block}
+.acc-b{position:absolute;transform:translate(-50%,-100%);font:400 28px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 10px var(--menta),0 0 2px #000;letter-spacing:.04em;pointer-events:none;z-index:8;animation:perc-su .75s ease-out forwards;white-space:nowrap}
+.acc-b.meno{text-shadow:0 0 10px #ff2040,0 0 2px #000}.acc-b.grigio{font-size:20px;color:#dfe6f3;text-shadow:0 0 6px #000}
+.acc-c{position:absolute;width:24%;transform:translateX(-50%);z-index:2}
+.acc-buco{position:absolute;left:8%;right:8%;bottom:100%;aspect-ratio:1/1.4;overflow:hidden}
+.acc-f{position:absolute;left:0;right:0;bottom:0;aspect-ratio:1;border:0;padding:0;background:none;transform:translateY(140%);transition:transform .13s ease-out;pointer-events:none;cursor:pointer;touch-action:none}
+.acc-f.su{transform:translateY(4%);pointer-events:auto}
+.acc-f.preso{transform:translateY(4%) scale(.82);transition-duration:.08s}.acc-f.preso .av{filter:brightness(1.35) saturate(1.3);box-shadow:0 0 0 3px var(--menta),0 0 16px var(--menta)}
+.acc-f.no{animation:scossa .3s}
+.acc-faccia{position:relative;display:block;width:100%;height:100%}
+.acc-faccia .av,.pdn-faccia .av{width:100%;height:100%;font-size:clamp(14px,6vw,28px);border-width:3px}
+.acc-faccia .cappello{position:absolute;width:76%;left:-10%;top:-24%;transform:rotate(-16deg);filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.acc-f .carbone{width:100%;height:100%;filter:drop-shadow(0 0 6px rgba(255,90,40,.5))}
+.acc-cam{position:relative;width:100%;aspect-ratio:2/1;border-radius:2px;box-shadow:inset 0 -6px 10px rgba(0,0,0,.35);
+  background:linear-gradient(90deg,rgba(0,0,0,.28),transparent 28%,transparent 72%,rgba(0,0,0,.32)),repeating-linear-gradient(0deg,#7e2c1f 0 1.5px,#b4523a 1.5px 9px)}
+.acc-cam::before{content:"";position:absolute;left:-7%;right:-7%;top:-12%;height:26%;border-radius:4px;background:#eef3fb;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.torre-p canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.torre-p .acc-cd{font-size:62px}
+.torre-msg{position:absolute;left:0;right:0;top:16%;text-align:center;font:400 32px/1 "Bebas Neue",sans-serif;color:#ffd86b;text-shadow:0 0 12px rgba(255,200,61,.8);opacity:0;pointer-events:none;z-index:3}
+.torre-msg.on{animation:torre-msg .9s ease-out}
+@keyframes torre-msg{0%{opacity:0;transform:scale(.7)}20%{opacity:1;transform:scale(1.12)}100%{opacity:0;transform:translateY(-22px)}}
+.pdn-p{cursor:crosshair}
+.pdn-f{position:absolute;left:50%;top:25%;width:24%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;z-index:2;transition:opacity .15s}
+.pdn-f.cambia{opacity:0}
+.pdn-faccia{position:relative;display:block;width:100%;aspect-ratio:1}
+.pdn-faccia .cappello{position:absolute;width:80%;left:-12%;top:-28%;transform:rotate(-16deg);filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.pdn-f small{margin-top:3px;padding:1px 6px;border-radius:6px;background:rgba(10,15,36,.75);color:#fff;font:800 11px Archivo,sans-serif;white-space:nowrap}
+.pdn-splat{position:absolute;left:50%;top:38%;width:120%;transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none}
+.pdn-splat svg{display:block;width:100%;filter:drop-shadow(0 0 4px rgba(170,200,255,.8))}
+.pdn-f.colpito .pdn-splat{animation:pdn-splat .7s ease-out}.pdn-f.colpito .pdn-faccia{animation:scossa .35s}
+@keyframes pdn-splat{0%{opacity:1;transform:translate(-50%,-50%) scale(.3)}25%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
+.pdn-palla{position:absolute;left:50%;top:86%;width:8%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#e4ebf6 60%,#b5c4dc);box-shadow:0 2px 6px rgba(0,0,0,.35);transform:translate(-50%,-50%);display:none;z-index:3}
+.pdn-mano{position:absolute;left:50%;bottom:1%;width:24%;transform:translateX(-50%);z-index:3;pointer-events:none}
+.pdn-mano svg{display:block;width:100%}
+.pdn-pm{position:absolute;left:44%;top:-8%;width:38%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#e4ebf6 60%,#b5c4dc);box-shadow:0 2px 5px rgba(0,0,0,.3);transition:transform .12s}
+.pdn-mano.scarica .pdn-pm{transform:scale(0)}
+/* classifica generale dell'avvento: tabella come il medagliere */
+.avv-tab tr.io td.chi .n{color:var(--menta)}
+.avv-mini{flex:none;width:34px;height:34px;border-radius:6px;display:grid;place-items:center;background:var(--k);color:#fff;font:400 22px/1 "Bebas Neue",sans-serif;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.avv-pt{flex:none;font:400 26px/1 "Bebas Neue",sans-serif;color:var(--giallo)}
 /* ---------- medagliere ---------- */
 .neon.oro{color:#fff8e6;text-shadow:0 0 2px #fff,0 0 8px #ffc83d,0 0 18px #ffc83d,0 0 38px rgba(255,200,61,.8),0 0 70px rgba(255,160,40,.45);animation-delay:-2s}
 .tw.k-medaglia{--k:#ffb627;--kt:rgba(255,182,39,.12);--kb:rgba(255,182,39,.5)}
@@ -3985,6 +4035,263 @@ GIOCHI_AVVENTO[4] = {
   }
 };
 
+// ---- aiutini per i giochini 5, 6 e 7 ----
+function suoniAvv() {   // piccoli suoni fatti al volo (niente file da scaricare)
+  let ac = null; try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  const pronto = () => { if (ac && ac.state === 'suspended') ac.resume(); return ac; };
+  return {
+    tono(f, tipo = 'sine', dur = .15, vol = .18, dopo = 0, f2) {
+      const a = pronto(); if (!a) return;
+      try {
+        const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + dopo; o.type = tipo; o.frequency.setValueAtTime(f, t);
+        if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + .02);
+      } catch (e) {}
+    },
+    rumore(dur = .15, freq = 1500, vol = .3) {
+      const a = pronto(); if (!a) return;
+      try {
+        const b = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+        const s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain(); fl.type = 'lowpass'; fl.frequency.value = freq; g.gain.value = vol;
+        s.buffer = b; s.connect(fl); fl.connect(g); g.connect(a.destination); s.start();
+      } catch (e) {}
+    }
+  };
+}
+const vibra = x => { try { if (navigator.vibrate) navigator.vibrate(x); } catch (e) {} };
+// le facce del gruppo (chi sta giocando no), in ordine sparso
+function facceAvv() {
+  const visti = new Set(), nomi = [];
+  const nomeVero = k => ((S.people || []).find(p => same(p.name, k)) || {}).name || cap(k);
+  [...(S.people || []).filter(p => !p.banned).map(p => p.name), ...Object.keys(S.av || {}).filter(k => okPath(S.av[k])).map(nomeVero)].forEach(n => {
+    const k = chiaveNome(n) || String(n).toLowerCase(); if (n && !visti.has(k)) { visti.add(k); nomi.push(n); }
+  });
+  let L = nomi.filter(n => !stessaPersona(n, S.me)); if (!L.length) L = nomi.length ? nomi : [S.me || 'Babbo'];
+  for (let i = L.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [L[i], L[j]] = [L[j], L[i]]; }
+  return L;
+}
+const CAPPELLO = '<svg class="cappello" viewBox="0 0 64 44" aria-hidden="true"><path d="M8 33C12 15 25 4 42 7c8 1.5 13 8 15 16l-6.5 2.5c-1.5-4-4-7-8-8.5C37 24 28 31 8 33z" fill="#e5193c" stroke="#8a0d22" stroke-width="1.5"/><rect x="3" y="30" width="48" height="11" rx="5.5" fill="#fff" stroke="#d9d9d9"/><circle cx="54" cy="24" r="6" fill="#fff" stroke="#d9d9d9"/></svg>';
+const CARBONE = '<svg class="carbone" viewBox="0 0 60 60" aria-label="Carbone"><path d="M9 40l5-17 15-9 17 5 7 17-8 13-21 3z" fill="#1c1c22" stroke="#000" stroke-width="1.5"/><path d="M17 26l11-6 9 3M21 42l13 2M38 31l7 6" stroke="#55555f" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>';
+// conto alla rovescia 3, 2, 1… e poi via (comune ai giochini 5, 6, 7)
+function contoAvv(box, cd, via) {
+  let c = 3; cd.textContent = c; cd.classList.add('on');
+  const conta = setInterval(() => {
+    if (!box.isConnected) return clearInterval(conta);
+    if (--c > 0) { cd.textContent = c; return; }
+    clearInterval(conta); cd.classList.remove('on'); via();
+  }, 800);
+}
+const scrittaAvv = (pan, x, y, testo, cls = '') => {   // "+1", "−1", "Mancato!" che vola via (x, y in %)
+  const z = document.createElement('span'); z.className = 'acc-b ' + cls; z.textContent = testo; z.style.left = x + '%'; z.style.top = y + '%';
+  pan.appendChild(z); setTimeout(() => z.remove(), 750);
+};
+
+// ---- casella 5: "Acchiappa il Pippegone" (Ricky, 21/11/2026) — dai comignoli spuntano le facce del gruppo: toccale! 15 secondi ----
+// ogni faccia presa +1, il carbone −1 (mai sotto zero). Più passa il tempo, più spuntano veloci e restano fuori meno.
+GIOCHI_AVVENTO[5] = {
+  nome: 'Acchiappa il Pippegone 🎅',
+  regole: 'Dai comignoli spuntano le facce del gruppo col cappello da Babbo Natale: <b>toccale</b> prima che rientrino! Hai <b>15 secondi</b>. Occhio al <b>carbone</b>: se lo tocchi perdi un punto.',
+  unita: ['pippegone', 'pippegoni'],
+  gioca(box, fine) {
+    const facce = facceAvv(), suoni = suoniAvv(), DURATA = 15000;
+    const POS = [[19, 45], [50, 39], [81, 45], [19, 81], [50, 75], [81, 81]];   // comignoli: centro e cima, in % del riquadro
+    box.innerHTML = `<div class="acc"><div class="acc-top"><span>Presi <b class="acc-n">0</b></span><span>⏱ <b class="acc-t">15,0</b></span></div>
+      <div class="acc-p"><svg class="acc-sf" viewBox="0 0 100 125" preserveAspectRatio="none" aria-hidden="true">
+          <circle cx="82" cy="14" r="7" fill="#fff6d6" opacity=".95"/><circle cx="85" cy="12" r="6" fill="#16224d"/>
+          ${[[10, 8], [24, 18], [40, 6], [58, 15], [70, 28], [30, 30], [92, 30], [6, 34]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".7" fill="#fff" opacity=".8"/>`).join('')}
+          <path d="M-5 60L50 50L105 60V125H-5z" fill="#5a1f22"/><path d="M-5 60L50 50L105 60L105 63L50 53L-5 63z" fill="#eef3fb"/>
+          <path d="M-5 104L50 96L105 104V125H-5z" fill="#7a2a2c"/><path d="M-5 104L50 96L105 104L105 107.5L50 99.5L-5 107.5z" fill="#eef3fb"/></svg>
+        ${POS.map(([x, y], i) => `<div class="acc-c" style="left:${x}%;top:${y}%"><div class="acc-buco"><button class="acc-f" data-i="${i}" tabindex="-1" aria-label="Comignolo ${i + 1}"></button></div><div class="acc-cam"></div></div>`).join('')}
+        <div class="acc-cd"></div></div>
+      <div class="cam-bar"><i></i></div><p class="acc-aiuto">Tocca le facce, non il carbone! 👆</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.acc-p'), nEl = $$('.acc-n'), tEl = $$('.acc-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+    const btn = [...box.querySelectorAll('.acc-f')], stato = POS.map(() => ({ su: false, tipo: '', timer: 0, libera: 0, preso: false }));
+    let n = 0, t0 = 0, finito = false, k = 0;
+    const giu = i => { const s = stato[i]; clearTimeout(s.timer); s.su = false; s.libera = performance.now() + 260; btn[i].classList.remove('su'); };
+    const spunta = () => {
+      if (finito || !box.isConnected) return;
+      const ora = performance.now(), el = Math.min(1, (ora - t0) / DURATA);   // da 0 a 1: si accelera
+      const liberi = stato.map((s, i) => !s.su && s.libera <= ora ? i : -1).filter(i => i >= 0);
+      if (liberi.length) {
+        const i = liberi[Math.floor(Math.random() * liberi.length)], s = stato[i], carbone = el > .1 && Math.random() < .2;
+        s.tipo = carbone ? 'c' : 'f'; s.su = true; s.preso = false;
+        btn[i].innerHTML = carbone ? CARBONE : `<span class="acc-faccia">${avatar(facce[k++ % facce.length])}${CAPPELLO}</span>`;
+        btn[i].className = 'acc-f' + (carbone ? ' nero' : ''); void btn[i].offsetWidth; btn[i].classList.add('su');
+        s.timer = setTimeout(() => giu(i), 1100 - 450 * el);
+      }
+      setTimeout(spunta, 700 - 330 * el);
+    };
+    btn.forEach((b, i) => b.addEventListener('pointerdown', e => {
+      e.preventDefault(); const s = stato[i]; if (!t0 || finito || !s.su || s.preso) return;
+      s.preso = true; clearTimeout(s.timer);
+      const [x, y] = POS[i];
+      if (s.tipo === 'f') { n++; b.classList.add('preso'); suoni.tono(620, 'sine', .12, .2, 0, 1150); vibra(12); scrittaAvv(pan, x, y - 14, '+1'); }
+      else { n = Math.max(0, n - 1); b.classList.add('no'); suoni.tono(150, 'square', .22, .12, 0, 90); vibra([30, 30, 30]); scrittaAvv(pan, x, y - 14, '−1', 'meno'); }
+      nEl.textContent = n; s.timer = setTimeout(() => giu(i), 200);
+    }));
+    const giro = now => {
+      if (!box.isConnected) return;
+      const resto = Math.max(0, DURATA - (now - t0));
+      tEl.textContent = (resto / 1000).toFixed(1).replace('.', ','); bar.style.width = resto / DURATA * 100 + '%';
+      if (resto > 0) return requestAnimationFrame(giro);
+      finito = true; stato.forEach((s, i) => giu(i));
+      cd.innerHTML = `STOP!<small>${n} ${n === 1 ? 'pippegone' : 'pippegoni'}</small>`; cd.classList.add('on');
+      setTimeout(() => fine(n), 1000);
+    };
+    requestAnimationFrame(() => box.querySelector('.acc').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); requestAnimationFrame(giro); spunta(); });
+  }
+};
+
+// ---- casella 6: "La torre di regali" (Ricky, 21/11/2026) — tocca per far cadere il regalo sulla pila; quello che sporge si taglia ----
+// risultato = regali messi sulla torre prima che crolli o finiscano i 25 secondi. Disegnata su un canvas 300×400.
+GIOCHI_AVVENTO[6] = {
+  nome: 'La torre di regali 🎁',
+  regole: 'Un regalo scorre avanti e indietro: <b>tocca lo schermo</b> per farlo cadere sulla pila. Il pezzo che sporge si taglia via e il regalo dopo è più piccolo, quindi mira bene! Se lo manchi la torre crolla. Hai <b>25 secondi</b>: vince la torre <b>più alta</b>.',
+  unita: ['regalo', 'regali'],
+  gioca(box, fine) {
+    const suoni = suoniAvv(), DURATA = 25000, W = 300, H = 400, BH = 26, BASE = H - 52;
+    const COL = [['#e5193c', '#ffd86b'], ['#1f9d55', '#ffffff'], ['#2f6fe0', '#ffd86b'], ['#f5b301', '#e5193c'], ['#8e44ff', '#ffffff'], ['#ff7a1a', '#1f9d55']];
+    const NEVE = Array.from({ length: 40 }, () => [Math.random() * W, Math.random() * H * 3, Math.random() * 1.6 + .6]);
+    box.innerHTML = `<div class="torre"><div class="acc-top"><span>Regali <b class="torre-n">0</b></span><span>⏱ <b class="torre-t">25,0</b></span></div>
+      <div class="torre-p"><canvas aria-label="La torre di regali"></canvas><div class="torre-msg"></div><div class="acc-cd"></div></div>
+      <div class="cam-bar"><i></i></div><p class="acc-aiuto">Tocca quando il regalo è sopra la pila 👆</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.torre-p'), cv = $$('canvas'), g = cv.getContext('2d'), nEl = $$('.torre-n'), tEl = $$('.torre-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd'), msgEl = $$('.torre-msg');
+    let pila = [{ x: 70, w: 160, c: -1 }], m = null, cadute = [], cam = 0, n = 0, t0 = 0, finito = false, ult = performance.now(), larg = 0;
+    const nuovo = () => { const top = pila[pila.length - 1], da = n % 2 ? W - top.w : 0; m = { x: da, w: top.w, dir: n % 2 ? -1 : 1, v: Math.min(270, 120 + n * 9), c: n % COL.length }; };
+    const misura = () => { const r = pan.getBoundingClientRect(), d = Math.min(3, window.devicePixelRatio || 1); larg = r.width; cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); };
+    const regalo = (x, y, w, c, fiocco) => {
+      if (c < 0) {   // la base: un tavolo di legno
+        g.fillStyle = '#7a4a2a'; g.fillRect(x, y, w, BH - 8); g.fillStyle = '#5d371e'; g.fillRect(x + 10, y + BH - 8, 9, H); g.fillRect(x + w - 19, y + BH - 8, 9, H);
+        g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(x, y, w, 3); return;
+      }
+      const [f, na] = COL[c], h = BH - 2;
+      g.fillStyle = f; g.fillRect(x, y, w, h);
+      g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(x, y + h - 5, w, 5);
+      g.fillStyle = na; const nw = Math.min(9, w * .16); g.fillRect(x + w / 2 - nw / 2, y, nw, h); g.fillRect(x, y + h / 2 - 2.5, w, 5);
+      g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.strokeRect(x + .5, y + .5, w - 1, h - 1);
+      if (fiocco && w > 14) {
+        g.fillStyle = na; g.beginPath(); g.ellipse(x + w / 2 - 7, y - 3, 7, 4.5, -.4, 0, Math.PI * 2); g.ellipse(x + w / 2 + 7, y - 3, 7, 4.5, .4, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.arc(x + w / 2, y - 2, 3, 0, Math.PI * 2); g.fill();
+      }
+    };
+    const disegna = () => {
+      if (Math.abs(pan.getBoundingClientRect().width - larg) > 1) misura();
+      g.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+      const cielo = g.createLinearGradient(0, 0, 0, H); cielo.addColorStop(0, '#0b1636'); cielo.addColorStop(1, '#24376f'); g.fillStyle = cielo; g.fillRect(0, 0, W, H);
+      g.fillStyle = 'rgba(255,255,255,.75)'; NEVE.forEach(([x, y, r]) => { g.beginPath(); g.arc(x, ((y + cam * .4) % (H + 10)), r, 0, Math.PI * 2); g.fill(); });
+      g.save(); g.translate(0, cam);
+      g.fillStyle = '#e8eef8'; g.fillRect(0, BASE + BH - 8, W, H);   // neve per terra
+      pila.forEach((b, i) => regalo(b.x, BASE - i * BH, b.w, b.c, false));
+      if (m) regalo(m.x, BASE - pila.length * BH, m.w, m.c, true);
+      cadute.forEach(c => { g.save(); g.translate(c.x + c.w / 2, c.y + BH / 2); g.rotate(c.r); regalo(-c.w / 2, -BH / 2, c.w, c.c, false); g.restore(); });
+      g.restore();
+    };
+    const scritta = t => { msgEl.textContent = t; msgEl.classList.remove('on'); void msgEl.offsetWidth; msgEl.classList.add('on'); };
+    const chiudi = testo => {
+      if (finito) return; finito = true; m = null;
+      setTimeout(() => { cd.innerHTML = `${testo}<small>${n} ${n === 1 ? 'regalo' : 'regali'}</small>`; cd.classList.add('on'); }, 500);
+      setTimeout(() => fine(n), 1600);
+    };
+    const giro = now => {
+      if (!box.isConnected) return;
+      const dt = Math.min(.05, (now - ult) / 1000); ult = now;
+      if (t0 && !finito) {
+        const resto = Math.max(0, DURATA - (now - t0));
+        tEl.textContent = (resto / 1000).toFixed(1).replace('.', ','); bar.style.width = resto / DURATA * 100 + '%';
+        if (m) { m.x += m.dir * m.v * dt; if (m.x <= 0) { m.x = 0; m.dir = 1; } else if (m.x >= W - m.w) { m.x = W - m.w; m.dir = -1; } }
+        if (resto <= 0) chiudi('TEMPO!');
+      }
+      cam += (Math.max(0, (pila.length - 8) * BH) - cam) * Math.min(1, dt * 6);
+      cadute.forEach(c => { c.vy += 900 * dt; c.y += c.vy * dt; c.r += c.vr * dt; });
+      cadute = cadute.filter(c => c.y < H + 80 - Math.min(0, cam));
+      disegna(); requestAnimationFrame(giro);
+    };
+    pan.addEventListener('pointerdown', e => {
+      e.preventDefault(); if (!t0 || finito || !m) return;
+      const top = pila[pila.length - 1], a = Math.max(m.x, top.x), b = Math.min(m.x + m.w, top.x + top.w), ov = b - a, y = BASE - pila.length * BH;
+      if (ov <= 1) {   // mancato: il regalo cade e la torre crolla
+        cadute.push({ x: m.x, y, w: m.w, c: m.c, vy: 0, r: 0, vr: m.dir * 2 }); m = null;
+        suoni.tono(200, 'sawtooth', .4, .12, 0, 60); vibra(90); return chiudi('CROLLATA!');
+      }
+      let x = a, w = ov;
+      if (Math.abs(m.x - top.x) <= 3) { x = top.x; w = top.w; scritta('Perfetto! ✨'); suoni.tono(990, 'sine', .16, .18, 0, 1480); vibra(15); }
+      else {
+        cadute.push(m.x < top.x ? { x: m.x, y, w: top.x - m.x, c: m.c, vy: 0, r: 0, vr: -2.5 } : { x: b, y, w: m.x + m.w - b, c: m.c, vy: 0, r: 0, vr: 2.5 });
+        suoni.tono(500 + Math.min(n, 24) * 22, 'triangle', .12, .16); vibra(8);
+      }
+      pila.push({ x, w, c: m.c }); n++; nEl.textContent = n; nuovo();
+    });
+    pan.torre = () => m && { x: m.x, w: m.w, tx: pila[pila.length - 1].x };   // per i test automatici
+    misura(); nuovo(); requestAnimationFrame(giro);
+    requestAnimationFrame(() => box.querySelector('.torre').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); });
+  }
+};
+
+// ---- casella 7: "Palla di neve in faccia" (Ricky, 21/11/2026) — la faccia di un amico scorre: tocca per tirargli una palla di neve ----
+// una palla alla volta (vola in 0,42 s dal basso al centro); centro = la faccia è sopra il punto di mira quando arriva. 15 secondi.
+GIOCHI_AVVENTO[7] = {
+  nome: 'Palla di neve in faccia ☃️',
+  regole: 'La faccia di un amico scorre avanti e indietro: <b>tocca lo schermo</b> per tirargli una palla di neve dritta in mezzo e cerca di <b>centrarlo</b>! Una palla alla volta, <b>15 secondi</b>. Vince chi fa più centri.',
+  unita: ['centro', 'centri'],
+  gioca(box, fine) {
+    const facce = facceAvv(), suoni = suoniAvv(), DURATA = 15000, VOLO = .42, YF = 25, YP = 86, MIRA = 50, PRESA = 12;   // posizioni in % del riquadro
+    box.innerHTML = `<div class="pdn"><div class="acc-top"><span>Centri <b class="pdn-n">0</b></span><span>⏱ <b class="pdn-t">15,0</b></span></div>
+      <div class="pdn-p"><svg class="acc-sf" viewBox="0 0 100 125" preserveAspectRatio="none" aria-hidden="true">
+          ${[[8, 10], [22, 22], [38, 7], [62, 14], [78, 26], [90, 9], [14, 40], [86, 44]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".7" fill="#fff" opacity=".8"/>`).join('')}
+          <path d="M-5 92Q25 84 50 90T105 88V125H-5z" fill="#eaf0fa"/><path d="M-5 100Q30 94 60 99T105 97V125H-5z" fill="#f7faff"/>
+          <path d="M50 58v40" stroke="rgba(255,255,255,.18)" stroke-width=".6" stroke-dasharray="2 2"/></svg>
+        <div class="pdn-f"><span class="pdn-faccia"></span><small></small><span class="pdn-splat"><svg viewBox="0 0 100 100"><path d="M50 6c7 11 19 1 23 13s17 8 12 21 11 16 0 25-3 21-16 19-12 15-22 8-21 7-25-6-19-6-14-19-15-14-6-25-9-21 6-23 9-17 21-13 15-3 27-6z" fill="#fff"/><circle cx="20" cy="18" r="5" fill="#fff"/><circle cx="86" cy="80" r="4" fill="#fff"/></svg></span></div>
+        <div class="pdn-palla"></div>
+        <div class="pdn-mano"><svg viewBox="0 0 60 50" aria-hidden="true"><path d="M14 46c-6-6-7-18-2-26l6-8c2-3 6-3 8 0l3 5 3-8c2-3 6-3 7 1l1 8 4-3c3-2 7 0 7 4l-2 14c-1 7-5 12-11 15z" fill="#e5193c" stroke="#8a0d22" stroke-width="1.5"/><rect x="12" y="40" width="30" height="9" rx="3" fill="#fff"/></svg><i class="pdn-pm"></i></div>
+        <div class="acc-cd"></div></div>
+      <div class="cam-bar"><i></i></div><p class="acc-aiuto">Tocca per tirare! ❄️</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.pdn-p'), nEl = $$('.pdn-n'), tEl = $$('.pdn-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+    const fEl = $$('.pdn-f'), faccia = $$('.pdn-faccia'), nome = $$('.pdn-f small'), palla = $$('.pdn-palla'), mano = $$('.pdn-mano');
+    let n = 0, t0 = 0, finito = false, ult = performance.now(), fase = Math.random() * 6, om = 2.3, A = 34, verso = 1, k = 0, volo = null, ricarica = 0, fx = MIRA;
+    const metti = () => { const nm = facce[k++ % facce.length]; faccia.innerHTML = `${avatar(nm)}${CAPPELLO}`; nome.textContent = nm; };
+    const giro = now => {
+      if (!box.isConnected) return;
+      const dt = Math.min(.05, (now - ult) / 1000); ult = now;
+      fase += verso * om * dt; fx = MIRA + A * Math.sin(fase);
+      fEl.style.left = fx + '%'; fEl.style.top = (YF + 1.6 * Math.sin(fase * 2.3)) + '%';
+      if (volo) {
+        volo.t += dt; const p = Math.min(1, volo.t / VOLO);
+        palla.style.top = (YP - (YP - YF) * p) + '%'; palla.style.transform = `translate(-50%,-50%) scale(${1.35 - .65 * p})`;
+        if (p >= 1) {
+          volo = null; palla.style.display = 'none'; ricarica = now + 150;
+          if (Math.abs(fx - MIRA) <= PRESA) {   // centrato!
+            n++; nEl.textContent = n; suoni.rumore(.2, 1100, .4); suoni.tono(300, 'sine', .12, .12, .03, 180); vibra(25);
+            fEl.classList.remove('colpito'); void fEl.offsetWidth; fEl.classList.add('colpito'); scrittaAvv(pan, MIRA, YF - 12, '+1');
+            om = Math.min(6, om + .3); A = 28 + Math.random() * 10; verso = Math.random() < .5 ? -1 : 1;
+            setTimeout(() => { if (!finito) { fEl.classList.add('cambia'); setTimeout(() => { metti(); fEl.classList.remove('cambia', 'colpito'); }, 160); } }, 380);
+          } else { suoni.tono(420, 'sine', .1, .06, 0, 250); scrittaAvv(pan, MIRA, YF + 14, 'Mancato!', 'grigio'); }
+        }
+      }
+      mano.classList.toggle('scarica', !!volo || now < ricarica);
+      if (t0 && !finito) {
+        const resto = Math.max(0, DURATA - (now - t0));
+        tEl.textContent = (resto / 1000).toFixed(1).replace('.', ','); bar.style.width = resto / DURATA * 100 + '%';
+        if (resto <= 0) {
+          finito = true; volo = null; palla.style.display = 'none';
+          cd.innerHTML = `STOP!<small>${n} ${n === 1 ? 'centro' : 'centri'}</small>`; cd.classList.add('on'); setTimeout(() => fine(n), 1000);
+        }
+      }
+      requestAnimationFrame(giro);
+    };
+    pan.addEventListener('pointerdown', e => {
+      e.preventDefault(); if (!t0 || finito || volo || performance.now() < ricarica) return;
+      volo = { t: 0 }; palla.style.display = 'block'; palla.style.top = YP + '%'; suoni.tono(700, 'triangle', .08, .08, 0, 400);
+    });
+    pan.mira = () => !!t0 && !finito && !volo && performance.now() >= ricarica && Math.abs(A * Math.sin(fase + verso * om * VOLO)) <= PRESA - 4;   // per i test automatici
+    metti(); requestAnimationFrame(giro);
+    requestAnimationFrame(() => box.querySelector('.pdn').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); });
+  }
+};
+
 const unitaAvv = (g, r) => g.formato ? g.formato(r) : `${r} ${r === 1 ? g.unita[0] : g.unita[1]}`;
 async function caricaAvvento() { S.avv = await rpc('avvento_classifica'); return S.avv; }
 function risultatoAvvHTML(C, n, g) {
@@ -4073,9 +4380,19 @@ function drawClassificaAvv() {
   const el = $('#avv-cl'); if (!el) return;
   if (!S.avv) { if (S.avvErr) el.innerHTML = `<p class="muto">${S.avvErr.message === 'NO_DB' ? 'La classifica arriva con il prossimo aggiornamento del database.' : esc(msg(S.avvErr))}</p>`; return; }
   aggiornaCaselle();
-  const T = S.avv.totale || [], med = ['🥇', '🥈', '🥉'];
-  el.innerHTML = T.length ? T.map((x, i) => `<div class="avv-gr-r${stessaPersona(x.name, S.me) ? ' io' : ''}"><span class="pos">${med[i] || (i + 1) + '°'}</span>${avatar(x.name, 's')}<span class="nm">${esc(x.name)}<small>${x.giochi} ${x.giochi === 1 ? 'giochino' : 'giochini'}</small></span><b class="pt">${x.punti} pt</b></div>`).join('')
+  const T = S.avv.totale || [];
+  el.innerHTML = T.length ? `<table class="med-tab avv-tab"><thead><tr><th>#</th><th>Chi</th><th title="Caselle vinte">🏆</th><th title="Giochini fatti">🎮</th><th>Punti</th></tr></thead><tbody>
+      ${T.map((x, i) => `<tr class="${i < 3 ? 'p' + (i + 1) : ''}${stessaPersona(x.name, S.me) ? ' io' : ''}" data-chi="${esc(x.name)}"><td class="pos">${i + 1}</td><td class="chi"><span class="chi-in">${avatar(x.name, 's')}<span class="n">${esc(x.name)}</span></span></td><td class="${x.primi ? '' : 'z'}">${x.primi || 0}</td><td>${x.giochi}</td><td class="tot">${x.punti}</td></tr>`).join('')}
+      </tbody></table><p class="hint">In ogni casella 5, 4, 3, 2 e 1 punti ai primi cinque. A pari punti vince chi ha vinto più caselle 🏆, poi chi ha giocato prima. Tocca un nome per vedere le sue caselle.</p>`
     : `<p class="muto">${giornoAvvento() === 0 ? 'Si parte il 1° dicembre: qui vedrete chi fa più punti con i giochini.' : 'Ancora nessun punto: gioca la casella di oggi!'}</p>`;
+  el.querySelectorAll('[data-chi]').forEach(r => r.onclick = () => caselleDi(r.dataset.chi));
+}
+// le caselle di una persona: risultato, posto e punti di ogni giochino
+function caselleDi(nome) {
+  const G = ((S.avv && S.avv.giorni) || []).filter(x => stessaPersona(x.name, nome)).sort((a, b) => a.giorno - b.giorno), tot = G.reduce((t, x) => t + x.punti, 0);
+  sheet(`<div class="med-s">${avatar(nome, 'xl')}<h3>${esc(nome)}</h3><p class="muto" style="margin:-4px 0 12px"><b>${tot}</b> ${tot === 1 ? 'punto' : 'punti'} · ${G.length} ${G.length === 1 ? 'giochino' : 'giochini'}</p>
+    <div class="med-ult">${G.map(x => { const g = GIOCHI_AVVENTO[x.giorno]; return `<div class="med-r"><span class="avv-mini" style="--k:${AVV_COL[AVV_ORDINE.indexOf(x.giorno) % AVV_COL.length]}">${x.giorno}</span><span class="med-rb"><b>${esc(g ? g.nome : 'Casella ' + x.giorno)}</b><span>${esc(g ? unitaAvv(g, x.punteggio) : String(x.punteggio))} · ${x.pos}° posto</span></span><b class="avv-pt">${x.punti ? '+' + x.punti : '0'}</b></div>`; }).join('') || '<p class="muto">Ancora nessun giochino finito.</p>'}</div>
+    <div class="row end"><button class="btn" data-close>Ok</button></div></div>`);
 }
 // laboratorio: solo per l'amministratore (chiede il PIN amministratore). Tutte le caselle si provano subito, i punti non contano
 function viewLab() {
@@ -4823,7 +5140,7 @@ function creaDemo() {
       D.avv.push({ giorno: a.p_giorno, name: n, punteggio: null, created_at: t(0) }); return { ok: true };
     },
     avvento_gioca: a => {
-      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500, 4: 4200 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30, 4: 40 }[a.p_giorno] || 0))) throw err('PUNTEGGIO_NON_VALIDO');
+      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500, 4: 4200, 5: 60, 6: 100, 7: 40 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30, 4: 40 }[a.p_giorno] || 0))) throw err('PUNTEGGIO_NON_VALIDO');
       const p = D.avv.find(y => y.giorno === a.p_giorno && stessaPersona(y.name, clean(a.p_name, 30)));
       if (!p) return { err: 'TEMPO_SCADUTO' }; if (p.punteggio != null) return { err: 'GIA_GIOCATO' };
       p.punteggio = a.p_punteggio; return { ok: true };

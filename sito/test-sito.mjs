@@ -785,7 +785,7 @@ ok(true, 'l\'amministratore li toglie: tornano nelle Novità')
 // laboratorio dei giochi dell'avvento: solo per l'amministratore (Area amministratore sbloccata)
 await vai(ricky, 'avvento'); await ricky.waitForSelector('.lab-in')
 await ricky.click('.lab-in'); await ricky.waitForSelector('.lab-r')
-ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('4 su 19') && (await ricky.locator('.lab-r.pronto').count()) === 4 && (await ricky.textContent('.lab-r.pronto >> nth=3')).includes('transenne') && (await ricky.textContent('.lab-r.pronto >> nth=0')).includes('Ema fotografa la Fra') && (await ricky.textContent('.lab-r.pronto >> nth=1')).includes('Cava') && (await ricky.textContent('.lab-r.pronto >> nth=2')).includes('Memory'), 'laboratorio: le 19 caselle, pronti i giochini 1 (Ema fotografa la Fra), 2 (il lavaggio del Cava), 3 (il memory) e 4 (le transenne della Nicole)')
+ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('7 su 19') && (await ricky.locator('.lab-r.pronto').count()) === 7 && (await ricky.textContent('.lab-r.pronto >> nth=3')).includes('transenne') && (await ricky.textContent('.lab-r.pronto >> nth=4')).includes('Pippegone') && (await ricky.textContent('.lab-r.pronto >> nth=5')).includes('torre') && (await ricky.textContent('.lab-r.pronto >> nth=6')).includes('Palla di neve') && (await ricky.textContent('.lab-r.pronto >> nth=0')).includes('Ema fotografa la Fra') && (await ricky.textContent('.lab-r.pronto >> nth=1')).includes('Cava') && (await ricky.textContent('.lab-r.pronto >> nth=2')).includes('Memory'), 'laboratorio: le 19 caselle, pronti i giochini 1 (Ema fotografa la Fra), 2 (il lavaggio del Cava), 3 (il memory), 4 (le transenne della Nicole), 5 (Acchiappa il Pippegone), 6 (la torre di regali) e 7 (palla di neve in faccia)')
 // prova del giochino 1 nel laboratorio (a novembre!): i risultati non si salvano
 await ricky.click('.lab-r:has(.lab-n:text-is("1")) [data-prova]'); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via')
 await ricky.waitForSelector('.cam-scatta:not([disabled])', { timeout: 10000 }); await shot(ricky, '42-fotocamera')
@@ -868,6 +868,33 @@ await ricky.waitForSelector('.perc-p'); await ricky.waitForFunction(() => !docum
 await ricky.waitForSelector('#avv-ri', { timeout: 20000 })
 ok(/^\d+,\d s$/.test((await ricky.textContent('.avv-ris b')).trim()) && (await ricky.textContent('.avv-ris')).includes('non salvate'), 'laboratorio: transenne finite, il risultato è il tempo coi +3 secondi (non salvato)')
 await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
+// caselle 5, 6, 7 (Ricky, 21/11/2026): un "robot" dentro la pagina gioca come una persona molto brava
+const provaLab = async n => { await ricky.click(`.lab-r:has(.lab-n:text-is("${n}")) [data-prova]`); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via'); await ricky.waitForFunction(() => !document.querySelector('.acc-cd.on'), null, { timeout: 10000 }) }
+const risLab = async () => { await ricky.waitForSelector('#avv-ri', { timeout: 30000 }); const r = (await ricky.textContent('.avv-ris b')).trim(); await ricky.click('.sheet [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov')); return r }
+await provaLab(5)
+const carb5 = await ricky.evaluate(() => new Promise(fatto => { let carb = null; const t = setInterval(() => {
+  const n = +document.querySelector('.acc-n').textContent, f = document.querySelector('.acc-f.su:not(.preso):not(.nero)'), c = document.querySelector('.acc-f.su.nero:not(.preso)')
+  if (c && carb === null && n >= 3) { c.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); carb = [n, +document.querySelector('.acc-n').textContent] }
+  else if (f) f.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))
+  if (document.querySelector('.acc-cd.on')) { clearInterval(t); fatto(carb) } }, 110) }))
+const r5 = await risLab(), n5 = parseInt(r5)
+ok(/^\d+ pippegon[ei]$/.test(r5) && n5 >= 8 && (!carb5 || carb5[1] === carb5[0] - 1), `Acchiappa il Pippegone: ${r5} in 15 secondi${carb5 ? ', toccare il carbone toglie un punto' : ''}`)
+await provaLab(6)
+const s6 = await ricky.evaluate(() => new Promise(fatto => { const pan = document.querySelector('.torre-p'); let perfetti = 0; const giro = () => {
+  if (!pan.isConnected || document.querySelector('.acc-cd.on')) return fatto(perfetti)
+  const s = pan.torre && pan.torre(), n = +document.querySelector('.torre-n').textContent
+  if (s && n < 12 && Math.abs(s.x - s.tx) < 2.5) { pan.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); perfetti++ }
+  else if (s && n >= 12 && Math.abs(s.x - s.tx) > s.w + 4) pan.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))   // poi la manca apposta
+  requestAnimationFrame(giro) }; giro() }))
+const r6 = await risLab()
+ok(r6 === '12 regali' && s6 === 12, 'La torre di regali: 12 regali messi al centimetro, poi uno mancato → la torre crolla e il gioco finisce')
+await provaLab(7)
+await ricky.evaluate(() => new Promise(fatto => { const pan = document.querySelector('.pdn-p'); const giro = () => {
+  if (!pan.isConnected || document.querySelector('.acc-cd.on')) return fatto()
+  if (pan.mira && pan.mira()) pan.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))
+  requestAnimationFrame(giro) }; giro() }))
+const r7 = await risLab()
+ok(/^\d+ centr[oi]$/.test(r7) && parseInt(r7) >= 5, `Palla di neve in faccia: ${r7} in 15 secondi tirando al momento giusto`)
 await vai(marco, 'avvento'); await marco.waitForSelector('.avv-c')
 ok(await marco.locator('.lab-in').count() === 0, 'Marco non vede il laboratorio')
 await marco.evaluate(() => { location.hash = '#avvento/lab' }); await marco.waitForSelector('#lab-pin')
@@ -1244,7 +1271,7 @@ for (const [quando, aperte, chiuse] of [[new Date(2026, 10, 17, 12), 0, 19], [ne
     await av.click('.avv-c[data-n="1"]'); ok((await toastText(av)).includes('si apre il 1 dicembre'), 'casella chiusa: dice quando si apre')
   } else {
     ok(await av.getAttribute('.avv-c.oggi', 'data-n') === '5', 'il 5 dicembre si accende la casella 5')
-    await av.click('.avv-c.oggi'); await av.waitForSelector('.avv-s'); ok((await av.textContent('.avv-s')).includes('Casella del 5 dicembre'), 'toccando la casella di oggi si apre (giochino in arrivo)')
+    await av.click('.avv-c.oggi'); await av.waitForSelector('.avv-s #avv-via'); ok((await av.textContent('.avv-s')).includes('Acchiappa il Pippegone'), 'toccando la casella di oggi si apre col suo giochino (Acchiappa il Pippegone)')
     await shot(av, '40-avvento-5-dicembre'); await av.click('.sheet [data-close]')
     await av.click('.avv-c[data-n="6"]'); ok((await toastText(av)).includes('si apre il 6 dicembre'), 'la casella di domani resta chiusa')
   }
@@ -1268,10 +1295,15 @@ await giuD.click('.sheet [data-close]'); await giuD.waitForFunction(() => !docum
 await fotografa(marD, 20)
 ok((await marD.textContent('.avv-ris')).includes('20 foto') && (await marD.textContent('.avv-gr')).includes('Giulia') && (await marD.textContent('.avv-ris')).includes('+5 punti'), 'Marco: 20 foto, passa primo (+5), Giulia seconda')
 await shot(marD, '43-avvento-risultato'); await marD.click('.sheet [data-close]'); await marD.waitForFunction(() => !document.querySelector('.ov'))
-await marD.waitForFunction(() => document.querySelectorAll('#avv-cl .avv-gr-r').length === 2)
-ok((await marD.textContent('#avv-cl .avv-gr-r >> nth=0')).includes('Marco') && (await marD.textContent('#avv-cl .avv-gr-r >> nth=0')).includes('5 pt') && (await marD.textContent('#avv-cl .avv-gr-r >> nth=1')).includes('4 pt'), 'classifica generale: Marco 5 punti, Giulia 4')
+await marD.waitForFunction(() => document.querySelectorAll('#avv-cl tbody tr').length === 2)
+const rigaCl = async i => marD.$eval(`#avv-cl tbody tr:nth-child(${i})`, r => [...r.cells].map(c => (c.querySelector('.n') || c).textContent.trim()).join('|'))
+ok(await rigaCl(1) === '1|Marco|1|1|5' && await rigaCl(2) === '2|Giulia|0|1|4' && await marD.locator('#avv-cl tr.io').count() === 1, 'classifica generale: Marco 5 punti, Giulia 4')
 ok(await marD.locator('.avv-c.oggi.fatta').count() === 1, 'la casella di oggi diventa "Oggi ✓" per chi ha giocato')
 await shot(marD, '44-avvento-classifica')
+await marD.click('#avv-cl tr[data-chi="Giulia"]'); await marD.waitForSelector('.med-s .avv-mini')
+ok((await marD.textContent('.med-s')).includes('Ema fotografa la Fra') && (await marD.textContent('.med-s')).includes('12 foto') && (await marD.textContent('.med-s')).includes('2° posto') && (await marD.textContent('.med-s .avv-pt')) === '+4',
+  'classifica: toccando Giulia si vedono le sue caselle (Ema fotografa la Fra · 12 foto · 2° posto · +4)')
+await marD.click('.med-s [data-close]'); await marD.waitForFunction(() => !document.querySelector('.ov'))
 await giuD.click('.avv-c.oggi'); await giuD.waitForSelector('.avv-ris')
 ok(await giuD.locator('#avv-via').count() === 0 && (await giuD.textContent('.avv-ris')).includes('2° posto') && (await giuD.textContent('.avv-ris')).includes('+4 punti'), 'Giulia riapre la casella: niente secondo tentativo, ora è seconda (+4)')
 await ricD.click('.avv-c.oggi'); await ricD.waitForSelector('#avv-via'); await ricD.click('#avv-via'); await ricD.waitForSelector('.avv-gioco .empty')
