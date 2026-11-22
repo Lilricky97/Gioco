@@ -806,6 +806,41 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .perc-cd{position:absolute;inset:0;display:none;place-items:center;font:400 90px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 22px var(--rosa);background:rgba(10,15,36,.55);z-index:5;text-align:center}
 .perc-cd.on{display:grid}.perc-cd small{display:block;font:800 16px Archivo,sans-serif;color:var(--giallo);text-shadow:none;margin-top:6px;padding:0 10px;line-height:1.4}.perc-cd small b{color:#fff}
 .perc-aiuto{margin:0;font:700 13px Archivo,sans-serif;color:var(--muto);text-align:center;min-height:2.6em}
+/* ---------- avvento: giochini 8 (chi l'ha scritto), 9 (anagrammi), 10 (differenze) + parole del Laboratorio ---------- */
+.chi,.ana,.dif{display:flex;flex-direction:column;align-items:center;gap:8px;user-select:none;-webkit-user-select:none}
+.chi-p,.ana-p{position:relative;width:min(100%,380px);min-height:340px;display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 12px;border-radius:12px;background:linear-gradient(#141d45,#0e1533);box-shadow:0 0 0 2px rgba(255,255,255,.1)}
+.chi-post{position:relative;width:100%;min-height:110px;padding:16px 16px 14px 34px;border-radius:10px;background:#fff8e8;color:#2a1d10;box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;align-items:center}
+.chi-v{position:absolute;left:8px;top:-4px;font:400 60px/1 Georgia,serif;color:#e5193c}
+.chi-testo{margin:0;font:600 16px/1.4 Archivo,sans-serif;overflow-wrap:anywhere;max-height:9.8em;overflow:hidden}
+.chi-dom{margin:0;font:400 24px/1 "Bebas Neue",sans-serif;letter-spacing:.06em;color:var(--giallo)}
+.chi-op{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.chi-o{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--testo);font:700 15px Archivo,sans-serif;cursor:pointer;min-width:0;text-align:left}
+.chi-o span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chi-o .av{width:34px;height:34px;font-size:15px}
+.chi-o.ok{border-color:var(--menta);background:rgba(70,245,192,.16);box-shadow:0 0 0 2px var(--menta),0 0 14px rgba(70,245,192,.5)}
+.chi-o.no{border-color:#ff2040;background:rgba(255,32,64,.15);animation:scossa .3s}
+.ana-ind{margin:4px 0 0;min-height:1.3em;font:700 14px Archivo,sans-serif;color:var(--muto);text-align:center}
+.ana-slot{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;min-height:46px}
+.ana-slot span{width:30px;height:40px;border-radius:6px;border:2px dashed rgba(255,255,255,.25);display:grid;place-items:center;font:400 28px/1 "Bebas Neue",sans-serif;color:#fff}
+.ana-slot span.su{border-style:solid;border-color:var(--giallo);background:rgba(255,216,107,.12)}
+.ana-slot.ok span{border-color:var(--menta);background:rgba(70,245,192,.2);color:var(--menta)}.ana-slot.no{animation:scossa .35s}.ana-slot.no span{border-color:#ff2040;background:rgba(255,32,64,.15)}
+.ana-let{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-top:6px}
+.ana-l{width:44px;height:48px;border-radius:8px;border:0;background:linear-gradient(#ffe9a8,#f5c84c);color:#3a2600;font:400 30px/1 "Bebas Neue",sans-serif;box-shadow:0 4px 0 #b88a1c,0 6px 10px rgba(0,0,0,.35);cursor:pointer;transition:transform .08s,opacity .15s;touch-action:manipulation}
+.ana-l:active{transform:translateY(3px);box-shadow:0 1px 0 #b88a1c}.ana-l:disabled{opacity:.18;transform:scale(.9);box-shadow:none}
+.ana-az{display:flex;gap:8px;margin-top:auto}
+.dif-p{position:relative;display:flex;flex-direction:column;gap:6px;width:min(100%,360px,calc((88dvh - 250px) * .75))}
+.dif-p svg{display:block;width:100%;aspect-ratio:3/2;border-radius:10px;box-shadow:0 0 0 2px rgba(255,255,255,.12),0 6px 16px rgba(0,0,0,.4);touch-action:manipulation;cursor:pointer}
+.dif-p.no{animation:scossa .25s}
+.dif-ok{fill:none;stroke:#46f5c0;stroke-width:3;filter:drop-shadow(0 0 3px #46f5c0)}
+.dif-manca{fill:none;stroke:#ffd86b;stroke-width:2.5;stroke-dasharray:4 3}
+.dif-x{stroke:#ff2040;stroke-width:3;stroke-linecap:round;animation:dif-x .8s forwards}
+@keyframes dif-x{to{opacity:0}}
+.par-l{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.par-r{display:grid;grid-template-columns:18px 1fr 1.2fr;gap:6px;align-items:center}.par-r span{font:400 20px "Bebas Neue",sans-serif;color:var(--muto)}
+.par-r input{margin:0;min-width:0}.par-r input[name^=p]{text-transform:uppercase;font-weight:800;letter-spacing:.06em}
+.par-h{margin:14px 0 6px;font-size:14px}.par-h small{color:var(--muto);font-weight:500}
+.par-top{display:flex;flex-wrap:wrap;gap:6px;max-height:170px;overflow:auto}
+.par-c{padding:5px 10px;border-radius:16px;border:1px solid var(--line);background:var(--campo);color:var(--testo);font:800 13px Archivo,sans-serif;letter-spacing:.04em;cursor:pointer}
+.par-c small{color:var(--muto);font-weight:600}.par-c.usata{border-color:var(--menta);color:var(--menta)}
 /* ---------- avvento: giochini 5 (comignoli), 6 (torre di regali), 7 (palla di neve) ---------- */
 .acc,.torre,.pdn{display:flex;flex-direction:column;align-items:center;gap:8px;user-select:none;-webkit-user-select:none}
 .acc-top{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:360px;font:800 13px Archivo,sans-serif;color:var(--muto)}
@@ -1096,6 +1131,8 @@ const MSG = {
   NON_AUTORIZZATO: 'Può farlo solo chi l\'ha creato.',
   PERSONA_SCONOSCIUTA: 'Questa persona non è nel gruppo.',
   MEDAGLIA_NON_VALIDA: 'Scegli oro, argento o bronzo.',
+  PREMI_GIOCA: 'Premi Gioca per iniziare.',
+  PAROLE_NON_VALIDE: 'Ogni parola deve avere da 3 a 12 lettere, senza numeri né spazi.',
   TROPPI_FISSATI: 'Puoi mettere in evidenza al massimo 5 post: prima togline uno (puntina in basso, poi tocca la 📌 sotto il post).',
   NOTIFICHE_NEGATE: 'Non hai dato il permesso. Se hai toccato "Non consentire", riattivale dalle impostazioni del telefono.',
   NOTIFICHE_NON_PRONTE: 'Le notifiche non sono ancora pronte (manca un passaggio su Supabase che deve fare Ricky). Riprova più tardi.',
@@ -4292,6 +4329,232 @@ GIOCHI_AVVENTO[7] = {
   }
 };
 
+// ---- caselle 8, 9, 10 (Ricky, 22/11/2026) ----
+async function sha256hex(t) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+const fermaAvv = (box, testo, dopo) => { box.innerHTML = `<div class="empty">${testo}</div>`; setTimeout(dopo, 2600); };
+
+// casella 8: "Chi l'ha scritto?" — 5 post veri del gruppo (li sceglie il database dopo "Gioca"), tocca chi l'ha scritto tra 4 facce.
+// risultato = giuste × 1000 + (999 − decimi): vince chi ne indovina di più, a pari giuste il più veloce. 90 secondi al massimo.
+const chiRis = r => { if (!r) return 'nessuna giusta'; const g = Math.floor(r / 1000); return `${g} ${g === 1 ? 'giusta' : 'giuste'} · ${((999 - r % 1000) / 10).toFixed(1).replace('.', ',')} s`; };
+GIOCHI_AVVENTO[8] = {
+  nome: 'Chi l\'ha scritto? 🕵️',
+  regole: 'Compaiono <b>5 post veri</b> del gruppo: tocca <b>chi l\'ha scritto</b> tra le 4 facce. Vince chi ne indovina di più; a pari risposte giuste, chi è più veloce. Hai 90 secondi.',
+  unita: ['punto', 'punti'], formato: chiRis,
+  gioca(box, fine) {
+    box.innerHTML = '<div class="loading">Pesco i post del gruppo</div>';
+    rpc('avvento_chi', { p_name: S.me }).then(r => {
+      const Q = r.domande || [];
+      if (Q.length < 3) return fermaAvv(box, 'Nel gruppo ci sono ancora pochi post per questo giochino.', () => fine(0));
+      const suoni = suoniAvv(), MAX = 900;
+      box.innerHTML = `<div class="chi"><div class="acc-top"><span>Domanda <b class="chi-q">1/${Q.length}</b></span><span>Giuste <b class="chi-g">0</b></span><span>⏱ <b class="chi-t">0,0</b></span></div>
+        <div class="chi-p"><div class="chi-post"><span class="chi-v">“</span><p class="chi-testo"></p></div><p class="chi-dom">Chi l'ha scritto?</p><div class="chi-op"></div><div class="acc-cd"></div></div>
+        <div class="cam-bar"><i></i></div></div>`;
+      const $$ = c => box.querySelector(c), wrap = $$('.chi'), testo = $$('.chi-testo'), op = $$('.chi-op'), qEl = $$('.chi-q'), gEl = $$('.chi-g'), tEl = $$('.chi-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+      let i = 0, giuste = 0, t0 = 0, finito = false, fermo = true;
+      const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+      const mostra = () => {
+        const d = Q[i]; qEl.textContent = `${i + 1}/${Q.length}`; testo.textContent = d.testo; fermo = false;
+        op.innerHTML = d.opzioni.map(n => `<button class="chi-o" data-n="${esc(n)}">${avatar(n)}<span>${esc(n)}</span></button>`).join('');
+        op.querySelectorAll('.chi-o').forEach(b => b.addEventListener('click', () => {
+          if (fermo || finito) return; fermo = true;
+          const giusto = b.dataset.n === d.giusta;
+          op.querySelectorAll('.chi-o').forEach(x => { if (x.dataset.n === d.giusta) x.classList.add('ok'); });
+          if (giusto) { giuste++; gEl.textContent = giuste; suoni.tono(660, 'sine', .14, .18, 0, 990); vibra(15); }
+          else { b.classList.add('no'); suoni.tono(180, 'square', .25, .1, 0, 110); vibra([30, 30, 30]); }
+          setTimeout(() => { if (finito) return; if (++i < Q.length) mostra(); else chiudi(); }, 850);
+        }));
+      };
+      const chiudi = scaduto => {
+        if (finito) return; finito = true; fermo = true;
+        const t = Math.min(decimi(), MAX), ris = giuste ? giuste * 1000 + Math.max(0, 999 - t) : 0;
+        cd.innerHTML = `${scaduto ? 'TEMPO!' : 'FATTO!'}<small>${giuste} su ${Q.length} · ${(t / 10).toFixed(1).replace('.', ',')} s</small>`; cd.classList.add('on');
+        setTimeout(() => fine(ris), 1300);
+      };
+      const giro = () => {
+        if (!box.isConnected || finito) return;
+        const t = decimi(); tEl.textContent = (t / 10).toFixed(1).replace('.', ','); bar.style.width = Math.max(0, 100 - t / MAX * 100) + '%';
+        if (t >= MAX) return chiudi(true);
+        requestAnimationFrame(giro);
+      };
+      wrap.giusta = () => Q[i] && !fermo ? Q[i].giusta : null;   // per i test automatici
+      requestAnimationFrame(() => wrap.scrollIntoView({ block: 'nearest' }));
+      contoAvv(box, cd, () => { t0 = performance.now(); mostra(); requestAnimationFrame(giro); });
+    }).catch(e => fermaAvv(box, esc(msg(e)), () => fine(0)));
+  }
+};
+
+// casella 9: "Anagrammi pippegosi" — le parole le sceglie l'amministratore nel Laboratorio (✏️ Parole) e arrivano mescolate con la loro impronta.
+// si toccano le lettere nell'ordine giusto; "Passo" = +20 secondi. Risultato = decimi + 200 per parola passata: vince chi ci mette meno. 2 minuti.
+GIOCHI_AVVENTO[9] = {
+  nome: 'Anagrammi pippegosi 🔤',
+  regole: 'Le lettere di <b>5 parole del gruppo</b> sono tutte mescolate: <b>toccale nell\'ordine giusto</b> per ricomporre ogni parola. Se una proprio non ti viene puoi <b>passare</b> (+20 secondi). Vince chi ci mette meno. Hai 2 minuti.',
+  unita: ['decimo', 'decimi'], formato: memoTempo,
+  gioca(box, fine) {
+    box.innerHTML = '<div class="loading">Mescolo le lettere</div>';
+    rpc('avvento_parole', { p_name: S.me, p_giorno: 9 }).then(r => {
+      const P = r.parole || [], sale = r.sale || '', suoni = suoniAvv(), MAX = 1200, MALUS = 200;
+      if (!P.length) return fermaAvv(box, 'Le parole di oggi non sono pronte.', () => fine(0));
+      box.innerHTML = `<div class="ana"><div class="acc-top"><span>Parola <b class="ana-q">1/${P.length}</b></span><span>Passate <b class="ana-s">0</b></span><span>⏱ <b class="ana-t">0,0</b></span></div>
+        <div class="ana-p"><p class="ana-ind"></p><div class="ana-slot"></div><div class="ana-let"></div>
+          <div class="ana-az"><button class="btn ghost xs" id="ana-del">⌫ Cancella</button><button class="btn ghost xs" id="ana-pass">Passo (+20 s)</button></div><div class="acc-cd"></div></div>
+        <div class="cam-bar"><i></i></div></div>`;
+      const $$ = c => box.querySelector(c), slot = $$('.ana-slot'), let_ = $$('.ana-let'), ind = $$('.ana-ind'), qEl = $$('.ana-q'), sEl = $$('.ana-s'), tEl = $$('.ana-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+      let i = 0, presi = [], passate = 0, t0 = 0, finito = false, fermo = true;
+      const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+      const mostraSlot = (cls = '') => {
+        const w = P[i], L = [...w.lettere];
+        slot.className = 'ana-slot ' + cls;
+        slot.innerHTML = Array.from({ length: w.n }, (_, k) => `<span class="${presi[k] != null ? 'su' : ''}">${presi[k] != null ? L[presi[k]] : ''}</span>`).join('');
+        let_.querySelectorAll('.ana-l').forEach(b => b.disabled = presi.includes(+b.dataset.k));
+      };
+      const parola = () => {
+        const w = P[i]; presi = []; fermo = false; qEl.textContent = `${i + 1}/${P.length}`;
+        ind.innerHTML = w.indizio ? `💡 ${esc(w.indizio)}` : `${w.n} lettere`;
+        let_.innerHTML = [...w.lettere].map((c, k) => `<button class="ana-l" data-k="${k}">${esc(c)}</button>`).join('');
+        let_.querySelectorAll('.ana-l').forEach(b => b.addEventListener('click', () => tocca(+b.dataset.k)));
+        mostraSlot();
+      };
+      const avanti = () => { if (++i < P.length) parola(); else chiudi(); };
+      const tocca = async k => {
+        if (fermo || finito || presi.includes(k)) return;
+        presi.push(k); suoni.tono(520 + presi.length * 40, 'triangle', .06, .08); mostraSlot();
+        if (presi.length < P[i].n) return;
+        fermo = true; const w = P[i], prova = presi.map(x => w.lettere[x]).join('');
+        if (await sha256hex(sale + prova) === w.h) { mostraSlot('ok'); suoni.tono(880, 'sine', .15, .2, 0, 1320); vibra(15); setTimeout(() => { if (!finito) avanti(); }, 650); }
+        else { mostraSlot('no'); suoni.tono(170, 'square', .22, .1); vibra([30, 30, 30]); setTimeout(() => { if (finito) return; presi = []; fermo = false; mostraSlot(); }, 550); }
+      };
+      $$('#ana-del').onclick = () => { if (fermo || finito || !presi.length) return; presi.pop(); mostraSlot(); };
+      $$('#ana-pass').onclick = () => { if (fermo || finito) return; passate++; sEl.textContent = passate; scrittaAvv($$('.ana-p'), 50, 30, '+20 s', 'meno'); suoni.tono(260, 'sine', .15, .1, 0, 180); avanti(); };
+      const chiudi = scaduto => {
+        if (finito) return; finito = true; fermo = true;
+        const resto = scaduto ? P.length - i : 0, ris = Math.min(decimi(), MAX) + MALUS * (passate + resto);
+        cd.innerHTML = `${scaduto ? 'TEMPO!' : 'FATTO!'}<small>${memoTempo(ris)}${passate + resto ? ` · ${passate + resto} ${passate + resto === 1 ? 'passata' : 'passate'}` : ''}</small>`; cd.classList.add('on');
+        setTimeout(() => fine(ris), 1300);
+      };
+      const giro = () => {
+        if (!box.isConnected || finito) return;
+        const t = decimi(); tEl.textContent = ((t + MALUS * passate) / 10).toFixed(1).replace('.', ','); bar.style.width = Math.max(0, 100 - t / MAX * 100) + '%';
+        if (t >= MAX) return chiudi(true);
+        requestAnimationFrame(giro);
+      };
+      requestAnimationFrame(() => box.querySelector('.ana').scrollIntoView({ block: 'nearest' }));
+      contoAvv(box, cd, () => { t0 = performance.now(); parola(); requestAnimationFrame(giro); });
+    }).catch(e => fermaAvv(box, esc(msg(e)), () => fine(0)));
+  }
+};
+
+// casella 10: "Trova le differenze" — due salotti di Natale disegnati, 5 differenze scelte a caso tra 10 (così non si possono passare la soluzione).
+// tocco giusto = cerchio su tutte e due; tocco a vuoto = +3 s. Risultato = decimi + 30 per tocco sbagliato (+30 s per differenza non trovata se scade il tempo). 90 s.
+const DIFF = [   // [id, x, y, raggio] nel disegno 300×200
+  ['stella', 130, 37, 14], ['pallina', 117, 101, 11], ['regalo', 121, 146, 14], ['pupazzo', 52, 67, 13], ['luna', 30, 31, 11],
+  ['orologio', 178, 30, 15], ['quadro', 251, 31, 18], ['calza', 222, 98, 13], ['candela', 276, 56, 12], ['gatto', 204, 172, 15]
+];
+function salotto(B) {   // B = differenze disegnate "nell'altro modo"
+  const b = id => B.has(id);
+  return `<svg viewBox="0 0 300 200" aria-label="Salotto di Natale">
+    <rect width="300" height="152" fill="#4a2f48"/><path d="M0 18H300M0 52H300M0 86H300M0 120H300" stroke="#553653" stroke-width="7"/>
+    <rect y="150" width="300" height="50" fill="#6b4428"/><path d="M0 162H300M0 176H300M0 190H300M40 150v12M120 162v14M200 150v12M260 176v14M80 176v14" stroke="#5a381f" stroke-width="1.5"/>
+    <rect x="12" y="14" width="66" height="80" rx="3" fill="#e9dcc6"/><rect x="17" y="19" width="56" height="70" fill="#13204a"/>
+    ${b('luna') ? '<circle cx="30" cy="31" r="7" fill="#fff4c4"/>' : '<circle cx="30" cy="31" r="7" fill="#fff4c4"/><circle cx="33.5" cy="28.5" r="6" fill="#13204a"/>'}
+    <circle cx="60" cy="27" r=".9" fill="#fff"/><circle cx="46" cy="40" r=".8" fill="#fff"/><path d="M17 76q14-6 28-2t28-1V89H17z" fill="#eef3fb"/>
+    <circle cx="52" cy="78" r="8" fill="#fff"/><circle cx="52" cy="66" r="6" fill="#fff"/><circle cx="50" cy="65" r=".9" fill="#222"/><circle cx="54" cy="65" r=".9" fill="#222"/><path d="M52 67l4 1-4 .8z" fill="#ff7a1a"/>
+    ${b('pupazzo') ? '' : '<rect x="47" y="57" width="10" height="5" fill="#222"/><rect x="45" y="61" width="14" height="2" fill="#222"/>'}
+    <path d="M45 19V89M17 54H73" stroke="#e9dcc6" stroke-width="3"/>
+    <circle cx="178" cy="30" r="14" fill="#f5ecd8" stroke="#8a6a3a" stroke-width="3"/><circle cx="178" cy="30" r="1.6" fill="#333"/>
+    ${b('orologio') ? '<path d="M178 30L170 25M178 30L178 20" stroke="#333" stroke-width="2" stroke-linecap="round"/>' : '<path d="M178 30L186 30M178 30L178 19" stroke="#333" stroke-width="2" stroke-linecap="round"/>'}
+    <rect x="233" y="16" width="36" height="30" fill="#f2e6cf" stroke="#c9a24a" stroke-width="3"/>
+    ${b('quadro') ? '<path d="M251 22l9 16h-18z" fill="#1f9d55"/><rect x="249.5" y="38" width="3" height="3" fill="#7a4a2a"/>' : '<path d="M251 40c-9-6-11-11-8-15 2-3 6-2 8 1 2-3 6-4 8-1 3 4 1 9-8 15z" fill="#e5193c"/>'}
+    <rect x="205" y="64" width="86" height="8" fill="#a07a52"/><rect x="211" y="72" width="74" height="78" fill="#8a5a3a"/><rect x="226" y="96" width="44" height="54" rx="3" fill="#1b120c"/>
+    <path d="M236 150c-2-12 6-14 6-24 6 6 2 12 8 16 2-8 8-8 8-14 6 8 4 16 2 22z" fill="#ff8a1e"/><path d="M243 150c0-7 5-9 5-15 4 5 2 9 5 11 1-4 4-5 4-8 3 5 2 9 1 12z" fill="#ffd23f"/>
+    <path d="M217 72v14" stroke="#ddd" stroke-width="1"/><path d="M214 86h10v14c0 4-3 6-7 6h-6v-6h3z" fill="${b('calza') ? '#1f9d55' : '#e5193c'}"/><rect x="213" y="84" width="12" height="4" fill="#fff"/>
+    <path d="M246 72v14" stroke="#ddd" stroke-width="1"/><path d="M243 86h10v14c0 4-3 6-7 6h-6v-6h3z" fill="#2f6fe0"/><rect x="242" y="84" width="12" height="4" fill="#fff"/>
+    <rect x="272" y="52" width="7" height="12" fill="#f4efe2"/>${b('candela') ? '' : '<path d="M275.5 51c-3-3-1-6 0-8 1 2 3 5 0 8z" fill="#ffb627"/>'}
+    <rect x="126" y="134" width="8" height="12" fill="#5d371e"/>
+    <path d="M130 42L104 80h12L98 108h14L92 136h76l-20-28h14l-18-28h12z" fill="#1f7a43"/><path d="M130 42L104 80h12L98 108h14L92 136h76l-20-28h14l-18-28h12z" fill="none" stroke="#155c31" stroke-width="1.5"/>
+    <path d="M108 78q22 8 44-2M102 106q28 10 56-2M96 133q34 6 68-2" stroke="#ffd86b" stroke-width="1.2" fill="none" stroke-dasharray="3 3"/>
+    ${b('stella') ? '' : '<path d="M130 28l2.9 6 6.6.9-4.8 4.6 1.2 6.5L130 43l-5.9 3 1.2-6.5-4.8-4.6 6.6-.9z" fill="#ffd23f" stroke="#c9a000" stroke-width=".8"/>'}
+    <circle cx="140" cy="70" r="4" fill="#2f6fe0"/><circle cx="128" cy="92" r="4" fill="#ffd23f"/><circle cx="146" cy="100" r="4" fill="#e5193c"/><circle cx="110" cy="124" r="4" fill="#ffd23f"/><circle cx="152" cy="126" r="4" fill="#2f6fe0"/>
+    ${b('pallina') ? '' : '<circle cx="117" cy="101" r="4.5" fill="#e5193c"/><circle cx="115.8" cy="99.8" r="1.2" fill="#fff" opacity=".7"/>'}
+    <rect x="110" y="138" width="22" height="16" fill="${b('regalo') ? '#2f6fe0' : '#e5193c'}"/><path d="M121 138v16M110 146h22" stroke="#ffd86b" stroke-width="2.5"/>
+    <rect x="136" y="142" width="18" height="12" fill="#1f9d55"/><path d="M145 142v12M136 148h18" stroke="#fff" stroke-width="2"/>
+    <ellipse cx="190" cy="178" rx="52" ry="11" fill="#8e2b3a"/><ellipse cx="190" cy="178" rx="44" ry="7" fill="none" stroke="#c9a24a" stroke-width="1.2" stroke-dasharray="4 3"/>
+    ${b('gatto') ? '' : '<ellipse cx="204" cy="174" rx="11" ry="6" fill="#2a2a30"/><circle cx="194" cy="169" r="5" fill="#2a2a30"/><path d="M190 166l1-5 3 3M195 164l3-4 1 5" fill="#2a2a30"/><path d="M215 174q8-2 6-10" stroke="#2a2a30" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="192.5" cy="168.5" r=".9" fill="#ffd23f"/>'}
+    <g class="dif-segni"></g></svg>`;
+}
+GIOCHI_AVVENTO[10] = {
+  nome: 'Trova le differenze 🔍',
+  regole: 'Due salotti di Natale quasi uguali: trova le <b>5 differenze</b> e toccale (sopra o sotto, è uguale). Ogni tocco a vuoto costa <b>+3 secondi</b>. Vince chi ci mette meno. Hai 90 secondi.',
+  unita: ['decimo', 'decimi'], formato: memoTempo,
+  gioca(box, fine) {
+    const suoni = suoniAvv(), MAX = 900, scelte = DIFF.slice().sort(() => Math.random() - .5).slice(0, 5), B = new Set(scelte.map(d => d[0]));
+    box.innerHTML = `<div class="dif"><div class="acc-top"><span>Trovate <b class="dif-n">0/5</b></span><span>⏱ <b class="dif-t">0,0</b></span></div>
+      <div class="dif-p">${salotto(new Set())}${salotto(B)}<div class="acc-cd"></div></div><div class="cam-bar"><i></i></div><p class="acc-aiuto">Tocca le differenze sul disegno di sopra o di sotto 👆</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.dif-p'), svgs = [...pan.querySelectorAll('svg')], nEl = $$('.dif-n'), tEl = $$('.dif-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+    const trovate = new Set(); let errori = 0, ultErr = 0, t0 = 0, finito = false;
+    const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+    const segno = (cls, x, y, r) => svgs.forEach(s => s.querySelector('.dif-segni').insertAdjacentHTML('beforeend', cls === 'ok'
+      ? `<circle class="dif-ok" cx="${x}" cy="${y}" r="${r}"/>` : `<path class="dif-x" d="M${x - 5} ${y - 5}l10 10M${x + 5} ${y - 5}l-10 10"/>`));
+    svgs.forEach(s => s.addEventListener('pointerdown', e => {
+      e.preventDefault(); if (!t0 || finito) return;
+      const r = s.getBoundingClientRect(), x = (e.clientX - r.left) * 300 / r.width, y = (e.clientY - r.top) * 200 / r.height;
+      const d = scelte.find(([id, cx, cy, rr]) => !trovate.has(id) && Math.hypot(x - cx, y - cy) <= rr + 6);
+      if (d) {
+        trovate.add(d[0]); segno('ok', d[1], d[2], d[3]); nEl.textContent = `${trovate.size}/5`; suoni.tono(760, 'sine', .14, .2, 0, 1140); vibra(15);
+        if (trovate.size === 5) chiudi();
+      } else if (!scelte.some(([id, cx, cy, rr]) => trovate.has(id) && Math.hypot(x - cx, y - cy) <= rr + 6) && performance.now() - ultErr > 400) {   // tocco a vuoto (non su una già trovata)
+        ultErr = performance.now(); errori = Math.min(30, errori + 1); segno('x', x, y);
+        pan.classList.remove('no'); void pan.offsetWidth; pan.classList.add('no'); suoni.tono(170, 'square', .18, .08); vibra(40);
+        scrittaAvv(pan, x / 3, (svgs.indexOf(s) * 200 + y) / 4.1, '+3 s', 'meno');
+      }
+    }));
+    const chiudi = scaduto => {
+      if (finito) return; finito = true;
+      const ris = Math.min(decimi(), MAX) + 30 * errori + (scaduto ? 300 * (5 - trovate.size) : 0);
+      scelte.forEach(([id, cx, cy, rr]) => { if (!trovate.has(id)) svgs.forEach(s => s.querySelector('.dif-segni').insertAdjacentHTML('beforeend', `<circle class="dif-manca" cx="${cx}" cy="${cy}" r="${rr}"/>`)); });
+      cd.innerHTML = `${scaduto ? 'TEMPO!' : 'TROVATE!'}<small>${memoTempo(ris)}${errori ? ` · ${errori} ${errori === 1 ? 'tocco' : 'tocchi'} a vuoto` : ''}</small>`;
+      setTimeout(() => cd.classList.add('on'), scaduto ? 1200 : 300); setTimeout(() => fine(ris), scaduto ? 2600 : 1600);
+    };
+    const giro = () => {
+      if (!box.isConnected || finito) return;
+      const t = decimi(); tEl.textContent = ((t + 30 * errori) / 10).toFixed(1).replace('.', ','); bar.style.width = Math.max(0, 100 - t / MAX * 100) + '%';
+      if (t >= MAX) return chiudi(true);
+      requestAnimationFrame(giro);
+    };
+    pan.dif = () => scelte.filter(([id]) => !trovate.has(id)).map(([id, cx, cy]) => { const r = svgs[1].getBoundingClientRect(); return [r.left + cx * r.width / 300, r.top + cy * r.height / 200]; });   // per i test automatici
+    requestAnimationFrame(() => box.querySelector('.dif').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); requestAnimationFrame(giro); });
+  }
+};
+
+// Laboratorio: le parole segrete delle caselle che le usano (per ora la 9, gli anagrammi), con le parole più usate nel gruppo
+const PAROLE_AVV = [9];
+function paroleLab(n) {
+  sheet(`<form class="par-f" novalidate><h3>✏️ Parole della casella ${n}</h3>
+    <p class="hint">Gli altri le vedranno solo il ${n} dicembre, mescolate. Da 3 a 12 lettere, senza spazi (gli accenti si tolgono da soli). L'indizio è facoltativo.</p>
+    <div class="par-l">${[1, 2, 3, 4, 5].map(i => `<div class="par-r"><span>${i}</span><input name="p${i}" maxlength="12" autocomplete="off" autocapitalize="characters" placeholder="Parola ${i}"><input name="i${i}" maxlength="80" autocomplete="off" placeholder="Indizio (facoltativo)"></div>`).join('')}</div>
+    <h4 class="par-h">Le parole più usate nel gruppo <small>(tocca per usarla)</small></h4><div class="par-top"><div class="loading">Conto le parole</div></div>
+    <p class="err" hidden></p>
+    <div class="row end"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn" type="submit">Salva le parole</button></div></form>`, async (s, close) => {
+    const f = s.querySelector('form'), er = f.querySelector('.err'), top = f.querySelector('.par-top');
+    rpc('avvento_parole_edit', { p_giorno: n, p_admin: adminPin() || null }).then(r => (r.parole || []).forEach((w, k) => { if (f['p' + (k + 1)]) { f['p' + (k + 1)].value = w.parola; f['i' + (k + 1)].value = w.indizio; } })).catch(() => {});
+    rpc('parole_top', { p_admin: adminPin() || null }).then(r => {
+      const L = r.parole || [];
+      top.innerHTML = L.length ? L.map(w => `<button type="button" class="par-c" data-p="${esc(w.parola)}">${esc(w.parola)} <small>×${w.volte}</small></button>`).join('') : '<p class="muto">Ancora poche parole: scrivete di più nel gruppo! 😄</p>';
+      top.querySelectorAll('.par-c').forEach(b => b.onclick = () => {
+        const vuoto = [1, 2, 3, 4, 5].map(i => f['p' + i]).find(x => !x.value.trim()); if (!vuoto) return toast('Le 5 parole sono già piene: cancellane una');
+        vuoto.value = b.dataset.p; b.classList.add('usata');
+      });
+    }).catch(e => { top.innerHTML = `<p class="muto">${esc(msg(e))}</p>`; });
+    f.onsubmit = async e => {
+      e.preventDefault(); er.hidden = true;
+      const parole = [1, 2, 3, 4, 5].map(i => ({ parola: f['p' + i].value.trim(), indizio: f['i' + i].value.trim() })).filter(w => w.parola);
+      if (!parole.length) { er.textContent = 'Scrivi almeno una parola.'; er.hidden = false; return; }
+      try { await rpc('avvento_parole_set', { p_author: S.me, p_giorno: n, p_parole: parole, p_admin: adminPin() || null }); close(); toast(`Parole della casella ${n} salvate ✓`); }
+      catch (ex) { er.textContent = msg(ex); er.hidden = false; }
+    };
+  });
+}
+
 const unitaAvv = (g, r) => g.formato ? g.formato(r) : `${r} ${r === 1 ? g.unita[0] : g.unita[1]}`;
 async function caricaAvvento() { S.avv = await rpc('avvento_classifica'); return S.avv; }
 function risultatoAvvHTML(C, n, g) {
@@ -4417,9 +4680,10 @@ function viewLab() {
       const g = GIOCHI_AVVENTO[n], k = AVV_COL[AVV_ORDINE.indexOf(n) % AVV_COL.length];
       const stato = n < oggi || oggi === 99 ? 'già aperta per tutti' : n === oggi ? 'si apre oggi per tutti' : `gli altri la vedono dal ${n} dicembre`;
       return `<div class="lab-r${g ? ' pronto' : ''}"><span class="lab-n" style="--k:${k}">${n}</span><span class="lab-t"><b>${g ? esc(g.nome) : 'Giochino da creare'}</b><small>${stato}</small></span>
-        <button class="btn ghost xs" data-prova="${n}">▶ Prova</button></div>`;
+        ${PAROLE_AVV.includes(n) ? `<button class="btn ghost xs" data-parole="${n}">✏️ Parole</button>` : ''}<button class="btn ghost xs" data-prova="${n}">▶ Prova</button></div>`;
     }).join('')}</div>`;
   $('#view').querySelectorAll('[data-prova]').forEach(b => b.onclick = () => apriCasella(+b.dataset.prova, true));
+  $('#view').querySelectorAll('[data-parole]').forEach(b => b.onclick = () => paroleLab(+b.dataset.parole));
   $('#view').insertAdjacentHTML('afterbegin', barraAdmin('avvento'));
 }
 
@@ -4909,7 +5173,7 @@ function guardaStorie(tutte, gi, opz = {}) {
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], luoghi: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], medaglie: [], files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], luoghi: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], medaglie: [], parole: {}, files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
@@ -5040,6 +5304,8 @@ function creaDemo() {
     if (e.admin_pin !== pin) { if (++e.admin_fail >= 5) { e.admin_fail = 0; e.admin_lock = Date.now() + 15 * 60000; return 'PIN_BLOCCATO'; } return 'PIN_ORGANIZZATORE_ERRATO'; }
     e.admin_fail = 0; return null;
   };
+  const mescola = A => { for (let i = A.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [A[i], A[j]] = [A[j], A[i]]; } return A; };
+  const pulParola = w => String(w || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
   const admG = pin => {
     if (D.adminNome && same(D.adminNome, S.me)) return null;   // l'amministratore riconosciuto dal nome
     if (D.adminLock > Date.now()) return 'PIN_BLOCCATO';
@@ -5140,7 +5406,7 @@ function creaDemo() {
       D.avv.push({ giorno: a.p_giorno, name: n, punteggio: null, created_at: t(0) }); return { ok: true };
     },
     avvento_gioca: a => {
-      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500, 4: 4200, 5: 60, 6: 100, 7: 40 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30, 4: 40 }[a.p_giorno] || 0))) throw err('PUNTEGGIO_NON_VALIDO');
+      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500, 4: 4200, 5: 60, 6: 100, 7: 40, 8: 5999, 9: 2500, 10: 3500 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30, 4: 40, 8: 1000, 9: 30, 10: 40 }[a.p_giorno] || 0))) throw err('PUNTEGGIO_NON_VALIDO');
       const p = D.avv.find(y => y.giorno === a.p_giorno && stessaPersona(y.name, clean(a.p_name, 30)));
       if (!p) return { err: 'TEMPO_SCADUTO' }; if (p.punteggio != null) return { err: 'GIA_GIOCATO' };
       p.punteggio = a.p_punteggio; return { ok: true };
@@ -5148,7 +5414,7 @@ function creaDemo() {
     avvento_classifica: a => {
       need(a); const fuori = n => D.avvFuori.has(chiaveNome(n)), giorni = [];
       for (let g = 1; g <= 19; g++) D.avv.filter(p => p.giorno === g && p.punteggio > 0 && !fuori(p.name))
-        .sort((x, y) => (g === 3 || g === 4 ? x.punteggio - y.punteggio : y.punteggio - x.punteggio) || (x.created_at < y.created_at ? -1 : x.created_at > y.created_at ? 1 : alfa(x.name, y.name)))
+        .sort((x, y) => ([3, 4, 9, 10].includes(g) ? x.punteggio - y.punteggio : y.punteggio - x.punteggio) || (x.created_at < y.created_at ? -1 : x.created_at > y.created_at ? 1 : alfa(x.name, y.name)))
         .forEach((p, i) => giorni.push({ giorno: g, name: p.name, punteggio: p.punteggio, pos: i + 1, punti: i < 5 ? 5 - i : 0, at: p.created_at }));
       const tot = new Map();
       for (const x of giorni) { const k = chiaveNome(x.name), v = tot.get(k) || { name: x.name, punti: 0, giochi: 0, primi: 0, primo: x.at }; v.punti += x.punti; v.giochi++; if (x.pos === 1) v.primi++; if (x.at < v.primo) v.primo = x.at; tot.set(k, v); }
@@ -5224,6 +5490,38 @@ function creaDemo() {
       return p;
     },
     poll_close: a => { need(a); const p = D.polls.find(x => x.id === a.p_poll && x.author === a.p_author); if (p) p.closed = a.p_closed !== false; },
+    parole_top: a => {
+      need(a); if (!(D.adminNome && same(D.adminNome, S.me)) && !a.p_admin) throw err('NON_AUTORIZZATO'); const x = admG(a.p_admin); if (x) return { err: x };
+      const vuote = new Set(['FOTO', 'HTTP', 'HTTPS', 'NUOVO', 'NUOVA', 'SABATO', 'SONO', 'COME', 'ANCHE', 'QUESTO', 'QUESTA', 'STASERA', 'DOMANI', 'OGGI', 'CIAO', 'GRAZIE', 'TUTTI', 'TUTTO', 'PERCHE', 'DOVE', 'QUANDO', 'ALLORA', 'EVENTO', 'SONDAGGIO', 'ALBUM', 'SECRETSANTA', 'MAPPA', 'MEDAGLIERE', 'RAGAZZI', 'DELLA', 'DELLE', 'ALLA', 'ALLE', 'NELLA', 'MOLTO', 'ANCORA', 'SEMPRE', 'FARE', 'COSA', 'DOPO', 'PRIMA']), c = new Map();
+      [...D.posts.map(p => p.body), ...D.replies.map(r => r.body)].forEach(t => (String(t || '').replace(/https?:\/\/\S+/g, ' ').match(/[a-zA-ZÀ-ÿ]+/g) || []).forEach(w => { w = pulParola(w); if (w.length >= 4 && w.length <= 12 && !vuote.has(w)) c.set(w, (c.get(w) || 0) + 1); }));
+      return { parole: [...c].filter(([, v]) => v >= 2).sort((x, y) => y[1] - x[1] || alfa(x[0], y[0])).slice(0, 40).map(([parola, volte]) => ({ parola, volte })) };
+    },
+    avvento_parole_set: a => {
+      need(a); if (!(D.adminNome && same(D.adminNome, S.me)) && !a.p_admin) throw err('NON_AUTORIZZATO'); const x = admG(a.p_admin); if (x) return { err: x };
+      if (!(a.p_giorno >= 1 && a.p_giorno <= 19)) throw err('CASELLA_NON_VALIDA');
+      const L = (a.p_parole || []).map(w => ({ parola: pulParola(w.parola), indizio: clean(w.indizio, 80) }));
+      if (!L.length || L.length > 8 || L.some(w => !/^[A-Z]{3,12}$/.test(w.parola))) throw err('PAROLE_NON_VALIDE');
+      D.parole[a.p_giorno] = L; return { ok: true, n: L.length };
+    },
+    avvento_parole_edit: a => { need(a); if (!(D.adminNome && same(D.adminNome, S.me)) && !a.p_admin) throw err('NON_AUTORIZZATO'); const x = admG(a.p_admin); if (x) return { err: x }; return { parole: D.parole[a.p_giorno] || [] }; },
+    avvento_parole: async a => {
+      need(a); const adm = D.adminNome && same(D.adminNome, S.me);
+      if (!adm && !D.avv.some(p => p.giorno === a.p_giorno && stessaPersona(p.name, clean(a.p_name, 30)) && p.punteggio == null)) throw err('PREMI_GIOCA');
+      const L = D.parole[a.p_giorno] || ['PIPPEGONE', 'PANETTONE', 'TRANSENNE', 'PRESEPE', 'RENNA'].map(parola => ({ parola, indizio: '' })), sale = uid().replace(/-/g, '').slice(0, 12);
+      return { sale, parole: await Promise.all(L.map(async w => {
+        let mix = w.parola; for (let k = 0; k < 10 && mix === w.parola; k++) mix = mescola([...w.parola]).join(''); if (mix === w.parola) mix = [...w.parola].reverse().join('');
+        return { n: w.parola.length, indizio: w.indizio, lettere: mix, h: await sha256hex(sale + w.parola) };
+      })) };
+    },
+    avvento_chi: a => {
+      need(a); const n = clean(a.p_name, 30), adm = D.adminNome && same(D.adminNome, S.me);
+      if (!adm && !D.avv.some(p => p.giorno === 8 && stessaPersona(p.name, n) && p.punteggio == null)) throw err('PREMI_GIOCA');
+      const vivi = D.members.filter(m => !m.banned), visti = new Set(), primi = [], altri = [];
+      mescola(D.posts.filter(p => String(p.body || '').trim().length >= 15 && !/#(evento|sondaggio|album|secretsanta|mappa|medagliere)/i.test(p.body) && !stessaPersona(p.author, n) && vivi.some(m => same(m.name, p.author))))
+        .forEach(p => { const k = chiaveNome(p.author); if (visti.has(k)) altri.push(p); else { visti.add(k); primi.push(p); } });
+      return { domande: [...primi, ...altri].slice(0, 5).map(p => ({ testo: p.body.trim().slice(0, 240), giusta: p.author,
+        opzioni: mescola([p.author, ...mescola(vivi.map(m => m.name).filter(x => !stessaPersona(x, p.author) && !stessaPersona(x, n))).slice(0, 3)]) })) };
+    },
     medagliere: a => {
       need(a); const d = new Date(), oggi = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const ap = oggi >= '2026-12-19', adm = !!D.adminNome && same(D.adminNome, S.me);
@@ -5502,7 +5800,7 @@ function creaDemo() {
     async rpc(fn, a) {
       await new Promise(z => setTimeout(z, 120));
       if (!F[fn]) throw err('NO_DB');
-      const r = F[fn](a); return r === undefined ? null : JSON.parse(JSON.stringify(r));
+      const r = await F[fn](a); return r === undefined ? null : JSON.parse(JSON.stringify(r));
     }
   };
 }

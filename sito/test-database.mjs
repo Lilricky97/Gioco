@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { PGlite } from '@electric-sql/pglite'
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto'
 import fs from 'fs'
@@ -745,7 +746,7 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
 // ACCESSO PERSONALE: ognuno entra col suo PIN, e il database controlla CHI fa ogni azione
 {
   // ogni funzione che agisce a nome di qualcuno controlla l'identità (controllo sul testo di schema.sql)
-  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like','luogo_add','luogo_edit','luogo_cero','luogo_del','medaglia_add','medaglia_del']
+  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like','luogo_add','luogo_edit','luogo_cero','luogo_del','medaglia_add','medaglia_del','avvento_parole_set','avvento_parole','avvento_chi']
   const senzaIo = AZIONI.filter(f => { const m = SCHEMA.match(new RegExp('create or replace function ' + f + '\\([\\s\\S]*?end \\$\\$;')); return !m || !/perform _io\(p_(name|author|organizer)\)/.test(m[0]) })
   ok(senzaIo.length === 0, `tutte le ${AZIONI.length} funzioni che agiscono a nome di qualcuno controllano chi sei` + (senzaIo.length ? ': mancano ' + senzaIo : ''))
   await db.exec(IO_VERO)   // da qui il controllo è quello vero
@@ -889,6 +890,55 @@ ok((await one('select _avvento_max(1)')) === 150 && (await one('select _avvento_
   ok((await err('select medaglia_del($1,$2,$3,$4)',[W(zed),'Zed',a1.id,null])) === 'NON_AUTORIZZATO','Zed non può togliere medaglie')
   ok((await err('select medagliere($1)',['x'])) === 'PASSWORD_ERRATA','medagliere protetto dalla password')
   { await db.exec('set role anon'); let no = false; try { await db.query('select * from medaglie') } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no,'tabella medaglie chiusa alla chiave pubblica') }
+  await one('select admin_dimentica($1)',[W(boss)]); await oggi('2026-11-20')
+}
+
+// AVVENTO 8-9-10 (Ricky, 22/11/2026): parole segrete degli anagrammi, "Chi l'ha scritto?", le parole più usate nel gruppo
+{
+  const W = tok => PW + String.fromCharCode(31) + tok
+  const oggi = d => q(`create or replace function _avvento_oggi() returns date language sql stable as $$ select '${d}'::date $$`)
+  const sha = t => createHash('sha256').update(t).digest('hex')
+  const boss = (await one('select accedi($1,$2,$3)',[PW,'Boss','1357'])).token, zed = (await one('select accedi($1,$2,$3)',[PW,'Zed','2468'])).token
+  await one('select admin_check($1,$2)',[W(boss),'4321'])
+  await q(`insert into posts(author, body) values ('Marco','Stasera pippegone al pub con lo spritz'),('Giulia','Che pippegone il Cava! Spritz per tutti'),
+    ('Luca','Pippegone di Natale, spritz e panettone'),('Sara','Domani panettone da Sara? #evento'),('Zed','Questo post è di Zed e non deve uscire'),('Anna','Votate qui per la cena #sondaggio')`)
+  const top = await one('select parole_top($1,$2)',[W(boss),null])
+  ok(top.parole[0].parola === 'PIPPEGONE' && top.parole[0].volte >= 3 && top.parole.some(x => x.parola === 'SPRITZ') && !top.parole.some(x => ['STASERA','EVENTO','DOMANI','SONDAGGIO'].includes(x.parola)),
+    'parole più usate nel gruppo: PIPPEGONE in cima, niente parole comuni ("stasera", "domani") né hashtag automatici')
+  ok((await err('select parole_top($1,$2)',[W(zed),null])) === 'NON_AUTORIZZATO','…le vede solo l\'amministratore')
+  const metti = (tok, nome, giorno, parole) => one('select avvento_parole_set($1,$2,$3,$4,$5)',[W(tok),nome,giorno,JSON.stringify(parole),null])
+  ok((await err('select avvento_parole_set($1,$2,$3,$4,$5)',[W(zed),'Zed',9,JSON.stringify([{parola:'ciao'}]),null])) === 'NON_AUTORIZZATO','Zed non può scegliere le parole degli anagrammi')
+  ok((await err('select avvento_parole_set($1,$2,$3,$4,$5)',[W(boss),'Boss',9,JSON.stringify([{parola:'ciao1'}]),null])) === 'PAROLE_NON_VALIDE'
+    && (await err('select avvento_parole_set($1,$2,$3,$4,$5)',[W(boss),'Boss',9,JSON.stringify([]),null])) === 'PAROLE_NON_VALIDE','parole con numeri o lista vuota: rifiutate')
+  const set = await metti(boss, 'Boss', 9, [{ parola: 'Pippegone', indizio: 'Il re del gruppo' }, { parola: 'città' }, { parola: 'spritz' }, { parola: 'panettone' }, { parola: 'Natale' }])
+  const ed = await one('select avvento_parole_edit($1,$2,$3)',[W(boss),9,null])
+  ok(set.ok === true && ed.parole.map(x => x.parola).join() === 'PIPPEGONE,CITTA,SPRITZ,PANETTONE,NATALE' && ed.parole[0].indizio === 'Il re del gruppo','l\'amministratore sceglie 5 parole: salvate in maiuscolo e senza accenti (città → CITTA)')
+  ok((await err('select avvento_parole_edit($1,$2,$3)',[W(zed),9,null])) === 'NON_AUTORIZZATO','Zed non può leggere le parole in chiaro')
+  await oggi('2026-12-08')
+  ok((await err('select avvento_parole($1,$2,$3)',[W(zed),'Zed',9])) === 'PREMI_GIOCA','l\'8 dicembre le parole della casella 9 non escono')
+  await oggi('2026-12-09')
+  ok((await err('select avvento_parole($1,$2,$3)',[W(zed),'Zed',9])) === 'PREMI_GIOCA','…e anche il 9 escono solo dopo aver premuto Gioca')
+  await one('select avvento_inizia($1,$2,$3)',[W(zed),9,'Zed'])
+  const ap = await one('select avvento_parole($1,$2,$3)',[W(zed),'Zed',9])
+  ok(ap.parole.length === 5 && ap.parole.every((x, i) => { const w = ed.parole[i].parola; return x.lettere.split('').sort().join('') === w.split('').sort().join('') && x.lettere !== w && x.h === sha(ap.sale + w) && x.n === w.length })
+    && ap.parole[0].indizio === 'Il re del gruppo' && !ed.parole.some(x => JSON.stringify(ap).includes(x.parola)),
+    'dopo "Gioca": lettere mescolate + impronta per controllare la risposta (le soluzioni non viaggiano in chiaro)')
+  const ap10 = await one('select avvento_parole($1,$2,$3)',[W(boss),'Boss',10])
+  ok(ap10.parole.length === 5 && ap10.parole[0].h === sha(ap10.sale + 'PIPPEGONE'),'l\'amministratore le riceve sempre (per provarle); se non sono state scelte ci sono 5 parole di riserva')
+  await oggi('2026-12-08')
+  ok((await err('select avvento_chi($1,$2)',[W(zed),'Zed'])) === 'PREMI_GIOCA','"Chi l\'ha scritto?": i post escono solo dopo aver premuto Gioca')
+  await one('select avvento_inizia($1,$2,$3)',[W(zed),8,'Zed'])
+  const chi = await one('select avvento_chi($1,$2)',[W(zed),'Zed'])
+  const nAut = await one("select count(distinct lower(p.author))::int from posts p join members m on lower(m.name) = lower(p.author) and not m.banned where char_length(btrim(p.body)) >= 15 and p.body !~* '#(evento|sondaggio|album|secretsanta|mappa|medagliere)' and lower(p.author) <> 'zed'")
+  const aut = chi.domande.map(d => d.giusta)
+  ok(chi.domande.length === Math.min(5, nAut + 5) && chi.domande.every(d => d.opzioni.length === 4 && d.opzioni.includes(d.giusta) && new Set(d.opzioni.map(x => x.toLowerCase())).size === 4
+      && !d.opzioni.some(x => x.toLowerCase() === 'zed') && !/#(sondaggio|evento)/i.test(d.testo) && d.testo.length >= 15) && new Set(aut).size === Math.min(aut.length, nAut),
+    `"Chi l'ha scritto?": 5 post veri (mai quelli di Zed né gli annunci automatici), un autore diverso per domanda, 4 nomi tra cui c'è quello giusto`)
+  ok(await one('select _avvento_max(8)') === 5999 && await one('select _avvento_asc(9)') && await one('select _avvento_asc(10)') && !(await one('select _avvento_asc(8)')) && await one('select _avvento_max(10)') === 3500,
+    'casella 8: più risposte giuste vince; caselle 9 e 10: vince chi ci mette meno')
+  ok((await err('select avvento_gioca($1,$2,$3,$4)',[W(zed),8,'Zed',800])) === 'PUNTEGGIO_NON_VALIDO','casella 8: un bonus di velocità senza nessuna risposta giusta non vale')
+  ok((await one('select avvento_gioca($1,$2,$3,$4)',[W(zed),8,'Zed',4612])).ok === true,'casella 8: 4 giuste in 38,7 secondi = 4612 (salvato)')
+  { await db.exec('set role anon'); let no = false; try { await db.query('select * from avvento_parole') } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no,'tabella avvento_parole chiusa alla chiave pubblica') }
   await one('select admin_dimentica($1)',[W(boss)]); await oggi('2026-11-20')
 }
 

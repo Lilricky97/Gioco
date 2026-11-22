@@ -785,7 +785,7 @@ ok(true, 'l\'amministratore li toglie: tornano nelle Novità')
 // laboratorio dei giochi dell'avvento: solo per l'amministratore (Area amministratore sbloccata)
 await vai(ricky, 'avvento'); await ricky.waitForSelector('.lab-in')
 await ricky.click('.lab-in'); await ricky.waitForSelector('.lab-r')
-ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('7 su 19') && (await ricky.locator('.lab-r.pronto').count()) === 7 && (await ricky.textContent('.lab-r.pronto >> nth=3')).includes('transenne') && (await ricky.textContent('.lab-r.pronto >> nth=4')).includes('Pippegone') && (await ricky.textContent('.lab-r.pronto >> nth=5')).includes('torre') && (await ricky.textContent('.lab-r.pronto >> nth=6')).includes('Palla di neve') && (await ricky.textContent('.lab-r.pronto >> nth=0')).includes('Ema fotografa la Fra') && (await ricky.textContent('.lab-r.pronto >> nth=1')).includes('Cava') && (await ricky.textContent('.lab-r.pronto >> nth=2')).includes('Memory'), 'laboratorio: le 19 caselle, pronti i giochini 1 (Ema fotografa la Fra), 2 (il lavaggio del Cava), 3 (il memory), 4 (le transenne della Nicole), 5 (Acchiappa il Pippegone), 6 (la torre di regali) e 7 (palla di neve in faccia)')
+ok(await ricky.locator('.lab-r').count() === 19 && (await ricky.textContent('.avv-stato')).includes('10 su 19') && (await ricky.locator('.lab-r.pronto').count()) === 10 && (await ricky.textContent('.lab-r.pronto >> nth=7')).includes('scritto') && (await ricky.textContent('.lab-r.pronto >> nth=8')).includes('Anagrammi') && (await ricky.textContent('.lab-r.pronto >> nth=9')).includes('differenze') && (await ricky.textContent('.lab-r.pronto >> nth=3')).includes('transenne') && (await ricky.textContent('.lab-r.pronto >> nth=4')).includes('Pippegone') && (await ricky.textContent('.lab-r.pronto >> nth=5')).includes('torre') && (await ricky.textContent('.lab-r.pronto >> nth=6')).includes('Palla di neve') && (await ricky.textContent('.lab-r.pronto >> nth=0')).includes('Ema fotografa la Fra') && (await ricky.textContent('.lab-r.pronto >> nth=1')).includes('Cava') && (await ricky.textContent('.lab-r.pronto >> nth=2')).includes('Memory'), 'laboratorio: le 19 caselle, pronti i giochini 1 (Ema fotografa la Fra), 2 (il lavaggio del Cava), 3 (il memory), 4 (le transenne della Nicole), 5 (Acchiappa il Pippegone), 6 (la torre di regali), 7 (palla di neve in faccia), 8 (chi l\'ha scritto), 9 (anagrammi) e 10 (trova le differenze)')
 // prova del giochino 1 nel laboratorio (a novembre!): i risultati non si salvano
 await ricky.click('.lab-r:has(.lab-n:text-is("1")) [data-prova]'); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via')
 await ricky.waitForSelector('.cam-scatta:not([disabled])', { timeout: 10000 }); await shot(ricky, '42-fotocamera')
@@ -895,6 +895,48 @@ await ricky.evaluate(() => new Promise(fatto => { const pan = document.querySele
   requestAnimationFrame(giro) }; giro() }))
 const r7 = await risLab()
 ok(/^\d+ centr[oi]$/.test(r7) && parseInt(r7) >= 5, `Palla di neve in faccia: ${r7} in 15 secondi tirando al momento giusto`)
+// caselle 8, 9, 10 (Ricky, 22/11/2026): i post e le parole arrivano dal database dopo "Gioca", quindi si aspetta che il gioco parta davvero
+const partito = async sel => { await ricky.waitForSelector(sel, { timeout: 15000 }); await ricky.waitForFunction(() => !document.querySelector('.acc-cd.on'), null, { timeout: 10000 }) }
+for (const [pg, testo] of [[marco, 'Stasera tutti da me per la pizza, porto io la birra!'], [amici.Giulia.page, 'Chi viene a pattinare sul ghiaccio sabato?'], [amici.Sara.page, 'Ho fatto la torta di mele, chi la vuole assaggiare?'], [amici.Luca.page, 'Domenica partita a calcetto, mancano due persone']])
+  await pg.evaluate(t => rpc('post_add', { p_author: S.me, p_body: t, p_photos: [] }), testo)
+await ricky.click('.lab-r:has(.lab-n:text-is("8")) [data-prova]'); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via'); await partito('.chi')
+const nQ = +(await ricky.textContent('.chi-q')).split('/')[1]
+for (let k = 0; k < nQ; k++) {
+  await ricky.waitForFunction(() => document.querySelector('.chi') && document.querySelector('.chi').giusta(), null, { timeout: 5000 })
+  const ok8 = await ricky.evaluate(sbaglia => { const g = document.querySelector('.chi').giusta(), b = [...document.querySelectorAll('.chi-o')].find(x => sbaglia ? x.dataset.n !== g : x.dataset.n === g); b.click(); return !sbaglia && !!b }, k === 1)
+  if (k === 1) { await ricky.waitForSelector('.chi-o.no'); ok(await ricky.locator('.chi-o.ok').count() === 1, 'Chi l\'ha scritto?: risposta sbagliata = rossa, e si illumina quella giusta') }
+  await ricky.waitForTimeout(950)
+}
+const r8 = await risLab()
+ok(nQ >= 3 && new RegExp(`^${nQ - 1} giust[ae] · \\d+,\\d s$`).test(r8), `Chi l'ha scritto?: ${nQ} post veri del gruppo, ${r8}`)
+// casella 9: le parole le sceglie l'amministratore dal Laboratorio, con l'elenco delle parole più usate nel gruppo
+await ricky.click('[data-parole="9"]'); await ricky.waitForSelector('.par-top .par-c, .par-top .muto')
+ok(await ricky.locator('.par-f input[name^=p]').count() === 5, 'Laboratorio → ✏️ Parole della casella 9: 5 parole con indizio e le parole più usate nel gruppo')
+for (const [i, w] of ['pippegone', 'Città', 'spritz', 'natale', 'renna'].entries()) await ricky.fill(`.par-f [name=p${i + 1}]`, w)
+await ricky.fill('.par-f [name=i1]', 'Il re del gruppo'); await ricky.click('.par-f [type=submit]'); await ricky.waitForFunction(() => !document.querySelector('.par-f'))
+await ricky.click('[data-parole="9"]'); await ricky.waitForFunction(() => document.querySelector('.par-f [name=p2]') && document.querySelector('.par-f [name=p2]').value)
+ok(await ricky.inputValue('.par-f [name=p2]') === 'CITTA' && await ricky.inputValue('.par-f [name=i1]') === 'Il re del gruppo', 'parole salvate nel database (maiuscole, senza accenti: CITTÀ → CITTA)')
+await ricky.click('.par-f [data-close]'); await ricky.waitForFunction(() => !document.querySelector('.ov'))
+await ricky.click('.lab-r:has(.lab-n:text-is("9")) [data-prova]'); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via'); await partito('.ana')
+ok((await ricky.textContent('.ana-ind')).includes('Il re del gruppo') && (await ricky.$$eval('.ana-l', L => L.map(x => x.textContent).sort().join(''))) === [...'PIPPEGONE'].sort().join(''), 'Anagrammi: le lettere di PIPPEGONE mescolate, con l\'indizio')
+for (const [k, w] of ['PIPPEGONE', 'CITTA', 'SPRITZ', 'NATALE', 'RENNA'].entries()) {
+  if (k === 1) {   // prima una risposta sbagliata (la parola al contrario: ATTIC)
+    for (const c of [...w].reverse()) await ricky.click(`.ana-l:not([disabled]):text-is("${c}") >> nth=0`)
+    await ricky.waitForSelector('.ana-slot.no'); await ricky.waitForFunction(() => !document.querySelector('.ana-slot.no') && document.querySelectorAll('.ana-l:disabled').length === 0)
+  }
+  for (const c of w) await ricky.click(`.ana-l:not([disabled]):text-is("${c}") >> nth=0`)
+  await ricky.waitForSelector('.ana-slot.ok'); await ricky.waitForTimeout(720)
+}
+const r9 = await risLab()
+ok(/^\d+,\d s$/.test(r9) && parseFloat(r9.replace(',', '.')) < 20, `Anagrammi pippegosi: 5 parole ricomposte (una sbagliata prima) in ${r9}, controllate con l'impronta senza vedere la soluzione`)
+await ricky.click('.lab-r:has(.lab-n:text-is("10")) [data-prova]'); await ricky.waitForSelector('#avv-via'); await ricky.click('#avv-via'); await partito('.dif')
+{ const r = await ricky.locator('.dif-p svg >> nth=1').boundingBox(); await ricky.mouse.click(r.x + 4, r.y + r.height - 4)
+  ok(await ricky.waitForFunction(() => parseFloat(document.querySelector('.dif-t').textContent.replace(',', '.')) >= 3 && document.querySelector('.dif-x'), null, { timeout: 3000 }).then(() => true, () => false), 'Trova le differenze: un tocco a vuoto = una X rossa e +3 secondi')
+  for (const [x, y] of await ricky.evaluate(() => document.querySelector('.dif-p').dif())) await ricky.mouse.click(x, y)
+  await ricky.waitForFunction(() => document.querySelectorAll('.dif-ok').length === 10)
+  ok(await ricky.textContent('.dif-n') === '5/5', 'Trova le differenze: 5 differenze trovate, cerchiate sopra e sotto') }
+const r10 = await risLab()
+ok(/^\d+,\d s$/.test(r10) && parseFloat(r10.replace(',', '.')) >= 3, `Trova le differenze: finito in ${r10} (con i 3 secondi del tocco a vuoto)`)
 await vai(marco, 'avvento'); await marco.waitForSelector('.avv-c')
 ok(await marco.locator('.lab-in').count() === 0, 'Marco non vede il laboratorio')
 await marco.evaluate(() => { location.hash = '#avvento/lab' }); await marco.waitForSelector('#lab-pin')

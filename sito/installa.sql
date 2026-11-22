@@ -2118,16 +2118,16 @@ language sql stable set search_path = public, extensions as $$ select (now() at 
 
 -- tetto di ogni giochino, contro i risultati impossibili (casella 1: 15 scatti al secondo per 10 secondi)
 create or replace function _avvento_max(p_giorno int) returns int
-language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 when 3 then 1500 when 4 then 4200 when 5 then 60 when 6 then 100 when 7 then 40 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s · 3: memory, decimi di secondo (max 150 s) · 4: transenne, decimi + 30 per tocco (max 120 s + 99 tocchi) · 5: facce acchiappate in 15 s · 6: regali sulla torre in 25 s · 7: centri con le palle di neve in 15 s
+language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 when 3 then 1500 when 4 then 4200 when 5 then 60 when 6 then 100 when 7 then 40 when 8 then 5999 when 9 then 2500 when 10 then 3500 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s · 3: memory, decimi di secondo (max 150 s) · 4: transenne, decimi + 30 per tocco (max 120 s + 99 tocchi) · 5: facce acchiappate in 15 s · 6: regali sulla torre in 25 s · 7: centri con le palle di neve in 15 s · 8: risposte giuste × 1000 + bonus velocità · 9 e 10: decimi + penalità
 
 -- giochini dove vince chi fa MENO; 0 = non finito, niente punti
 --   casella 3, il memory: il tempo in decimi di secondo
 --   casella 4, le transenne della Nicole: decimi di secondo + 30 (= 3 secondi) per ogni tocco di un ostacolo
 create or replace function _avvento_asc(p_giorno int) returns boolean
-language sql immutable as $$ select p_giorno in (3, 4) $$;
+language sql immutable as $$ select p_giorno in (3, 4, 9, 10) $$;   -- 9: anagrammi, 10: trova le differenze (tempo + penalità)
 -- il minimo credibile (memory: sotto i 3 secondi è impossibile girare 10 carte)
 create or replace function _avvento_min(p_giorno int) returns int
-language sql immutable as $$ select case p_giorno when 3 then 30 when 4 then 40 else 0 end $$;
+language sql immutable as $$ select case p_giorno when 3 then 30 when 4 then 40 when 8 then 1000 when 9 then 30 when 10 then 40 else 0 end $$;   -- 8: almeno una risposta giusta
 
 create or replace function _avvento_aperta(p_giorno int, p_name text) returns text
 language plpgsql stable security definer set search_path = public, extensions as $$
@@ -2565,6 +2565,133 @@ begin
   return json_build_object('ok', true);
 end $$;
 
+-- ---------- AVVENTO: parole segrete (anagrammi, poi cruciverba) e "Chi l'ha scritto?" (Ricky, 22/11/2026) ----------
+-- Le parole le sceglie l'amministratore dal Laboratorio e restano qui (il codice del sito è pubblico): ai giocatori arrivano
+-- solo il giorno giusto, dopo aver premuto Gioca, mescolate e con l'impronta sha256 al posto della soluzione.
+create table if not exists avvento_parole (
+  giorno int not null,
+  n int not null,
+  parola text not null,                 -- MAIUSCOLA, senza accenti
+  indizio text not null default '',
+  primary key (giorno, n)
+);
+alter table avvento_parole enable row level security;
+
+-- controllo amministratore per le funzioni del Laboratorio (riconosciuto dal nome, oppure col PIN)
+create or replace function _avvento_admin(p_admin text) returns text
+language plpgsql volatile security definer set search_path = public, extensions as $$
+begin
+  if _admin_io() then return null; end if;
+  if coalesce(p_admin, '') = '' then raise exception 'NON_AUTORIZZATO'; end if;
+  return _admin_try(p_admin);
+end $$;
+
+create or replace function _parola_pulita(p text) returns text
+language sql immutable as $$ select upper(translate(lower(btrim(coalesce(p, ''))), 'àáâèéêìíîòóôùúû', 'aaaeeeiiiooouuu')) $$;
+
+-- le parole più usate nel gruppo (post, risposte, commenti, sondaggi): solo numeri, per scegliere le parole dei giochini
+create or replace function parole_top(p_pw text, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text;
+begin
+  perform _need(p_pw);
+  x := _avvento_admin(p_admin); if x is not null then return json_build_object('err', x); end if;
+  return json_build_object('parole', coalesce((select json_agg(json_build_object('parola', p, 'volte', c) order by c desc, p) from (
+    select p, count(*)::int as c from (
+      select _parola_pulita(w) as p from (
+        select body as t from posts union all select body from post_replies union all select body from photo_comments
+        union all select body from event_comments union all select body from story_comments union all select caption from stories
+        union all select question from polls) testi, regexp_split_to_table(regexp_replace(coalesce(t, ''), 'https?://\S+', ' ', 'g'), '[^a-zA-ZàáâèéêìíîòóôùúûÀÈÉÌÒÙ]+') as w) z
+    where char_length(p) between 4 and 12 and p not in ('SONO','COME','ANCHE','QUESTO','QUESTA','QUESTI','QUELLO','QUELLA','PERCHE','PERO','TUTTI','TUTTE','TUTTO',
+      'FARE','FATTO','FATTA','ANCORA','SEMPRE','DOVE','QUANDO','QUANTO','ALLORA','ALLA','ALLE','DALLA','DALLE','DELLA','DELLE','DEGLI','DELLO','NELLA','NELLE',
+      'NEGLI','SULLA','SULLE','MOLTO','OGGI','DOMANI','STASERA','CIAO','GRAZIE','COSA','DOPO','PRIMA','LORO','SIAMO','SARA','HANNO','AVETE','ABBIAMO','ESSERE',
+      'SENZA','SOLO','OGNI','QUALCUNO','QUALCOSA','PROPRIO','DIRE','DETTO','VEDI','HTTPS','HTTP','FOTO','EVENTO','SONDAGGIO','ALBUM','SECRETSANTA','MAPPA',
+      'MEDAGLIERE','NUOVO','NUOVA','RAGAZZI','VUOI','VOGLIO','POSSO','PUOI','FATE','FACCIAMO','STATO','STATA','BENE','ECCO','COSI','MENO','ALTRO','ALTRA','ALTRI',
+      'TIPO','GIUSTO','VERO','POCO','TANTO','NOSTRO','NOSTRA','VOSTRO','VOSTRA','MIO','TUO','SUOI','CHE','UNA','UNO','PER','NON','CON','DEL','DAL','NEL','SUL',
+      'GIORNO','VOLTA','ANNO','ORA','ORE','DOMENICA','SABATO','VENERDI','LUNEDI','MARTEDI','MERCOLEDI','GIOVEDI','STANNO','ANDIAMO','VIENE','VENGO','DEVO','DEVE')
+    group by p having count(*) >= 2 order by c desc, p limit 40) r), '[]'::json));
+end $$;
+
+-- il Laboratorio salva le parole di una casella (1–8 parole di 3–12 lettere, con un indizio facoltativo)
+create or replace function avvento_parole_set(p_pw text, p_author text, p_giorno int, p_parole json, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text; e json; i int := 0;
+begin
+  perform _need(p_pw); perform _io(p_author);
+  x := _avvento_admin(p_admin); if x is not null then return json_build_object('err', x); end if;
+  if p_giorno is null or p_giorno not between 1 and 19 then raise exception 'CASELLA_NON_VALIDA'; end if;
+  if p_parole is null or json_typeof(p_parole) <> 'array' or json_array_length(p_parole) not between 1 and 8 then raise exception 'PAROLE_NON_VALIDE'; end if;
+  for e in select * from json_array_elements(p_parole) loop
+    if _parola_pulita(e->>'parola') !~ '^[A-Z]{3,12}$' then raise exception 'PAROLE_NON_VALIDE'; end if;
+  end loop;
+  delete from avvento_parole where giorno = p_giorno;
+  for e in select * from json_array_elements(p_parole) loop
+    i := i + 1;
+    insert into avvento_parole(giorno, n, parola, indizio) values (p_giorno, i, _parola_pulita(e->>'parola'), _clean(e->>'indizio', 80));
+  end loop;
+  return json_build_object('ok', true, 'n', i);
+end $$;
+
+-- per modificarle nel Laboratorio (solo l'amministratore le vede in chiaro)
+create or replace function avvento_parole_edit(p_pw text, p_giorno int, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text;
+begin
+  perform _need(p_pw);
+  x := _avvento_admin(p_admin); if x is not null then return json_build_object('err', x); end if;
+  return json_build_object('parole', coalesce((select json_agg(json_build_object('parola', parola, 'indizio', indizio) order by n) from avvento_parole where giorno = p_giorno), '[]'::json));
+end $$;
+
+-- c'è un tentativo aperto (premuto Gioca da meno di 3 minuti, non ancora finito)?
+create or replace function _avvento_in_corso(p_giorno int, p_name text) returns boolean
+language sql stable security definer set search_path = public, extensions as $$
+  select exists (select 1 from avvento_punti where giorno = p_giorno and _nome_chiave(name) = _nome_chiave(p_name)
+                 and punteggio is null and created_at > now() - interval '3 minutes')
+$$;
+
+-- le parole per giocare: mescolate, con l'impronta sha256(sale || parola) per controllare la risposta senza svelarla
+create or replace function avvento_parole(p_pw text, p_name text, p_giorno int) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare sale text := encode(gen_random_bytes(6), 'hex'); L json;
+begin
+  perform _need(p_pw); perform _io(p_name);
+  if not _admin_io() and not _avvento_in_corso(p_giorno, _clean(p_name, 30)) then raise exception 'PREMI_GIOCA'; end if;
+  with w as (
+    select n, parola, indizio from avvento_parole where giorno = p_giorno
+    union all   -- se l'amministratore non le ha ancora scelte: parole di riserva
+    select v.n, v.parola, '' from (values (1, 'PIPPEGONE'), (2, 'PANETTONE'), (3, 'TRANSENNE'), (4, 'PRESEPE'), (5, 'RENNA')) v(n, parola)
+    where not exists (select 1 from avvento_parole where giorno = p_giorno)
+  ), m as (
+    select n, parola, indizio, (select string_agg(c, '' order by random()) from regexp_split_to_table(parola, '') c) as mix from w
+  )
+  select json_agg(json_build_object('n', char_length(parola), 'indizio', indizio,
+           'lettere', case when mix = parola then reverse(parola) else mix end,
+           'h', encode(digest(sale || parola, 'sha256'), 'hex')) order by n) into L from m;
+  return json_build_object('sale', sale, 'parole', coalesce(L, '[]'::json));
+end $$;
+
+-- "Chi l'ha scritto?": 5 post veri del gruppo (non dei giocatore, niente annunci automatici), uno per autore finché si può, con 4 nomi tra cui scegliere
+create or replace function avvento_chi(p_pw text, p_name text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare n text := _clean(p_name, 30); L json;
+begin
+  perform _need(p_pw); perform _io(p_name);
+  if not _admin_io() and not _avvento_in_corso(8, n) then raise exception 'PREMI_GIOCA'; end if;
+  with cand as (
+    select p.author, p.body, row_number() over (partition by _nome_chiave(p.author) order by random()) as rk
+    from posts p join members m on lower(m.name) = lower(p.author) and not m.banned
+    where char_length(btrim(p.body)) >= 15 and p.body !~* '#(evento|sondaggio|album|secretsanta|mappa|medagliere)'
+      and _nome_chiave(p.author) <> _nome_chiave(n)
+  ), scelti as (select author, body from cand order by rk, random() limit 5)
+  select json_agg(json_build_object('testo', left(btrim(s.body), 240), 'giusta', s.author,
+           'opzioni', (select json_agg(o order by random()) from (
+              select s.author as o
+              union all
+              (select m.name from members m where not m.banned and _nome_chiave(m.name) not in (_nome_chiave(s.author), _nome_chiave(n)) order by random() limit 3)) z)))
+    into L from scelti s;
+  return json_build_object('domande', coalesce(L, '[]'::json));
+end $$;
+
 -- ---------- MEDAGLIERE PIPPEGOSO (Ricky, 20/11/2026) ----------
 -- L'amministratore assegna medaglie d'oro, d'argento e di bronzo (con un motivo); tutti vedono la classifica.
 -- Si apre il 19 dicembre 2026 (ora italiana): prima lo vede solo l'amministratore, che può già prepararlo. Per ora non si chiude (Ricky: "fino a quando non te lo dirò io").
@@ -2646,16 +2773,17 @@ grant execute on function check_pw, members_list, member_add, presenza, accesso_
   events_list, event_get, event_add, event_edit, event_del, event_rsvp, event_comment_add, event_comment_del,
   event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste,
   avvento_inizia, avvento_gioca, avvento_classifica, avvento_fuori, comment_like,
-  luoghi_list, luogo_add, luogo_edit, luogo_cero, luogo_del, medagliere, medaglia_add, medaglia_del to anon, authenticated;
+  luoghi_list, luogo_add, luogo_edit, luogo_cero, luogo_del, medagliere, medaglia_add, medaglia_del,
+  parole_top, avvento_parole_set, avvento_parole_edit, avvento_parole, avvento_chi to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _medagliere_apre, _medagliere_aperto, _att_medaglia, _io from anon, authenticated;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _medagliere_apre, _medagliere_aperto, _att_medaglia, _avvento_admin, _parola_pulita, _avvento_in_corso, _io from anon, authenticated;
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,
   _data_it, _notifica, _notif_sveglia, _notif_storia, _notif_commento_storia, _notif_post, _notif_evento, _notif_promemoria, _nome_chiave,
-  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _medagliere_apre, _medagliere_aperto, _att_medaglia, _io from public;
+  _att, _att_via, _att_post_like, _att_risposta, _att_cuore, _att_commento_storia, _att_like_foto, _att_commento_foto, _att_evento, _att_commento_evento, _att_voto, _att_cuore_commento, _cuori, _luogo_chi, _luogo_ok, _luogo_tappe, _luogo_percorso, _admin_io, _avvento_oggi, _avvento_max, _avvento_asc, _avvento_min, _avvento_aperta, _medagliere_apre, _medagliere_aperto, _att_medaglia, _avvento_admin, _parola_pulita, _avvento_in_corso, _io from public;
 -- le funzioni della "postina" delle notifiche: solo per la funzione di Supabase (service_role), mai per il sito
 revoke execute on function notif_claim, push_gone, vapid_get, vapid_set from public, anon, authenticated;
 do $$ begin
