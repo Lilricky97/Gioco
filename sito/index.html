@@ -806,6 +806,66 @@ button.chip{cursor:pointer;font-size:16px;padding:10px 15px}
 .perc-cd{position:absolute;inset:0;display:none;place-items:center;font:400 90px/1 "Bebas Neue",sans-serif;color:#fff;text-shadow:0 0 22px var(--rosa);background:rgba(10,15,36,.55);z-index:5;text-align:center}
 .perc-cd.on{display:grid}.perc-cd small{display:block;font:800 16px Archivo,sans-serif;color:var(--giallo);text-shadow:none;margin-top:6px;padding:0 10px;line-height:1.4}.perc-cd small b{color:#fff}
 .perc-aiuto{margin:0;font:700 13px Archivo,sans-serif;color:var(--muto);text-align:center;min-height:2.6em}
+/* ---------- avvento: giochini 11-19 ---------- */
+.puz,.cin,.sli,.sac,.cmp,.spu{display:flex;flex-direction:column;align-items:center;gap:8px;user-select:none;-webkit-user-select:none}
+.puz-p{position:relative;width:min(100%,340px,calc(88dvh - 250px));display:flex;flex-direction:column;align-items:center;gap:8px}
+.puz-g{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;aspect-ratio:1;padding:4px;border-radius:12px;background:#0e1533;box-shadow:0 0 0 2px rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.45);transition:gap .5s,padding .5s}
+.puz-c{border:0;padding:0;border-radius:6px;background-color:#1d2a5a;background-size:300% 300%;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);transition:transform .12s,box-shadow .12s,border-radius .5s;touch-action:manipulation}
+.puz-c.ok{box-shadow:inset 0 0 0 2px rgba(70,245,192,.7)}.puz-c.sel{transform:scale(.9);box-shadow:inset 0 0 0 3px #ffd86b,0 0 14px #ffd86b}
+.puz-p.fatto .puz-g{gap:0;padding:0}.puz-p.fatto .puz-c{border-radius:0;box-shadow:none}
+.puz-chi{min-height:1.3em;font:400 26px/1 "Bebas Neue",sans-serif;letter-spacing:.05em;color:var(--giallo)}
+.cin-p{position:relative;width:min(100%,360px);aspect-ratio:4/5;max-height:calc(88dvh - 230px);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;touch-action:none;cursor:pointer;
+  background:#1a2350;box-shadow:0 0 0 2px rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.45);transition:background .12s}
+.cin-p.attesa{background:#7a1c2c}.cin-p.via{background:#13915c}.cin-p.presto{background:#b5600f}.cin-p.preso{background:#1a2350}
+.cin-b{display:flex;gap:4px;height:42%}.cin-g{display:block;height:100%;transition:transform .15s}.cin-g svg{height:100%;width:auto}
+.cin-g.s{transform:rotate(-8deg)}.cin-g.d{transform:rotate(8deg) scaleX(-1)}
+.cin-p.via .cin-g.s{transform:rotate(14deg) translateX(10px)}.cin-p.via .cin-g.d{transform:rotate(-14deg) translateX(-10px) scaleX(-1)}
+.cin-s{margin:0;font:400 46px/1 "Bebas Neue",sans-serif;letter-spacing:.05em;color:#fff;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.4)}.cin-s small{display:block;font:800 16px Archivo,sans-serif;margin-top:6px}
+.cin-tempi{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-height:26px}.cin-tempi span{padding:3px 8px;border-radius:12px;background:rgba(0,0,0,.25);font:800 13px Archivo,sans-serif;color:#fff}
+.chie-f{width:min(100%,240px);aspect-ratio:1;border-radius:12px;overflow:hidden;background:#0e1533;box-shadow:0 0 0 3px rgba(255,255,255,.15),0 6px 18px rgba(0,0,0,.45)}
+.chie-f img{display:block;width:100%;height:100%;object-fit:cover;will-change:transform,filter}
+.chie-f.svelata img{transform:none!important;filter:none!important;transition:transform .4s,filter .4s}
+.chi-o.solo{justify-content:center;text-align:center;min-height:48px}.chi-o.solo span{white-space:normal}
+.chi-op.uno{grid-template-columns:1fr}
+.sli-p,.sac-p{position:relative;width:min(100%,360px,calc((88dvh - 250px) * .75));aspect-ratio:3/4;border-radius:12px;overflow:hidden;touch-action:none;cursor:pointer;box-shadow:0 0 0 2px rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.45)}
+.sli-p canvas,.sac-p canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cmp-p{position:relative;width:min(100%,340px);display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px;border-radius:14px;background:linear-gradient(#141d45,#0e1533);box-shadow:0 0 0 2px rgba(255,255,255,.1);transition:box-shadow .2s}
+.cmp-p.turno{box-shadow:0 0 0 2px var(--menta),0 0 18px rgba(70,245,192,.35)}.cmp-p.no{animation:scossa .35s}
+.cmp-s{margin:0;font:400 30px/1 "Bebas Neue",sans-serif;letter-spacing:.05em;color:var(--giallo)}
+.cmp-g{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.cmp-c{aspect-ratio:1;border-radius:18px;border:0;background:color-mix(in srgb,var(--c) 22%,#0e1533);color:var(--c);display:grid;place-items:center;cursor:pointer;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 60%,transparent);transition:transform .1s,background .1s,box-shadow .1s;touch-action:manipulation}
+.cmp-c svg{width:58%;height:auto;transform-origin:50% 10%}
+.cmp-c.on{background:var(--c);color:#fff;transform:scale(1.05);box-shadow:0 0 0 3px #fff,0 0 30px var(--c)}.cmp-c.on svg{animation:dondola .3s}
+.cmp-c.giusta{animation:scossa .5s 2;box-shadow:0 0 0 3px #fff,0 0 24px var(--c)}.cmp-c:disabled{cursor:default}
+.spu-p{position:relative;width:min(100%,360px);height:min(460px,calc(88dvh - 220px));border-radius:14px;overflow:hidden;touch-action:none;cursor:pointer;background:linear-gradient(#0b1636 0 55%,#1d3b26 55%);box-shadow:0 0 0 2px rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.45);display:flex;flex-direction:column}
+.spu-campo{position:relative;height:44%;flex:none}
+.spu-campo span{position:absolute;bottom:4px;transform:translateX(-50%);font:800 10px Archivo,sans-serif;color:rgba(255,255,255,.5);border-left:1px dashed rgba(255,255,255,.25);padding-left:3px;height:60%;display:flex;align-items:flex-end}
+.spu-tappo{position:absolute;left:8%;bottom:8%;width:14px;height:12px;border-radius:4px 4px 2px 2px;background:#ffd86b;box-shadow:0 0 8px #ffd86b;opacity:0}
+.spu-p.vola .spu-tappo{opacity:1;animation:spu-vola .9s cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes spu-vola{0%{left:8%;bottom:8%}50%{bottom:75%}100%{left:var(--x);bottom:6%;transform:rotate(720deg)}}
+.spu-dove{position:absolute;bottom:20%;transform:translateX(-50%);font:400 24px/1 "Bebas Neue",sans-serif;color:var(--giallo);text-shadow:0 0 8px rgba(255,200,61,.8)}
+.spu-giu{flex:1;display:flex;align-items:flex-end;justify-content:flex-start;gap:22px;padding:6px 0 40px 4%;min-height:0}
+.spu-bot{position:relative;height:100%;max-height:200px;aspect-ratio:80/220;--sc:0}.spu-bot svg{width:100%;height:100%}
+.spu-bot.agita{animation:spu-agita calc(.25s - var(--sc) * .17s) infinite}
+@keyframes spu-agita{0%,100%{transform:rotate(calc(-4deg - var(--sc) * 10deg))}50%{transform:rotate(calc(4deg + var(--sc) * 10deg))}}
+.spu-schiuma{position:absolute;left:50%;top:-6%;width:120%;aspect-ratio:1;transform:translate(-50%,-50%) scale(0);border-radius:50%;background:radial-gradient(circle,#fffbe8 0 35%,rgba(255,251,232,.6) 36% 55%,transparent 56%);opacity:0}
+.spu-p.vola .spu-schiuma{animation:spu-sch .8s ease-out}.spu-p.boom .spu-schiuma{animation:spu-sch 1s ease-out;width:260%}
+@keyframes spu-sch{0%{opacity:1;transform:translate(-50%,-50%) scale(.2)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2)}}
+.spu-p.boom .spu-bot svg{animation:scossa .4s;filter:brightness(.6)}
+.spu-gauge{position:relative;width:22px;height:70%;max-height:150px;border-radius:11px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.spu-gauge::after{content:"";position:absolute;left:0;right:0;top:0;height:10%;border-radius:11px 11px 0 0;background:repeating-linear-gradient(45deg,rgba(255,32,64,.45) 0 4px,transparent 4px 8px)}
+.spu-gauge i{position:absolute;left:0;right:0;bottom:0;height:0;border-radius:11px;background:linear-gradient(0deg,var(--menta),var(--giallo));transition:height .05s}.spu-gauge i.rosso{background:linear-gradient(0deg,var(--giallo),#ff2040)}
+.spu-gauge b{position:absolute;left:30px;bottom:-4px;font:400 22px "Bebas Neue",sans-serif;color:#fff;white-space:nowrap}
+.spu-s{position:absolute;left:0;right:0;bottom:8px;margin:0;text-align:center;font:800 14px Archivo,sans-serif;color:#fff}
+.spu-tiri{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:24px}.spu-tiri span{font:600 13px Archivo,sans-serif;color:var(--muto)}.spu-tiri b{color:var(--testo)}.spu-tiri .zero b{color:#ff5d6c}
+.can-disco{display:flex;gap:14px;font-size:40px;color:var(--giallo);min-height:64px;align-items:center}
+.can-disco.gira span{animation:can-nota .9s ease-in-out infinite alternate}.can-disco.gira span:nth-child(2){animation-delay:.3s}.can-disco.gira span:nth-child(3){animation-delay:.6s}
+@keyframes can-nota{to{transform:translateY(-12px) rotate(10deg);color:var(--rosa)}}
+.can-via{position:absolute;inset:0;display:grid;place-content:center;gap:12px;text-align:center;background:rgba(10,15,36,.88);border-radius:12px;z-index:5}.can-via p{margin:0;font:800 18px Archivo,sans-serif;color:var(--giallo)}
+.quiz-d{width:100%;min-height:96px;padding:16px;border-radius:10px;background:#fff8e8;color:#2a1d10;font:700 18px/1.35 Archivo,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.qz-l{display:flex;flex-direction:column;gap:10px;margin:8px 0}
+.qz-r{border:1px solid var(--line);border-radius:8px;padding:8px 10px 10px;display:flex;flex-direction:column;gap:6px;margin:0}.qz-r legend{padding:0 6px;font:400 18px "Bebas Neue",sans-serif;letter-spacing:.05em;color:var(--giallo)}
+.qz-r input{margin:0}.qz-g{border-color:rgba(70,245,192,.5)!important}
 /* ---------- avvento: giochini 8 (chi l'ha scritto), 9 (anagrammi), 10 (differenze) + parole del Laboratorio ---------- */
 .chi,.ana,.dif{display:flex;flex-direction:column;align-items:center;gap:8px;user-select:none;-webkit-user-select:none}
 .chi-p,.ana-p{position:relative;width:min(100%,380px);min-height:340px;display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 12px;border-radius:12px;background:linear-gradient(#141d45,#0e1533);box-shadow:0 0 0 2px rgba(255,255,255,.1)}
@@ -1133,6 +1193,7 @@ const MSG = {
   MEDAGLIA_NON_VALIDA: 'Scegli oro, argento o bronzo.',
   PREMI_GIOCA: 'Premi Gioca per iniziare.',
   PAROLE_NON_VALIDE: 'Ogni parola deve avere da 3 a 12 lettere, senza numeri né spazi.',
+  DOMANDE_NON_VALIDE: 'Servono da 3 a 10 domande, ognuna con la risposta giusta e almeno una sbagliata (diverse tra loro).',
   TROPPI_FISSATI: 'Puoi mettere in evidenza al massimo 5 post: prima togline uno (puntina in basso, poi tocca la 📌 sotto il post).',
   NOTIFICHE_NEGATE: 'Non hai dato il permesso. Se hai toccato "Non consentire", riattivale dalle impostazioni del telefono.',
   NOTIFICHE_NON_PRONTE: 'Le notifiche non sono ancora pronte (manca un passaggio su Supabase che deve fare Ricky). Riprova più tardi.',
@@ -4555,6 +4616,567 @@ function paroleLab(n) {
   });
 }
 
+// ---- caselle 11-19 (Ricky, 24/11/2026) ----
+const mescolaAvv = A => { for (let i = A.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [A[i], A[j]] = [A[j], A[i]]; } return A; };
+// le foto utente del gruppo ({ nome, foto }), senza chi gioca se ce ne sono abbastanza
+function fotoAvv() {
+  const nomeVero = k => ((S.people || []).find(p => same(p.name, k)) || {}).name || cap(k);
+  const L = Object.entries(S.av || {}).filter(([, v]) => okPath(v) && String(v).startsWith('avatar/')).map(([k, v]) => ({ nome: nomeVero(k), foto: v }));
+  const senza = L.filter(x => !stessaPersona(x.nome, S.me));
+  return mescolaAvv(senza.length >= 3 ? senza : L);
+}
+// 4 nomi tra cui scegliere: il giusto + 3 del gruppo (mai chi gioca)
+function nomiAvv(giusto, altri) {
+  const visti = new Set([chiaveNome(giusto), chiaveNome(S.me)]), L = [];
+  mescolaAvv([...(S.people || []).filter(p => !p.banned).map(p => p.name), ...altri]).forEach(n => { const k = chiaveNome(n); if (!visti.has(k)) { visti.add(k); L.push(n); } });
+  return mescolaAvv([giusto, ...L.slice(0, 3)]);
+}
+// gioco a domande (13, 18, 19): risultato = giuste × 1000 + (999 − decimi), come "Chi l'ha scritto?"
+const puntiDomande = (giuste, decimi) => giuste ? giuste * 1000 + Math.max(0, 999 - decimi) : 0;
+const ALBERO_PUZ = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><rect width="300" height="300" fill="#13204a"/><circle cx="60" cy="50" r="3" fill="#fff"/><circle cx="240" cy="70" r="2" fill="#fff"/><circle cx="200" cy="30" r="2.5" fill="#fff"/><path d="M0 250q80-20 150-5t150-5V300H0z" fill="#eef3fb"/><path d="M150 40L95 120h22L80 180h28L65 245h170l-43-65h28l-37-60h22z" fill="#1f7a43" stroke="#155c31" stroke-width="3"/><rect x="138" y="245" width="24" height="25" fill="#5d371e"/><path d="M150 18l6 12 13 2-9 9 2 13-12-6-12 6 2-13-9-9 13-2z" fill="#ffd23f"/><circle cx="130" cy="110" r="7" fill="#e5193c"/><circle cx="170" cy="150" r="7" fill="#2f6fe0"/><circle cx="120" cy="200" r="7" fill="#ffd23f"/><circle cx="185" cy="215" r="7" fill="#e5193c"/><circle cx="150" cy="180" r="6" fill="#fff"/><rect x="60" y="230" width="34" height="28" fill="#e5193c"/><path d="M77 230v28M60 244h34" stroke="#ffd86b" stroke-width="4"/><rect x="205" y="236" width="30" height="24" fill="#2f6fe0"/><path d="M220 236v24M205 248h30" stroke="#fff" stroke-width="4"/></svg>';
+
+// casella 11: "Puzzle pippegoso" — la foto profilo di un amico tagliata in 9 pezzi mescolati: tocca due pezzi per scambiarli. Vince il più veloce (decimi), 2 minuti.
+GIOCHI_AVVENTO[11] = {
+  nome: 'Puzzle pippegoso 🧩',
+  regole: 'La foto di un amico è tagliata in <b>9 pezzi</b> tutti mescolati: <b>tocca due pezzi</b> per scambiarli, finché la faccia torna a posto. Chi sarà? Vince chi ci mette meno. Hai 2 minuti.',
+  unita: ['decimo', 'decimi'], formato: memoTempo,
+  gioca(box, fine) {
+    const chi = fotoAvv()[0], suoni = suoniAvv(), MAX = 1200;
+    const img = chi ? pub(chi.foto) : 'data:image/svg+xml,' + encodeURIComponent(ALBERO_PUZ);
+    const pos = [...Array(9).keys()]; do mescolaAvv(pos); while (pos.filter((t, i) => t === i).length > 2);
+    box.innerHTML = `<div class="puz"><div class="acc-top"><span>Al posto <b class="puz-n">0/9</b></span><span>⏱ <b class="puz-t">0,0</b></span></div>
+      <div class="puz-p"><div class="puz-g">${pos.map((t, i) => `<button class="puz-c" data-i="${i}" aria-label="Pezzo ${i + 1}"></button>`).join('')}</div><div class="puz-chi"></div><div class="acc-cd"></div></div>
+      <div class="cam-bar"><i></i></div><p class="acc-aiuto">Tocca un pezzo, poi quello con cui scambiarlo 👆</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.puz-p'), celle = [...box.querySelectorAll('.puz-c')], nEl = $$('.puz-n'), tEl = $$('.puz-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+    let sel = null, t0 = 0, finito = false;
+    const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+    const disegna = () => {
+      celle.forEach((c, i) => { const t = pos[i]; c.style.backgroundImage = `url("${img}")`; c.style.backgroundPosition = `${(t % 3) * 50}% ${Math.floor(t / 3) * 50}%`; c.classList.toggle('ok', t === i); c.classList.toggle('sel', sel === i); });
+      nEl.textContent = pos.filter((t, i) => t === i).length + '/9';
+    };
+    const chiudi = scaduto => {
+      if (finito) return; finito = true; const r = scaduto ? 0 : decimi();
+      if (!scaduto) { pan.classList.add('fatto'); suoni.tono(660, 'sine', .15, .2); suoni.tono(990, 'sine', .3, .2, .14); vibra([20, 40, 20]); }
+      pan.querySelector('.puz-chi').textContent = chi ? `Era ${chi.nome}! 🎉` : 'Buon Natale! 🎄';
+      setTimeout(() => { cd.innerHTML = scaduto ? 'TEMPO!<small>oltre 2 minuti: niente punti</small>' : `FATTO!<small>${memoTempo(r)}</small>`; cd.classList.add('on'); }, scaduto ? 0 : 1100);
+      setTimeout(() => fine(r), scaduto ? 1500 : 2500);
+    };
+    celle.forEach((c, i) => c.addEventListener('click', () => {
+      if (!t0 || finito) return;
+      if (sel === null) { sel = i; suoni.tono(520, 'triangle', .05, .07); }
+      else if (sel === i) sel = null;
+      else { [pos[sel], pos[i]] = [pos[i], pos[sel]]; const giusti = pos[i] === i || pos[sel] === sel; sel = null; suoni.tono(giusti ? 780 : 440, 'triangle', .08, .1); if (giusti) vibra(10); }
+      disegna(); if (pos.every((t, k) => t === k)) chiudi();
+    }));
+    const giro = () => {
+      if (!box.isConnected || finito) return;
+      const t = decimi(); tEl.textContent = (t / 10).toFixed(1).replace('.', ','); bar.style.width = Math.max(0, 100 - t / MAX * 100) + '%';
+      if (t >= MAX) return chiudi(true);
+      requestAnimationFrame(giro);
+    };
+    pan.puzzle = () => pos.slice();   // per i test automatici
+    disegna(); requestAnimationFrame(() => box.querySelector('.puz').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); requestAnimationFrame(giro); });
+  }
+};
+
+// casella 12: "Il brindisi più veloce" — quando compare CIN CIN! tocca subito; 5 volte. Prima del tempo = falsa partenza (+500 ms e si ripete).
+// risultato = millisecondi dei 5 brindisi + penalità (sotto i 100 ms è una falsa partenza); vince chi fa meno. Se non tocchi entro 1,5 s: 1500 ms.
+const GLASS = '<svg viewBox="0 0 60 120" aria-hidden="true"><path d="M12 6h36l-4 44c-1 10-7 16-14 16s-13-6-14-16z" fill="rgba(255,255,255,.16)" stroke="#fff" stroke-width="2.5"/><path d="M15 26h30l-2 24c-1 8-6 13-13 13s-12-5-13-13z" fill="#ffd86b"/><circle cx="24" cy="44" r="1.6" fill="#fff8"/><circle cx="33" cy="36" r="1.2" fill="#fff8"/><circle cx="28" cy="52" r="1.4" fill="#fff8"/><path d="M30 66v38M16 110h28" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>';
+GIOCHI_AVVENTO[12] = {
+  nome: 'Il brindisi più veloce 🥂',
+  regole: 'Bicchieri pronti… quando compare <b>CIN CIN!</b> tocca lo schermo il più in fretta che puoi. Si fa <b>5 volte</b>. Se tocchi prima è una falsa partenza: <b>+0,5 secondi</b> e si rifà. Vince chi ha i riflessi più rapidi.',
+  unita: ['millisecondo', 'millisecondi'], formato: r => r ? `${Math.round(r / 5)} ms di media` : 'non finito',
+  gioca(box, fine) {
+    const suoni = suoniAvv(), GIRI = 5, LENTO = 1500;
+    box.innerHTML = `<div class="cin"><div class="acc-top"><span>Brindisi <b class="cin-n">1/5</b></span><span>Media <b class="cin-m">—</b></span></div>
+      <div class="cin-p"><div class="cin-b"><span class="cin-g s">${GLASS}</span><span class="cin-g d">${GLASS}</span></div><p class="cin-s">Pronti…</p><div class="cin-tempi"></div><div class="acc-cd"></div></div>
+      <p class="acc-aiuto">Tocca appena diventa verde 👆</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.cin-p'), sEl = $$('.cin-s'), nEl = $$('.cin-n'), mEl = $$('.cin-m'), tempi = $$('.cin-tempi'), cd = $$('.acc-cd');
+    let stato = 'fermo', giro = 0, tVia = 0, timer = 0, penal = 0, finito = false; const T = [];
+    const metti = (st, testo) => { stato = st; pan.className = 'cin-p ' + st; sEl.innerHTML = testo; };
+    const prossimo = () => {
+      if (finito || !box.isConnected) return;
+      nEl.textContent = `${giro + 1}/${GIRI}`; metti('attesa', 'Aspetta…');
+      timer = setTimeout(() => {
+        if (finito || !box.isConnected) return;
+        metti('via', 'CIN CIN! 🥂'); tVia = performance.now();
+        timer = setTimeout(() => segna(LENTO, 'Troppo lento! 🐢'), LENTO);
+      }, 1200 + Math.random() * 2200);
+    };
+    const segna = (ms, testo) => {
+      clearTimeout(timer); T.push(ms); giro++;
+      tempi.innerHTML = T.map(x => `<span>${x} ms</span>`).join(''); mEl.textContent = Math.round(T.reduce((a, b) => a + b, 0) / T.length) + ' ms';
+      metti('preso', testo || `${ms} ms`);
+      if (giro >= GIRI) return chiudi();
+      timer = setTimeout(prossimo, 1000);
+    };
+    const chiudi = () => {
+      finito = true; const r = Math.min(20000, T.reduce((a, b) => a + b, 0) + penal);
+      setTimeout(() => { cd.innerHTML = `SALUTE!<small>${Math.round(r / GIRI)} ms di media${penal ? ` · ${penal / 500} ${penal === 500 ? 'falsa partenza' : 'false partenze'}` : ''}</small>`; cd.classList.add('on'); }, 700);
+      setTimeout(() => fine(r), 2000);
+    };
+    pan.addEventListener('pointerdown', e => {
+      e.preventDefault(); if (finito) return;
+      if (stato === 'attesa' || (stato === 'via' && performance.now() - tVia < 100)) {   // falsa partenza (anche sotto i 100 ms: nessuno è così veloce)
+        clearTimeout(timer); penal += 500; suoni.tono(170, 'square', .25, .1); vibra([40, 40, 40]);
+        metti('presto', 'Troppo presto! <small>+0,5 s</small>'); timer = setTimeout(prossimo, 1100);
+      } else if (stato === 'via') {
+        const ms = Math.round(performance.now() - tVia); suoni.tono(1400, 'sine', .12, .2, 0, 2100); suoni.tono(1870, 'sine', .25, .12, .03); vibra(15); segna(ms);
+      }
+    });
+    pan.cin = () => stato === 'via';   // per i test automatici
+    requestAnimationFrame(() => box.querySelector('.cin').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, prossimo);
+  }
+};
+
+// casella 13: "Chi è?" — una foto profilo ingrandita e sfocata che si schiarisce in 7 secondi: tocca il nome giusto tra 4. 5 foto, 90 s.
+GIOCHI_AVVENTO[13] = {
+  nome: 'Chi è? 🔍',
+  regole: 'Compare una <b>foto profilo</b> del gruppo, ingrandita e sfocata, che piano piano si vede meglio: tocca <b>il nome giusto</b> prima che puoi! 5 foto. Vince chi ne indovina di più; a pari risposte giuste, chi è più veloce. Hai 90 secondi.',
+  unita: ['punto', 'punti'], formato: chiRis,
+  gioca(box, fine) {
+    const F = fotoAvv(), Q = F.slice(0, 5), suoni = suoniAvv(), MAX = 900, SVELA = 7000;
+    if (Q.length < 3) return fermaAvv(box, 'Servono almeno 3 foto utente nel gruppo per questo giochino.', () => fine(0));
+    box.innerHTML = `<div class="chi chie"><div class="acc-top"><span>Foto <b class="chi-q">1/${Q.length}</b></span><span>Giuste <b class="chi-g">0</b></span><span>⏱ <b class="chi-t">0,0</b></span></div>
+      <div class="chi-p"><div class="chie-f"><img alt=""></div><p class="chi-dom">Chi è?</p><div class="chi-op"></div><div class="acc-cd"></div></div><div class="cam-bar"><i></i></div></div>`;
+    const $$ = c => box.querySelector(c), wrap = $$('.chi'), fEl = $$('.chie-f'), img = $$('.chie-f img'), op = $$('.chi-op'), qEl = $$('.chi-q'), gEl = $$('.chi-g'), tEl = $$('.chi-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+    let i = 0, giuste = 0, t0 = 0, tFoto = 0, finito = false, fermo = true, ox = 50, oy = 50;
+    const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+    const mostra = () => {
+      const d = Q[i]; qEl.textContent = `${i + 1}/${Q.length}`; fermo = false; tFoto = performance.now();
+      ox = 25 + Math.random() * 50; oy = 25 + Math.random() * 50; img.style.transformOrigin = `${ox}% ${oy}%`; img.src = pub(d.foto); fEl.classList.remove('svelata');
+      op.innerHTML = nomiAvv(d.nome, F.map(x => x.nome)).map(n => `<button class="chi-o solo" data-n="${esc(n)}"><span>${esc(n)}</span></button>`).join('');
+      op.querySelectorAll('.chi-o').forEach(b => b.addEventListener('click', () => {
+        if (fermo || finito) return; fermo = true; fEl.classList.add('svelata');
+        const giusto = stessaPersona(b.dataset.n, d.nome);
+        op.querySelectorAll('.chi-o').forEach(x => { if (stessaPersona(x.dataset.n, d.nome)) x.classList.add('ok'); });
+        if (giusto) { giuste++; gEl.textContent = giuste; suoni.tono(660, 'sine', .14, .18, 0, 990); vibra(15); } else { b.classList.add('no'); suoni.tono(180, 'square', .25, .1, 0, 110); vibra([30, 30, 30]); }
+        setTimeout(() => { if (finito) return; if (++i < Q.length) mostra(); else chiudi(); }, 1100);
+      }));
+    };
+    const chiudi = scaduto => {
+      if (finito) return; finito = true; fermo = true; const t = Math.min(decimi(), MAX), r = puntiDomande(giuste, t);
+      cd.innerHTML = `${scaduto ? 'TEMPO!' : 'FATTO!'}<small>${giuste} su ${Q.length} · ${(t / 10).toFixed(1).replace('.', ',')} s</small>`; cd.classList.add('on'); setTimeout(() => fine(r), 1300);
+    };
+    const giro = () => {
+      if (!box.isConnected || finito) return;
+      const t = decimi(); tEl.textContent = (t / 10).toFixed(1).replace('.', ','); bar.style.width = Math.max(0, 100 - t / MAX * 100) + '%';
+      if (!fEl.classList.contains('svelata')) { const p = Math.min(1, (performance.now() - tFoto) / SVELA); img.style.transform = `scale(${(7 - 6 * p).toFixed(3)})`; img.style.filter = `blur(${(14 * (1 - p)).toFixed(1)}px)`; }
+      if (t >= MAX) return chiudi(true);
+      requestAnimationFrame(giro);
+    };
+    wrap.giusta = () => Q[i] && !fermo ? Q[i].nome : null;   // per i test automatici
+    requestAnimationFrame(() => wrap.scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); mostra(); requestAnimationFrame(giro); });
+  }
+};
+
+// casella 14: "La slitta" — scendi sulla neve: tocca a sinistra o a destra per cambiare corsia, schiva alberi e pupazzi, prendi i regali (+15 m).
+// sbattere non fa finire il gioco: la slitta rallenta. 20 secondi; risultato = metri fatti (vince chi ne fa di più). Canvas 300×400.
+GIOCHI_AVVENTO[14] = {
+  nome: 'La slitta 🛷',
+  regole: 'Scendi sulla neve! <b>Tocca a sinistra o a destra</b> per cambiare corsia: schiva alberi, pupazzi e sassi (se sbatti rallenti) e prendi i <b>regali</b> (+15 metri). Più vai giù, più vai veloce. Hai <b>20 secondi</b>: vince chi fa più strada.',
+  unita: ['metro', 'metri'],
+  gioca(box, fine) {
+    const suoni = suoniAvv(), DURATA = 20000, W = 300, H = 400, CORSIE = [60, 150, 240], YS = 96;
+    box.innerHTML = `<div class="sli"><div class="acc-top"><span>Strada <b class="sli-n">0 m</b></span><span>⏱ <b class="sli-t">20,0</b></span></div>
+      <div class="sli-p"><canvas aria-label="La slitta sulla neve"></canvas><div class="acc-cd"></div></div><div class="cam-bar"><i></i></div><p class="acc-aiuto">Tocca a sinistra ⬅️ o a destra ➡️</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.sli-p'), cv = $$('canvas'), g = cv.getContext('2d'), nEl = $$('.sli-n'), tEl = $$('.sli-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+    let corsia = 1, x = CORSIE[1], v = 150, metri = 0, cose = [], prossima = 0, t0 = 0, ult = performance.now(), finito = false, botta = 0, larg = 0, solchi = [];
+    const mia = (S.av || {})[String(S.me || '').toLowerCase()], foto = mia && okPath(mia) ? Object.assign(new Image(), { src: pub(mia) }) : null;
+    const misura = () => { const r = pan.getBoundingClientRect(), d = Math.min(3, window.devicePixelRatio || 1); larg = r.width; cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); };
+    const fila = () => {   // una fila di cose: mai tutte e tre le corsie chiuse
+      const libere = mescolaAvv([0, 1, 2]), n = Math.random() < .35 ? 2 : 1;
+      libere.slice(0, n).forEach(c => cose.push({ c, y: H + 30, t: ['albero', 'pupazzo', 'sasso'][Math.floor(Math.random() * 3)] }));
+      if (Math.random() < .45) cose.push({ c: libere[2], y: H + 30 + (Math.random() < .5 ? 0 : 60), t: 'regalo' });
+    };
+    const disegna = now => {
+      if (Math.abs(pan.getBoundingClientRect().width - larg) > 1) misura();
+      g.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+      const neve = g.createLinearGradient(0, 0, 0, H); neve.addColorStop(0, '#f4f8ff'); neve.addColorStop(1, '#dbe6f5'); g.fillStyle = neve; g.fillRect(0, 0, W, H);
+      g.strokeStyle = 'rgba(120,150,200,.18)'; g.lineWidth = 2; g.setLineDash([14, 22]); g.lineDashOffset = -(metri * 10) % 36;
+      [105, 195].forEach(cx => { g.beginPath(); g.moveTo(cx, 0); g.lineTo(cx, H); g.stroke(); }); g.setLineDash([]);
+      g.strokeStyle = 'rgba(150,170,210,.5)'; g.lineWidth = 1.5; solchi.forEach(([a, b]) => { g.beginPath(); g.moveTo(a - 8, b); g.lineTo(a - 8, b - 6); g.moveTo(a + 8, b); g.lineTo(a + 8, b - 6); g.stroke(); });
+      cose.forEach(o => {
+        const cx = CORSIE[o.c], y = o.y;
+        if (o.t === 'albero') { g.fillStyle = '#5d371e'; g.fillRect(cx - 3, y + 8, 6, 9); g.fillStyle = '#1f7a43'; g.beginPath(); g.moveTo(cx, y - 26); g.lineTo(cx - 20, y + 10); g.lineTo(cx + 20, y + 10); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(cx, y - 26); g.lineTo(cx - 7, y - 14); g.lineTo(cx + 7, y - 14); g.fill(); }
+        else if (o.t === 'pupazzo') { g.fillStyle = '#fff'; g.strokeStyle = '#b9c6da'; g.lineWidth = 1.5; [[y + 6, 13], [y - 12, 9]].forEach(([yy, r]) => { g.beginPath(); g.arc(cx, yy, r, 0, 7); g.fill(); g.stroke(); }); g.fillStyle = '#ff7a1a'; g.beginPath(); g.moveTo(cx, y - 12); g.lineTo(cx + 9, y - 10); g.lineTo(cx, y - 9); g.fill(); g.fillStyle = '#222'; g.fillRect(cx - 7, y - 26, 14, 6); g.fillRect(cx - 10, y - 21, 20, 2.5); }
+        else if (o.t === 'sasso') { g.fillStyle = '#7d8696'; g.beginPath(); g.ellipse(cx, y + 4, 18, 11, 0, 0, 7); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.ellipse(cx - 3, y - 4, 11, 4, 0, 0, 7); g.fill(); }
+        else if (!o.preso) { g.fillStyle = '#e5193c'; g.fillRect(cx - 12, y - 10, 24, 20); g.fillStyle = '#ffd86b'; g.fillRect(cx - 2.5, y - 10, 5, 20); g.fillRect(cx - 12, y - 2.5, 24, 5); g.beginPath(); g.ellipse(cx - 5, y - 13, 5, 3, -.4, 0, 7); g.ellipse(cx + 5, y - 13, 5, 3, .4, 0, 7); g.fill(); }
+      });
+      // la slitta, con la tua foto (o l'iniziale) e il cappello
+      const giro = botta > now ? Math.sin(now / 40) * .5 : (x - CORSIE[corsia]) / -120;
+      g.save(); g.translate(x, YS); g.rotate(giro);
+      g.fillStyle = '#8a0d22'; g.fillRect(-16, -22, 4, 44); g.fillRect(12, -22, 4, 44);
+      g.fillStyle = '#e5193c'; g.beginPath(); g.moveTo(-8, -18); g.arcTo(14, -18, 14, 16, 6); g.arcTo(14, 16, -14, 16, 6); g.arcTo(-14, 16, -14, -18, 6); g.arcTo(-14, -18, 14, -18, 6); g.closePath(); g.fill(); g.strokeStyle = '#ffd86b'; g.lineWidth = 2; g.stroke();
+      g.save(); g.beginPath(); g.arc(0, 2, 11, 0, 7); g.clip();
+      if (foto && foto.complete && foto.naturalWidth) g.drawImage(foto, -11, -9, 22, 22); else { g.fillStyle = '#ffe3c7'; g.fillRect(-11, -9, 22, 22); g.fillStyle = '#8a0d22'; g.font = 'bold 13px Archivo,sans-serif'; g.textAlign = 'center'; g.fillText(String(S.me || '?').charAt(0).toUpperCase(), 0, 7); }
+      g.restore(); g.fillStyle = '#e5193c'; g.beginPath(); g.moveTo(-11, -6); g.quadraticCurveTo(0, -24, 12, -10); g.lineTo(11, -6); g.fill(); g.fillStyle = '#fff'; g.fillRect(-12, -8, 24, 4); g.beginPath(); g.arc(12, -11, 3, 0, 7); g.fill();
+      g.restore();
+      if (botta > now) { g.fillStyle = '#e5193c'; g.font = '400 28px "Bebas Neue",sans-serif'; g.textAlign = 'center'; g.fillText('SBAM!', x, YS - 34); }
+    };
+    const chiudi = () => { finito = true; const r = Math.round(metri); cd.innerHTML = `ARRIVATO!<small>${r} metri</small>`; cd.classList.add('on'); setTimeout(() => fine(r), 1300); };
+    const ciclo = now => {
+      if (!box.isConnected) return;
+      const dt = Math.min(.05, (now - ult) / 1000); ult = now;
+      if (t0 && !finito) {
+        const resto = Math.max(0, DURATA - (now - t0)), el = 1 - resto / DURATA;
+        tEl.textContent = (resto / 1000).toFixed(1).replace('.', ','); bar.style.width = resto / DURATA * 100 + '%';
+        v += ((botta > now ? 70 : 150 + 170 * el) - v) * Math.min(1, dt * (botta > now ? 6 : 1.2));
+        metri += v * dt / 10; nEl.textContent = Math.round(metri) + ' m';
+        cose.forEach(o => { o.y -= v * dt; }); solchi.forEach(s => { s[1] -= v * dt; });
+        solchi.push([x, YS + 20]); solchi = solchi.filter(s => s[1] > -10).slice(-60);
+        cose = cose.filter(o => o.y > -40);
+        if ((prossima -= v * dt) <= 0) { fila(); prossima = 130 - 40 * el; }
+        cose.forEach(o => {
+          if (o.preso || o.c !== corsia || Math.abs(o.y - YS) > 20) return;
+          if (o.t === 'regalo') { o.preso = true; metri += 15; suoni.tono(880, 'sine', .12, .18, 0, 1320); vibra(12); scrittaAvv(pan, x / 3, 18, '+15 m'); }
+          else if (botta <= now) { botta = now + 900; o.preso = true; suoni.rumore(.25, 600, .35); vibra(90); }
+        });
+        if (resto <= 0) chiudi();
+      }
+      x += (CORSIE[corsia] - x) * Math.min(1, dt * 14);
+      disegna(now); requestAnimationFrame(ciclo);
+    };
+    pan.addEventListener('pointerdown', e => {
+      e.preventDefault(); if (!t0 || finito) return;
+      const r = pan.getBoundingClientRect(), dx = e.clientX - r.left < r.width / 2 ? -1 : 1;
+      corsia = Math.max(0, Math.min(2, corsia + dx)); suoni.rumore(.08, 2500, .12);
+    });
+    pan.slitta = () => ({ corsia, metri, cose: cose.filter(o => !o.preso).map(o => ({ c: o.c, y: o.y, t: o.t })) });   // per i test automatici
+    misura(); requestAnimationFrame(ciclo);
+    requestAnimationFrame(() => box.querySelector('.sli').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); });
+  }
+};
+
+// casella 15: "Prendi i regali" — sposta il sacco di Babbo Natale col dito: regalo +1, stella +3, carbone −1 (mai sotto zero). 20 secondi. Canvas 300×400.
+GIOCHI_AVVENTO[15] = {
+  nome: 'Prendi i regali 🎁',
+  regole: 'Dal cielo cadono regali: <b>sposta il sacco</b> col dito per prenderli! Regalo <b>+1</b>, stella d\'oro <b>+3</b>, carbone <b>−1</b>. Più va avanti, più cadono veloci. Hai <b>20 secondi</b>.',
+  unita: ['punto', 'punti'],
+  gioca(box, fine) {
+    const suoni = suoniAvv(), DURATA = 20000, W = 300, H = 400, YS = 352, SW = 64;
+    box.innerHTML = `<div class="sac"><div class="acc-top"><span>Punti <b class="sac-n">0</b></span><span>⏱ <b class="sac-t">20,0</b></span></div>
+      <div class="sac-p"><canvas aria-label="Prendi i regali"></canvas><div class="acc-cd"></div></div><div class="cam-bar"><i></i></div><p class="acc-aiuto">Trascina il dito a destra e a sinistra ↔️</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.sac-p'), cv = $$('canvas'), g = cv.getContext('2d'), nEl = $$('.sac-n'), tEl = $$('.sac-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+    let sx = W / 2, meta = W / 2, punti = 0, cose = [], prossima = 0, t0 = 0, ult = performance.now(), finito = false, larg = 0;
+    const NEVE = Array.from({ length: 30 }, () => [Math.random() * W, Math.random() * H, Math.random() * 1.5 + .5]);
+    const COL = ['#e5193c', '#1f9d55', '#2f6fe0', '#8e44ff', '#ff7a1a'];
+    const misura = () => { const r = pan.getBoundingClientRect(), d = Math.min(3, window.devicePixelRatio || 1); larg = r.width; cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); };
+    const disegna = now => {
+      if (Math.abs(pan.getBoundingClientRect().width - larg) > 1) misura();
+      g.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+      const cielo = g.createLinearGradient(0, 0, 0, H); cielo.addColorStop(0, '#0b1636'); cielo.addColorStop(1, '#2a3f7d'); g.fillStyle = cielo; g.fillRect(0, 0, W, H);
+      g.fillStyle = 'rgba(255,255,255,.7)'; NEVE.forEach(([x, y, r]) => { g.beginPath(); g.arc(x, (y + now / 40 * r) % H, r, 0, 7); g.fill(); });
+      g.fillStyle = '#eef3fb'; g.beginPath(); g.moveTo(0, H - 22); g.quadraticCurveTo(W / 2, H - 40, W, H - 22); g.lineTo(W, H); g.lineTo(0, H); g.fill();
+      cose.forEach(o => {
+        g.save(); g.translate(o.x, o.y); g.rotate(o.r);
+        if (o.t === 'regalo') { g.fillStyle = COL[o.k]; g.fillRect(-11, -10, 22, 20); g.fillStyle = '#ffd86b'; g.fillRect(-2.5, -10, 5, 20); g.fillRect(-11, -2.5, 22, 5); g.beginPath(); g.ellipse(-5, -13, 5, 3, -.4, 0, 7); g.ellipse(5, -13, 5, 3, .4, 0, 7); g.fill(); }
+        else if (o.t === 'stella') { g.fillStyle = '#ffd23f'; g.shadowColor = '#ffd23f'; g.shadowBlur = 12; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? 6 : 14; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.fill(); }
+        else { g.fillStyle = '#1c1c22'; g.beginPath(); g.moveTo(-12, 4); g.lineTo(-7, -9); g.lineTo(5, -12); g.lineTo(13, -2); g.lineTo(8, 10); g.lineTo(-6, 11); g.fill(); g.strokeStyle = '#55555f'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(-5, -3); g.lineTo(4, -6); g.stroke(); }
+        g.restore();
+      });
+      // il sacco di Babbo Natale
+      g.save(); g.translate(sx, YS);
+      g.fillStyle = '#8a5a2a'; g.beginPath(); g.moveTo(-SW / 2, -6); g.quadraticCurveTo(-SW / 2 - 6, 26, -12, 30); g.lineTo(12, 30); g.quadraticCurveTo(SW / 2 + 6, 26, SW / 2, -6); g.fill();
+      g.fillStyle = '#6b4220'; g.beginPath(); g.ellipse(0, -6, SW / 2, 7, 0, 0, 7); g.fill(); g.fillStyle = '#3d2410'; g.beginPath(); g.ellipse(0, -6, SW / 2 - 5, 4.5, 0, 0, 7); g.fill();
+      g.strokeStyle = '#e5193c'; g.lineWidth = 3; g.beginPath(); g.moveTo(-SW / 2 + 2, 2); g.quadraticCurveTo(0, 8, SW / 2 - 2, 2); g.stroke();
+      g.restore();
+    };
+    const chiudi = () => { finito = true; cd.innerHTML = `STOP!<small>${punti} ${punti === 1 ? 'punto' : 'punti'}</small>`; cd.classList.add('on'); setTimeout(() => fine(punti), 1300); };
+    const ciclo = now => {
+      if (!box.isConnected) return;
+      const dt = Math.min(.05, (now - ult) / 1000); ult = now;
+      sx += (meta - sx) * Math.min(1, dt * 18);
+      if (t0 && !finito) {
+        const resto = Math.max(0, DURATA - (now - t0)), el = 1 - resto / DURATA;
+        tEl.textContent = (resto / 1000).toFixed(1).replace('.', ','); bar.style.width = resto / DURATA * 100 + '%';
+        if ((prossima -= dt * 1000) <= 0) {
+          const z = Math.random(), t = z < .14 ? 'carbone' : z < .23 ? 'stella' : 'regalo';
+          cose.push({ x: 20 + Math.random() * (W - 40), y: -20, v: 120 + 170 * el + Math.random() * 40, t, k: Math.floor(Math.random() * COL.length), r: 0, vr: (Math.random() - .5) * 3 });
+          prossima = 620 - 330 * el;
+        }
+        cose.forEach(o => { o.y += o.v * dt; o.r += o.vr * dt;
+          if (!o.preso && o.y > YS - 16 && o.y < YS + 8 && Math.abs(o.x - sx) < SW / 2 + 6) {
+            o.preso = true; const d = o.t === 'regalo' ? 1 : o.t === 'stella' ? 3 : -1; punti = Math.max(0, punti + d); nEl.textContent = punti;
+            if (d > 0) { suoni.tono(d === 3 ? 1180 : 760, 'sine', .12, .18, 0, d === 3 ? 1770 : 1140); vibra(10); } else { suoni.tono(160, 'square', .2, .1); vibra([30, 30, 30]); }
+            scrittaAvv(pan, o.x / 3, (YS - 30) / 4, d > 0 ? '+' + d : '−1', d > 0 ? '' : 'meno');
+          } });
+        cose = cose.filter(o => !o.preso && o.y < H + 30);
+        if (resto <= 0) chiudi();
+      }
+      disegna(now); requestAnimationFrame(ciclo);
+    };
+    const muovi = e => { const r = pan.getBoundingClientRect(); meta = Math.max(SW / 2, Math.min(W - SW / 2, (e.clientX - r.left) * W / r.width)); };
+    pan.addEventListener('pointerdown', e => { e.preventDefault(); try { pan.setPointerCapture(e.pointerId); } catch (z) {} muovi(e); });
+    pan.addEventListener('pointermove', e => { if (e.buttons || e.pointerType !== 'mouse') muovi(e); });
+    pan.regali = () => ({ sacco: sx, cose: cose.filter(o => !o.preso).map(o => ({ x: o.x, y: o.y, t: o.t })) });   // per i test automatici
+    misura(); requestAnimationFrame(ciclo);
+    requestAnimationFrame(() => box.querySelector('.sac').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); });
+  }
+};
+
+// casella 16: "Le campanelle" — 4 campanelle suonano in un ordine: ripetilo. Ogni volta la fila si allunga di una; al primo sbaglio è finita.
+// risultato = la fila più lunga ripetuta giusta (vince chi ne fa di più). Al massimo 2 minuti e mezzo.
+const CAMPANE = [['#e5193c', 523.25], ['#1f9d55', 659.25], ['#f5b301', 783.99], ['#2f6fe0', 1046.5]];
+const ICO_CAMPANA_AVV = '<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M30 8c-11 0-17 9-17 20v9l-5 7h44l-5-7v-9c0-11-6-20-17-20z" fill="currentColor" stroke="rgba(0,0,0,.35)" stroke-width="2"/><circle cx="30" cy="49" r="5" fill="currentColor" stroke="rgba(0,0,0,.35)" stroke-width="2"/><path d="M22 18c2-3 5-4 8-4" stroke="rgba(255,255,255,.6)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M26 6h8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>';
+GIOCHI_AVVENTO[16] = {
+  nome: 'Le campanelle 🔔',
+  regole: 'Le <b>4 campanelle</b> suonano in un certo ordine: <b>ripetilo</b> toccandole. Ogni volta se ne aggiunge una e la fila si allunga. Al primo sbaglio è finita: vince chi ripete la fila <b>più lunga</b>.',
+  unita: ['campanella', 'campanelle'],
+  gioca(box, fine) {
+    const suoni = suoniAvv(), MAX = 150000;
+    box.innerHTML = `<div class="cmp"><div class="acc-top"><span>Fila <b class="cmp-n">0</b></span><span>⏱ <b class="cmp-t">0</b></span></div>
+      <div class="cmp-p"><p class="cmp-s">Ascolta…</p><div class="cmp-g">${CAMPANE.map(([c], i) => `<button class="cmp-c" data-i="${i}" style="--c:${c}" aria-label="Campanella ${i + 1}" disabled>${ICO_CAMPANA_AVV}</button>`).join('')}</div><div class="acc-cd"></div></div>
+      <p class="acc-aiuto">Guarda e ascolta, poi tocca le campanelle nello stesso ordine 🔔</p></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.cmp-p'), bott = [...box.querySelectorAll('.cmp-c')], sEl = $$('.cmp-s'), nEl = $$('.cmp-n'), tEl = $$('.cmp-t'), cd = $$('.acc-cd');
+    let seq = [], k = 0, fatte = 0, turno = false, finito = false, t0 = 0;
+    const suona = (i, dur = .35) => {
+      const b = bott[i]; b.classList.add('on'); setTimeout(() => b.classList.remove('on'), Math.max(180, dur * 700));
+      suoni.tono(CAMPANE[i][1], 'sine', dur + .4, .22); suoni.tono(CAMPANE[i][1] * 2.01, 'sine', dur, .06);
+    };
+    const ascolta = () => {
+      if (finito || !box.isConnected) return;
+      turno = false; k = 0; bott.forEach(b => b.disabled = true); sEl.textContent = 'Ascolta… 👂'; pan.className = 'cmp-p';
+      seq.push(Math.floor(Math.random() * 4)); const passo = Math.max(300, 620 - seq.length * 22);
+      seq.forEach((i, n) => setTimeout(() => { if (!finito && box.isConnected) suona(i, passo / 1600); }, 500 + n * passo));
+      setTimeout(() => { if (finito || !box.isConnected) return; turno = true; bott.forEach(b => b.disabled = false); sEl.textContent = 'Tocca a te! 👆'; pan.className = 'cmp-p turno'; }, 500 + seq.length * passo);
+    };
+    const chiudi = testo => {
+      finito = true; turno = false; bott.forEach(b => b.disabled = true);
+      cd.innerHTML = `${testo}<small>${fatte} ${fatte === 1 ? 'campanella' : 'campanelle'} in fila</small>`; setTimeout(() => cd.classList.add('on'), 700); setTimeout(() => fine(Math.min(60, fatte)), 2000);
+    };
+    bott.forEach((b, i) => b.addEventListener('pointerdown', e => {
+      e.preventDefault(); if (!turno || finito) return;
+      suona(i, .25);
+      if (i !== seq[k]) { pan.className = 'cmp-p no'; suoni.tono(150, 'sawtooth', .45, .1, .05); vibra([60, 40, 60]); sEl.textContent = 'Sbagliato! 🙈'; bott[seq[k]].classList.add('giusta'); return chiudi('FINE!'); }
+      if (++k === seq.length) { fatte = seq.length; nEl.textContent = fatte; turno = false; bott.forEach(x => x.disabled = true); sEl.textContent = 'Bravo! ✨'; vibra(15); setTimeout(ascolta, 900); }
+    }));
+    const giro = () => {
+      if (!box.isConnected || finito) return;
+      const t = performance.now() - t0; tEl.textContent = Math.floor(t / 1000) + ' s';
+      if (t >= MAX) return chiudi('TEMPO!');
+      requestAnimationFrame(giro);
+    };
+    pan.simon = () => ({ seq: seq.slice(), turno, k });   // per i test automatici
+    requestAnimationFrame(() => box.querySelector('.cmp').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { t0 = performance.now(); requestAnimationFrame(giro); ascolta(); });
+  }
+};
+
+// casella 17: "Stappa lo spumante" — tieni premuto per agitare (la pressione sale sempre più in fretta), lascia per far volare il tappo.
+// sopra il 90% c'è la zona rossa: la bottiglia scoppia a un punto a caso tra 90 e 100% (tiro nullo). 3 tiri, conta il migliore. Risultato = decimetri.
+const BOTTIGLIA = '<svg viewBox="0 0 80 220" aria-hidden="true"><path d="M30 6h20v44c0 10 18 22 18 46v108c0 6-4 10-10 10H22c-6 0-10-4-10-10V96c0-24 18-36 18-46z" fill="#1b5e3a" stroke="#0d3a22" stroke-width="3"/><path d="M28 6h24v34H28z" fill="#ffd86b"/><path d="M28 30h24" stroke="#c9a000" stroke-width="2"/><rect x="16" y="110" width="48" height="58" rx="4" fill="#f4efe2"/><path d="M24 128h32M24 140h32M30 152h20" stroke="#b9a87a" stroke-width="3"/><text x="40" y="124" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="800" font-size="9" fill="#8a0d22">PIPPEGHI</text><path d="M22 70c4-8 8-12 10-16" stroke="rgba(255,255,255,.35)" stroke-width="5" fill="none" stroke-linecap="round"/></svg>';
+GIOCHI_AVVENTO[17] = {
+  nome: 'Stappa lo spumante 🍾',
+  regole: '<b>Tieni premuto</b> per agitare la bottiglia: la pressione sale sempre più in fretta. <b>Lascia</b> per far volare il tappo: più pressione, più va lontano. Ma nella <b>zona rossa</b> la bottiglia può scoppiare! <b>3 tiri</b>, conta il migliore.',
+  unita: ['decimetro', 'decimetri'], formato: r => `${(r / 10).toFixed(1).replace('.', ',')} m`,
+  gioca(box, fine) {
+    const suoni = suoniAvv(), TIRI = 3, METRI = d => Math.round(300 * Math.pow(d / 100, 1.4)) / 10;
+    box.innerHTML = `<div class="spu"><div class="acc-top"><span>Tiro <b class="spu-n">1/3</b></span><span>Migliore <b class="spu-m">—</b></span></div>
+      <div class="spu-p"><div class="spu-campo">${[5, 10, 15, 20, 25, 30].map(m => `<span style="left:${8 + m / 32 * 88}%">${m} m</span>`).join('')}<i class="spu-tappo"></i><b class="spu-dove"></b></div>
+        <div class="spu-giu"><div class="spu-bot">${BOTTIGLIA}<i class="spu-schiuma"></i></div><div class="spu-gauge"><i></i><b>0%</b></div></div><p class="spu-s">Tieni premuto la bottiglia 👇</p><div class="acc-cd"></div></div>
+      <div class="spu-tiri"></div></div>`;
+    const $$ = c => box.querySelector(c), pan = $$('.spu-p'), bot = $$('.spu-bot'), gauge = $$('.spu-gauge i'), gTxt = $$('.spu-gauge b'), tappo = $$('.spu-tappo'), dove = $$('.spu-dove'), sEl = $$('.spu-s'), nEl = $$('.spu-n'), mEl = $$('.spu-m'), tiriEl = $$('.spu-tiri'), cd = $$('.acc-cd');
+    let p = 0, carica = false, pronto = false, tiro = 0, soglia = 90 + Math.random() * 10, ult = 0, finito = false; const T = [];
+    const metti = () => { gauge.style.height = p + '%'; gauge.classList.toggle('rosso', p >= 90); gTxt.textContent = Math.floor(p) + '%'; bot.style.setProperty('--sc', (p / 100).toFixed(2)); };
+    const prossimo = () => {
+      if (tiro >= TIRI) return chiudi();
+      nEl.textContent = `${tiro + 1}/${TIRI}`; p = 0; metti(); soglia = 90 + Math.random() * 10; pronto = true; pan.classList.remove('boom', 'vola');
+      tappo.style.cssText = ''; dove.textContent = ''; sEl.textContent = 'Tieni premuto la bottiglia 👇';
+    };
+    const segna = m => {
+      T.push(m); tiro++; tiriEl.innerHTML = T.map((x, i) => `<span class="${x ? '' : 'zero'}">Tiro ${i + 1}: <b>${x ? x.toFixed(1).replace('.', ',') + ' m' : '💥'}</b></span>`).join('');
+      const best = Math.max(...T); mEl.textContent = best ? best.toFixed(1).replace('.', ',') + ' m' : '—';
+      setTimeout(prossimo, 1800);
+    };
+    const lascia = () => {
+      if (!carica || finito) return; carica = false; pronto = false; bot.classList.remove('agita');
+      const m = METRI(p); suoni.rumore(.12, 3000, .5); suoni.tono(900, 'sine', .15, .15, 0, 300); vibra(20);
+      pan.classList.add('vola'); tappo.style.setProperty('--x', (8 + Math.min(m, 32) / 32 * 88) + '%'); sEl.textContent = 'POP! 🍾';
+      setTimeout(() => { dove.style.left = (8 + Math.min(m, 32) / 32 * 88) + '%'; dove.textContent = m.toFixed(1).replace('.', ',') + ' m'; }, 900);
+      segna(m);
+    };
+    const boom = () => {
+      carica = false; pronto = false; bot.classList.remove('agita'); pan.classList.add('boom'); sEl.textContent = 'BOOM! Scoppiata 💥';
+      suoni.rumore(.5, 900, .5); vibra([80, 40, 120]); segna(0);
+    };
+    const chiudi = () => {
+      finito = true; const best = Math.max(...T), r = Math.round(best * 10);
+      cd.innerHTML = `${best ? 'SALUTE! 🥂' : 'TUTTE SCOPPIATE!'}<small>${best.toFixed(1).replace('.', ',')} m</small>`; cd.classList.add('on'); setTimeout(() => fine(r), 1500);
+    };
+    const giro = now => {
+      if (!box.isConnected || finito) return;
+      const dt = Math.min(.05, (now - ult) / 1000); ult = now;
+      if (carica) { p = Math.min(100, p + (10 + .45 * p) * dt); metti(); if (p >= soglia) boom(); }
+      requestAnimationFrame(giro);
+    };
+    pan.addEventListener('pointerdown', e => { e.preventDefault(); if (!pronto || finito || carica) return; try { pan.setPointerCapture(e.pointerId); } catch (z) {} carica = true; bot.classList.add('agita'); sEl.textContent = 'Agita, agita… e lascia! 🫨'; suoni.rumore(.3, 400, .12); });
+    pan.addEventListener('pointerup', lascia); pan.addEventListener('pointercancel', lascia);
+    pan.pressione = () => ({ p, pronto, carica, tiro });   // per i test automatici
+    requestAnimationFrame(() => box.querySelector('.spu').scrollIntoView({ block: 'nearest' }));
+    contoAvv(box, cd, () => { ult = performance.now(); requestAnimationFrame(giro); prossimo(); });
+  }
+};
+
+// casella 18: "Indovina la canzone" — il telefono suona l'inizio di una canzone di Natale (melodie antiche, libere da diritti): scegli il titolo tra 4.
+// 5 canzoni, 90 s; risultato = giuste × 1000 + (999 − decimi). Le melodie sono fatte al volo in un file WAV e suonano con un elemento <audio>
+// (sull'iPhone suona anche col tasto silenzioso), sbloccato dal tocco su "Inizia".
+const CANZONI = [   // [titolo, battiti al minuto, note: 'nota+ottava durata' (durata in battiti)]
+  ['Jingle Bells', 168, 'E4 1 E4 1 E4 2 E4 1 E4 1 E4 2 E4 1 G4 1 C4 1.5 D4 .5 E4 4 F4 1 F4 1 F4 1.5 F4 .5 F4 1 E4 1 E4 1 E4 .5 E4 .5 E4 1 D4 1 D4 1 E4 1 D4 2 G4 2'],
+  ['We Wish You a Merry Christmas', 160, 'D4 1 G4 1 G4 .5 A4 .5 G4 .5 F#4 .5 E4 1 E4 1 E4 1 A4 1 A4 .5 B4 .5 A4 .5 G4 .5 F#4 1 D4 1 D4 1 B4 1 B4 .5 C5 .5 B4 .5 A4 .5 G4 1 E4 1 D4 .5 D4 .5 E4 1 A4 1 F#4 1 G4 2'],
+  ['Astro del ciel', 200, 'G4 3 A4 1 G4 2 E4 6 G4 3 A4 1 G4 2 E4 6 D5 4 D5 2 B4 6 C5 4 C5 2 G4 6'],
+  ['Deck the Halls', 150, 'G4 1.5 F4 .5 E4 1 D4 1 C4 1 D4 1 E4 1 C4 1 D4 .5 E4 .5 F4 .5 D4 .5 E4 1.5 D4 .5 C4 1 B3 1 C4 2'],
+  ['O albero di Natale', 100, 'D4 1 G4 .75 G4 .25 G4 1.5 A4 .5 B4 .75 B4 .25 B4 1.5 B4 .5 A4 .5 B4 .5 C5 1 F#4 1 A4 1 G4 2'],
+  ['Gioia al mondo', 110, 'C5 1 B4 .75 A4 .25 G4 1.5 F4 .5 E4 1 D4 1 C4 1.5 G4 .5 A4 1.5 A4 .5 B4 1.5 B4 .5 C5 3'],
+  ['Adeste fideles', 100, 'G4 1 G4 2 D4 1 G4 1 A4 2 D4 2 B4 1 A4 1 B4 1 C5 1 B4 2 A4 1 G4 1']
+];
+function melodiaWav(nota, bpm) {   // un piccolo carillon: seno + armonica, attacco breve e coda che sfuma
+  const SR = 22050, P = nota.split(' '), N = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }, beat = 60 / bpm, note = [];
+  for (let i = 0; i < P.length; i += 2) { const m = P[i].match(/^([A-G])(#?)(\d)$/); note.push([440 * Math.pow(2, (N[m[1]] + (m[2] ? 1 : 0) + 12 * (+m[3] + 1) - 69) / 12), +P[i + 1] * beat]); }
+  const tot = note.reduce((a, [, d]) => a + d, 0) + .6, n = Math.floor(tot * SR), dati = new Int16Array(n);
+  let t0 = 0;
+  note.forEach(([f, d]) => {
+    const da = Math.floor(t0 * SR), len = Math.floor(Math.min(d + .45, 1.6) * SR);
+    for (let k = 0; k < len && da + k < n; k++) {
+      const t = k / SR, inv = Math.min(1, t / .012) * Math.exp(-t * 3.2) * (t > d ? Math.exp(-(t - d) * 9) : 1);
+      dati[da + k] = Math.max(-32767, Math.min(32767, dati[da + k] + inv * (Math.sin(2 * Math.PI * f * t) * .55 + Math.sin(4 * Math.PI * f * t) * .18 + Math.sin(6 * Math.PI * f * t) * .06) * 32767 * .55));
+    }
+    t0 += d;
+  });
+  const buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf), w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, SR, true); v.setUint32(28, SR * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  new Int16Array(buf, 44).set(dati);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+GIOCHI_AVVENTO[18] = {
+  nome: 'Indovina la canzone 🎶',
+  regole: 'Il telefono suona l\'inizio di una <b>canzone di Natale</b>: tocca il <b>titolo giusto</b> tra 4, anche prima che finisca! 5 canzoni. Vince chi ne indovina di più; a pari risposte giuste, chi è più veloce. Hai 90 secondi. <b>Alza il volume 🔊</b>',
+  unita: ['punto', 'punti'], formato: chiRis,
+  gioca(box, fine) {
+    const suoni = suoniAvv(), MAX = 900, Q = mescolaAvv(CANZONI.slice()).slice(0, 5), url = {};
+    box.innerHTML = `<div class="chi can"><div class="acc-top"><span>Canzone <b class="chi-q">1/5</b></span><span>Giuste <b class="chi-g">0</b></span><span>⏱ <b class="chi-t">0,0</b></span></div>
+      <div class="chi-p"><div class="can-disco"><span>♪</span><span>♫</span><span>♪</span></div><p class="chi-dom">Che canzone è?</p><div class="chi-op"></div>
+        <button class="btn ghost xs can-ri" hidden>🔁 Riascolta</button>
+        <div class="can-via"><p>🔊 Alza il volume</p><button class="btn big">▶ Inizia</button></div></div><div class="cam-bar"><i></i></div></div>`;
+    const $$ = c => box.querySelector(c), wrap = $$('.chi'), disco = $$('.can-disco'), op = $$('.chi-op'), qEl = $$('.chi-q'), gEl = $$('.chi-g'), tEl = $$('.chi-t'), bar = $$('.cam-bar i'), ri = $$('.can-ri'), via = $$('.can-via');
+    const player = new Audio(); player.preload = 'auto';
+    let i = 0, giuste = 0, t0 = 0, finito = false, fermo = true;
+    const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+    const suona = () => { const [tit, bpm, note] = Q[i]; url[tit] = url[tit] || melodiaWav(note, bpm); player.src = url[tit]; player.currentTime = 0; const pr = player.play(); if (pr && pr.catch) pr.catch(() => { ri.hidden = false; }); disco.classList.add('gira'); };
+    player.addEventListener('ended', () => { disco.classList.remove('gira'); ri.hidden = fermo; });
+    const mostra = () => {
+      const [tit] = Q[i]; qEl.textContent = `${i + 1}/${Q.length}`; fermo = false; ri.hidden = true;
+      const altri = mescolaAvv(CANZONI.map(c => c[0]).filter(x => x !== tit)).slice(0, 3);
+      op.innerHTML = mescolaAvv([tit, ...altri]).map(n => `<button class="chi-o solo" data-n="${esc(n)}"><span>${esc(n)}</span></button>`).join('');
+      op.querySelectorAll('.chi-o').forEach(b => b.addEventListener('click', () => {
+        if (fermo || finito) return; fermo = true; player.pause(); disco.classList.remove('gira'); ri.hidden = true;
+        op.querySelectorAll('.chi-o').forEach(x => { if (x.dataset.n === tit) x.classList.add('ok'); });
+        if (b.dataset.n === tit) { giuste++; gEl.textContent = giuste; suoni.tono(660, 'sine', .14, .18, 0, 990); vibra(15); } else { b.classList.add('no'); suoni.tono(180, 'square', .25, .1, 0, 110); vibra([30, 30, 30]); }
+        setTimeout(() => { if (finito) return; if (++i < Q.length) { mostra(); suona(); } else chiudi(); }, 1000);
+      }));
+    };
+    const chiudi = scaduto => {
+      if (finito) return; finito = true; fermo = true; player.pause(); const t = Math.min(decimi(), MAX), r = puntiDomande(giuste, t);
+      const cd = document.createElement('div'); cd.className = 'acc-cd on'; cd.innerHTML = `${scaduto ? 'TEMPO!' : 'FATTO!'}<small>${giuste} su ${Q.length} · ${(t / 10).toFixed(1).replace('.', ',')} s</small>`;
+      $$('.chi-p').appendChild(cd); setTimeout(() => { Object.values(url).forEach(u => URL.revokeObjectURL(u)); fine(r); }, 1300);
+    };
+    const giro = () => {
+      if (!box.isConnected) { player.pause(); return; }
+      if (finito) return;
+      const t = decimi(); tEl.textContent = (t / 10).toFixed(1).replace('.', ','); bar.style.width = Math.max(0, 100 - t / MAX * 100) + '%';
+      if (t >= MAX) return chiudi(true);
+      requestAnimationFrame(giro);
+    };
+    ri.onclick = () => { if (!fermo) suona(); };
+    via.querySelector('button').onclick = () => { via.remove(); t0 = performance.now(); mostra(); suona(); requestAnimationFrame(giro); };   // il tocco sblocca l'audio (iPhone)
+    wrap.giusta = () => Q[i] && !fermo ? Q[i][0] : null;   // per i test automatici
+    requestAnimationFrame(() => wrap.scrollIntoView({ block: 'nearest' }));
+  }
+};
+
+// casella 19: "La finalissima: quiz pippegoso" — domande scritte da Ricky nel Laboratorio (✏️ Domande), segrete nel database fino al 19:
+// arrivano con le risposte mescolate e l'impronta di quella giusta. Risultato = giuste × 1000 + (999 − decimi), 2 minuti e mezzo.
+GIOCHI_AVVENTO[19] = {
+  nome: 'La finalissima: quiz pippegoso 🏆',
+  regole: 'L\'ultima casella! <b>Domande sul gruppo</b> scritte dall\'amministratore: tocca la risposta giusta. Vince chi ne indovina di più; a pari risposte giuste, chi è più veloce. Hai 2 minuti e mezzo.',
+  unita: ['punto', 'punti'], formato: chiRis,
+  gioca(box, fine) {
+    box.innerHTML = '<div class="loading">Preparo le domande</div>';
+    rpc('avvento_quiz', { p_name: S.me, p_giorno: 19 }).then(r => {
+      const Q = r.domande || [], sale = r.sale || '', suoni = suoniAvv(), MAX = 1500;
+      if (!Q.length) return fermaAvv(box, 'Le domande non sono pronte.', () => fine(0));
+      box.innerHTML = `<div class="chi quiz"><div class="acc-top"><span>Domanda <b class="chi-q">1/${Q.length}</b></span><span>Giuste <b class="chi-g">0</b></span><span>⏱ <b class="chi-t">0,0</b></span></div>
+        <div class="chi-p"><div class="quiz-d"></div><div class="chi-op uno"></div><div class="acc-cd"></div></div><div class="cam-bar"><i></i></div></div>`;
+      const $$ = c => box.querySelector(c), wrap = $$('.chi'), dom = $$('.quiz-d'), op = $$('.chi-op'), qEl = $$('.chi-q'), gEl = $$('.chi-g'), tEl = $$('.chi-t'), bar = $$('.cam-bar i'), cd = $$('.acc-cd');
+      let i = 0, giuste = 0, t0 = 0, finito = false, fermo = true, giustaOra = null;
+      const decimi = () => Math.max(1, Math.round((performance.now() - t0) / 100));
+      const mostra = async () => {
+        const d = Q[i]; qEl.textContent = `${i + 1}/${Q.length}`; dom.textContent = d.domanda; giustaOra = null;
+        op.innerHTML = d.opzioni.map(n => `<button class="chi-o solo" data-n="${esc(n)}"><span>${esc(n)}</span></button>`).join('');
+        for (const n of d.opzioni) if (await sha256hex(sale + n) === d.h) giustaOra = n;   // quale è la giusta (per illuminarla dopo la risposta)
+        fermo = false;
+        op.querySelectorAll('.chi-o').forEach(b => b.addEventListener('click', () => {
+          if (fermo || finito) return; fermo = true;
+          op.querySelectorAll('.chi-o').forEach(x => { if (x.dataset.n === giustaOra) x.classList.add('ok'); });
+          if (b.dataset.n === giustaOra) { giuste++; gEl.textContent = giuste; suoni.tono(660, 'sine', .14, .18, 0, 990); vibra(15); } else { b.classList.add('no'); suoni.tono(180, 'square', .25, .1, 0, 110); vibra([30, 30, 30]); }
+          setTimeout(() => { if (finito) return; if (++i < Q.length) mostra(); else chiudi(); }, 1000);
+        }));
+      };
+      const chiudi = scaduto => {
+        if (finito) return; finito = true; fermo = true; const t = Math.min(decimi(), MAX), r = puntiDomande(giuste, t);
+        cd.innerHTML = `${scaduto ? 'TEMPO!' : 'FATTO!'}<small>${giuste} su ${Q.length} · ${(t / 10).toFixed(1).replace('.', ',')} s</small>`; cd.classList.add('on'); setTimeout(() => fine(r), 1300);
+      };
+      const giro = () => {
+        if (!box.isConnected || finito) return;
+        const t = decimi(); tEl.textContent = (t / 10).toFixed(1).replace('.', ','); bar.style.width = Math.max(0, 100 - t / MAX * 100) + '%';
+        if (t >= MAX) return chiudi(true);
+        requestAnimationFrame(giro);
+      };
+      wrap.giusta = () => !fermo ? giustaOra : null;   // per i test automatici
+      requestAnimationFrame(() => wrap.scrollIntoView({ block: 'nearest' }));
+      contoAvv(box, cd, () => { t0 = performance.now(); mostra(); requestAnimationFrame(giro); });
+    }).catch(e => fermaAvv(box, esc(msg(e)), () => fine(0)));
+  }
+};
+
+// Laboratorio: le domande del quiz finale (casella 19)
+const QUIZ_AVV = [19];
+function quizLab(n) {
+  const riga = (k, d = {}) => `<fieldset class="qz-r" data-k="${k}"><legend>Domanda ${k + 1}</legend>
+    <input class="qz-d" maxlength="160" autocomplete="off" placeholder="La domanda (es. Chi ha l'Audi A3?)" value="${esc(d.domanda || '')}">
+    <input class="qz-g" maxlength="60" autocomplete="off" placeholder="✅ Risposta giusta" value="${esc(d.giusta || '')}">
+    ${[0, 1, 2].map(j => `<input class="qz-s" maxlength="60" autocomplete="off" placeholder="❌ Risposta sbagliata${j ? ' (facoltativa)' : ''}" value="${esc((d.sbagliate || [])[j] || '')}">`).join('')}</fieldset>`;
+  sheet(`<form class="qz-f" novalidate><h3>✏️ Domande della casella ${n}</h3>
+    <p class="hint">Da 3 a 10 domande sul gruppo. Per ognuna: la risposta giusta e da 1 a 3 sbagliate (le mescolo io). Gli altri le vedranno solo il ${n} dicembre.</p>
+    <div class="qz-l"><div class="loading">Carico</div></div>
+    <button type="button" class="link" id="qz-piu">+ Aggiungi una domanda</button>
+    <p class="err" hidden></p>
+    <div class="row end"><button type="button" class="btn ghost" data-close>Annulla</button><button class="btn" type="submit">Salva le domande</button></div></form>`, async (s, close) => {
+    const f = s.querySelector('form'), L = f.querySelector('.qz-l'), er = f.querySelector('.err'), piu = f.querySelector('#qz-piu');
+    let D = [];
+    try { D = (await rpc('avvento_quiz_edit', { p_giorno: n, p_admin: adminPin() || null })).domande || []; } catch (e) {}
+    L.innerHTML = (D.length ? D : [{}, {}, {}]).map((d, k) => riga(k, d)).join('');
+    const conta = () => { piu.hidden = L.children.length >= 10; };
+    piu.onclick = () => { L.insertAdjacentHTML('beforeend', riga(L.children.length)); conta(); L.lastElementChild.querySelector('.qz-d').focus(); }; conta();
+    f.onsubmit = async e => {
+      e.preventDefault(); er.hidden = true;
+      const dom = [...L.querySelectorAll('.qz-r')].map(r => ({ domanda: r.querySelector('.qz-d').value.trim(), giusta: r.querySelector('.qz-g').value.trim(), sbagliate: [...r.querySelectorAll('.qz-s')].map(x => x.value.trim()).filter(Boolean) }))
+        .filter(d => d.domanda || d.giusta || d.sbagliate.length);
+      const male = dom.findIndex(d => !d.domanda || !d.giusta || !d.sbagliate.length);
+      if (dom.length < 3) { er.textContent = 'Servono almeno 3 domande.'; er.hidden = false; return; }
+      if (male >= 0) { er.textContent = `Alla domanda ${male + 1} manca qualcosa: la domanda, la risposta giusta e almeno una sbagliata.`; er.hidden = false; return; }
+      try { await rpc('avvento_quiz_set', { p_author: S.me, p_giorno: n, p_domande: dom, p_admin: adminPin() || null }); close(); toast(`Domande della casella ${n} salvate ✓`); }
+      catch (ex) { er.textContent = msg(ex); er.hidden = false; }
+    };
+  });
+}
+
 const unitaAvv = (g, r) => g.formato ? g.formato(r) : `${r} ${r === 1 ? g.unita[0] : g.unita[1]}`;
 async function caricaAvvento() { S.avv = await rpc('avvento_classifica'); return S.avv; }
 function risultatoAvvHTML(C, n, g) {
@@ -4680,10 +5302,11 @@ function viewLab() {
       const g = GIOCHI_AVVENTO[n], k = AVV_COL[AVV_ORDINE.indexOf(n) % AVV_COL.length];
       const stato = n < oggi || oggi === 99 ? 'già aperta per tutti' : n === oggi ? 'si apre oggi per tutti' : `gli altri la vedono dal ${n} dicembre`;
       return `<div class="lab-r${g ? ' pronto' : ''}"><span class="lab-n" style="--k:${k}">${n}</span><span class="lab-t"><b>${g ? esc(g.nome) : 'Giochino da creare'}</b><small>${stato}</small></span>
-        ${PAROLE_AVV.includes(n) ? `<button class="btn ghost xs" data-parole="${n}">✏️ Parole</button>` : ''}<button class="btn ghost xs" data-prova="${n}">▶ Prova</button></div>`;
+        ${PAROLE_AVV.includes(n) ? `<button class="btn ghost xs" data-parole="${n}">✏️ Parole</button>` : ''}${QUIZ_AVV.includes(n) ? `<button class="btn ghost xs" data-quiz="${n}">✏️ Domande</button>` : ''}<button class="btn ghost xs" data-prova="${n}">▶ Prova</button></div>`;
     }).join('')}</div>`;
   $('#view').querySelectorAll('[data-prova]').forEach(b => b.onclick = () => apriCasella(+b.dataset.prova, true));
   $('#view').querySelectorAll('[data-parole]').forEach(b => b.onclick = () => paroleLab(+b.dataset.parole));
+  $('#view').querySelectorAll('[data-quiz]').forEach(b => b.onclick = () => quizLab(+b.dataset.quiz));
   $('#view').insertAdjacentHTML('afterbegin', barraAdmin('avvento'));
 }
 
@@ -5173,7 +5796,7 @@ function guardaStorie(tutte, gi, opz = {}) {
 let demo = null;
 function demoDB() { return demo || (demo = creaDemo()); }
 function creaDemo() {
-  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], luoghi: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], medaglie: [], parole: {}, files: new Map() };
+  const D = { pw: 'prova', members: [], stories: [], views: [], slikes: [], clikes: [], luoghi: [], avv: [], avvFuori: new Set(), scomments: [], pcomments: [], pvotes: [], polls: [], posts: [], likes: [], replies: [], albums: [], photos: [], ss: [], medaglie: [], parole: {}, quiz: {}, files: new Map() };
   const t = min => new Date(Date.now() - min * 60000).toISOString();
   const clean = (x, n) => String(x ?? '').trim().slice(0, n);
   const pinOk = p => /^\d{4,8}$/.test(p || '');
@@ -5198,7 +5821,7 @@ function creaDemo() {
   [['Marco', 'oro', 'Miglior cena dell\'anno', 900], ['Giulia', 'oro', 'Regina del karaoke', 800], ['Marco', 'bronzo', 'Ultimo a lasciare la festa', 700], ['Luca', 'argento', 'Fotografo ufficiale', 600],
    ['Giulia', 'argento', '', 500], ['Sara', 'bronzo', 'Torta più buona', 400], ['Marco', 'argento', 'Organizzatore della gita', 300]]
     .forEach(([name, tipo, motivo, min], i) => D.medaglie.push({ id: 'med' + i, name, tipo, motivo, dato_da: 'Ricky', created_at: t(min) }));
-  [['Giulia', '🌸', 330], ['Marco', '😎', 200]].forEach(([n, emo, hue]) => {   // foto utente finte
+  [['Giulia', '🌸', 330], ['Marco', '😎', 200], ['Luca', '🎸', 30], ['Sara', '🌻', 120]].forEach(([n, emo, hue]) => {   // foto utente finte (4: servono almeno 3 per il giochino "Chi è?")
     const c = document.createElement('canvas'); c.width = c.height = 240; const x = c.getContext('2d');
     const g = x.createLinearGradient(0, 0, 240, 240); g.addColorStop(0, `hsl(${hue},85%,60%)`); g.addColorStop(1, `hsl(${hue + 60},80%,30%)`);
     x.fillStyle = g; x.fillRect(0, 0, 240, 240); x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '150px serif'; x.fillText(emo, 120, 132);
@@ -5406,7 +6029,7 @@ function creaDemo() {
       D.avv.push({ giorno: a.p_giorno, name: n, punteggio: null, created_at: t(0) }); return { ok: true };
     },
     avvento_gioca: a => {
-      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500, 4: 4200, 5: 60, 6: 100, 7: 40, 8: 5999, 9: 2500, 10: 3500 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30, 4: 40, 8: 1000, 9: 30, 10: 40 }[a.p_giorno] || 0))) throw err('PUNTEGGIO_NON_VALIDO');
+      need(a); if (a.p_punteggio == null || a.p_punteggio < 0 || a.p_punteggio > ({ 1: 150, 2: 200, 3: 1500, 4: 4200, 5: 60, 6: 100, 7: 40, 8: 5999, 9: 2500, 10: 3500, 11: 1200, 12: 20000, 13: 5999, 14: 1500, 15: 150, 16: 60, 17: 310, 18: 5999, 19: 10999 }[a.p_giorno] || 100000) || (a.p_punteggio > 0 && a.p_punteggio < ({ 3: 30, 4: 40, 8: 1000, 9: 30, 10: 40, 11: 30, 12: 500, 13: 1000, 18: 1000, 19: 1000 }[a.p_giorno] || 0))) throw err('PUNTEGGIO_NON_VALIDO');
       const p = D.avv.find(y => y.giorno === a.p_giorno && stessaPersona(y.name, clean(a.p_name, 30)));
       if (!p) return { err: 'TEMPO_SCADUTO' }; if (p.punteggio != null) return { err: 'GIA_GIOCATO' };
       p.punteggio = a.p_punteggio; return { ok: true };
@@ -5414,7 +6037,7 @@ function creaDemo() {
     avvento_classifica: a => {
       need(a); const fuori = n => D.avvFuori.has(chiaveNome(n)), giorni = [];
       for (let g = 1; g <= 19; g++) D.avv.filter(p => p.giorno === g && p.punteggio > 0 && !fuori(p.name))
-        .sort((x, y) => ([3, 4, 9, 10].includes(g) ? x.punteggio - y.punteggio : y.punteggio - x.punteggio) || (x.created_at < y.created_at ? -1 : x.created_at > y.created_at ? 1 : alfa(x.name, y.name)))
+        .sort((x, y) => ([3, 4, 9, 10, 11, 12].includes(g) ? x.punteggio - y.punteggio : y.punteggio - x.punteggio) || (x.created_at < y.created_at ? -1 : x.created_at > y.created_at ? 1 : alfa(x.name, y.name)))
         .forEach((p, i) => giorni.push({ giorno: g, name: p.name, punteggio: p.punteggio, pos: i + 1, punti: i < 5 ? 5 - i : 0, at: p.created_at }));
       const tot = new Map();
       for (const x of giorni) { const k = chiaveNome(x.name), v = tot.get(k) || { name: x.name, punti: 0, giochi: 0, primi: 0, primo: x.at }; v.punti += x.punti; v.giochi++; if (x.pos === 1) v.primi++; if (x.at < v.primo) v.primo = x.at; tot.set(k, v); }
@@ -5521,6 +6144,21 @@ function creaDemo() {
         .forEach(p => { const k = chiaveNome(p.author); if (visti.has(k)) altri.push(p); else { visti.add(k); primi.push(p); } });
       return { domande: [...primi, ...altri].slice(0, 5).map(p => ({ testo: p.body.trim().slice(0, 240), giusta: p.author,
         opzioni: mescola([p.author, ...mescola(vivi.map(m => m.name).filter(x => !stessaPersona(x, p.author) && !stessaPersona(x, n))).slice(0, 3)]) })) };
+    },
+    avvento_quiz_set: a => {
+      need(a); if (!(D.adminNome && same(D.adminNome, S.me)) && !a.p_admin) throw err('NON_AUTORIZZATO'); const x = admG(a.p_admin); if (x) return { err: x };
+      const L = (a.p_domande || []).map(d => ({ domanda: clean(d.domanda, 160), giusta: clean(d.giusta, 60), sbagliate: (d.sbagliate || []).map(v => clean(v, 60)).filter(Boolean) }));
+      if (L.length < 3 || L.length > 10 || L.some(d => !d.domanda || !d.giusta || !d.sbagliate.length || d.sbagliate.length > 3 || d.sbagliate.some(v => same(v, d.giusta)))) throw err('DOMANDE_NON_VALIDE');
+      D.quiz[a.p_giorno] = L; return { ok: true, n: L.length };
+    },
+    avvento_quiz_edit: a => { need(a); if (!(D.adminNome && same(D.adminNome, S.me)) && !a.p_admin) throw err('NON_AUTORIZZATO'); const x = admG(a.p_admin); if (x) return { err: x }; return { domande: D.quiz[a.p_giorno] || [] }; },
+    avvento_quiz: async a => {
+      need(a); const adm = D.adminNome && same(D.adminNome, S.me);
+      if (!adm && !D.avv.some(p => p.giorno === a.p_giorno && stessaPersona(p.name, clean(a.p_name, 30)) && p.punteggio == null)) throw err('PREMI_GIOCA');
+      const L = D.quiz[a.p_giorno] || [['Quanti sono i Re Magi?', 'Tre', ['Due', 'Quattro', 'Cinque']], ['In che città è nato Gesù?', 'Betlemme', ['Nazareth', 'Gerusalemme', 'Roma']], ['Che dolce di Natale viene da Milano?', 'Panettone', ['Pandoro', 'Panforte', 'Torrone']],
+        ['Quando arriva la Befana?', '6 gennaio', ['1 gennaio', '25 dicembre', '31 dicembre']], ['Come si chiama la renna dal naso rosso?', 'Rudolph', ['Cometa', 'Fulmine', 'Donnola']]].map(([domanda, giusta, sbagliate]) => ({ domanda, giusta, sbagliate }));
+      const sale = uid().replace(/-/g, '').slice(0, 12);
+      return { sale, domande: await Promise.all(L.map(async d => ({ domanda: d.domanda, opzioni: mescola([...d.sbagliate, d.giusta]), h: await sha256hex(sale + d.giusta) }))) };
     },
     medagliere: a => {
       need(a); const d = new Date(), oggi = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

@@ -2113,16 +2113,18 @@ language sql stable set search_path = public, extensions as $$ select (now() at 
 
 -- tetto di ogni giochino, contro i risultati impossibili (casella 1: 15 scatti al secondo per 10 secondi)
 create or replace function _avvento_max(p_giorno int) returns int
-language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 when 3 then 1500 when 4 then 4200 when 5 then 60 when 6 then 100 when 7 then 40 when 8 then 5999 when 9 then 2500 when 10 then 3500 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s · 3: memory, decimi di secondo (max 150 s) · 4: transenne, decimi + 30 per tocco (max 120 s + 99 tocchi) · 5: facce acchiappate in 15 s · 6: regali sulla torre in 25 s · 7: centri con le palle di neve in 15 s · 8: risposte giuste × 1000 + bonus velocità · 9 e 10: decimi + penalità
+language sql immutable as $$ select case p_giorno when 1 then 150 when 2 then 200 when 3 then 1500 when 4 then 4200 when 5 then 60 when 6 then 100 when 7 then 40 when 8 then 5999 when 9 then 2500 when 10 then 3500
+  when 11 then 1200 when 12 then 20000 when 13 then 5999 when 14 then 1500 when 15 then 150 when 16 then 60 when 17 then 310 when 18 then 5999 when 19 then 10999 else 100000 end $$;   -- 1: foto in 10 s · 2: passate sulla macchina in 10 s · 3: memory, decimi di secondo (max 150 s) · 4: transenne, decimi + 30 per tocco (max 120 s + 99 tocchi) · 5: facce acchiappate in 15 s · 6: regali sulla torre in 25 s · 7: centri con le palle di neve in 15 s · 8: risposte giuste × 1000 + bonus velocità · 9 e 10: decimi + penalità · 11: puzzle, decimi · 12: brindisi, millisecondi di 5 riflessi · 13, 18, 19: giuste × 1000 + bonus velocità · 14: metri in slitta · 15: regali presi · 16: campanelle in fila · 17: decimetri del tappo
 
 -- giochini dove vince chi fa MENO; 0 = non finito, niente punti
 --   casella 3, il memory: il tempo in decimi di secondo
 --   casella 4, le transenne della Nicole: decimi di secondo + 30 (= 3 secondi) per ogni tocco di un ostacolo
 create or replace function _avvento_asc(p_giorno int) returns boolean
-language sql immutable as $$ select p_giorno in (3, 4, 9, 10) $$;   -- 9: anagrammi, 10: trova le differenze (tempo + penalità)
+language sql immutable as $$ select p_giorno in (3, 4, 9, 10, 11, 12) $$;   -- 9: anagrammi, 10: trova le differenze (tempo + penalità)
 -- il minimo credibile (memory: sotto i 3 secondi è impossibile girare 10 carte)
 create or replace function _avvento_min(p_giorno int) returns int
-language sql immutable as $$ select case p_giorno when 3 then 30 when 4 then 40 when 8 then 1000 when 9 then 30 when 10 then 40 else 0 end $$;   -- 8: almeno una risposta giusta
+language sql immutable as $$ select case p_giorno when 3 then 30 when 4 then 40 when 8 then 1000 when 9 then 30 when 10 then 40
+  when 11 then 30 when 12 then 500 when 13 then 1000 when 18 then 1000 when 19 then 1000 else 0 end $$;   -- 8: almeno una risposta giusta
 
 create or replace function _avvento_aperta(p_giorno int, p_name text) returns text
 language plpgsql stable security definer set search_path = public, extensions as $$
@@ -2687,6 +2689,74 @@ begin
   return json_build_object('domande', coalesce(L, '[]'::json));
 end $$;
 
+-- quiz finale (casella 19): domande scritte dall'amministratore nel Laboratorio. Ai giocatori arrivano solo il giorno giusto, dopo "Gioca",
+-- con tutte le risposte mescolate e l'impronta sha256(sale || risposta giusta) per controllare senza svelarla.
+create table if not exists avvento_quiz (
+  giorno int not null,
+  n int not null,
+  domanda text not null,
+  giusta text not null,
+  sbagliate text[] not null,
+  primary key (giorno, n)
+);
+alter table avvento_quiz enable row level security;
+
+create or replace function avvento_quiz_set(p_pw text, p_author text, p_giorno int, p_domande json, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text; e json; i int := 0; sb text[];
+begin
+  perform _need(p_pw); perform _io(p_author);
+  x := _avvento_admin(p_admin); if x is not null then return json_build_object('err', x); end if;
+  if p_giorno is null or p_giorno not between 1 and 19 then raise exception 'CASELLA_NON_VALIDA'; end if;
+  if p_domande is null or json_typeof(p_domande) <> 'array' or json_array_length(p_domande) not between 3 and 10 then raise exception 'DOMANDE_NON_VALIDE'; end if;
+  for e in select * from json_array_elements(p_domande) loop
+    sb := array(select _clean(v, 60) from json_array_elements_text(coalesce(e->'sbagliate', '[]'::json)) v where btrim(v) <> '');
+    if _clean(e->>'domanda', 160) = '' or _clean(e->>'giusta', 60) = '' or coalesce(array_length(sb, 1), 0) not between 1 and 3
+       or lower(_clean(e->>'giusta', 60)) = any (array(select lower(z) from unnest(sb) z)) then raise exception 'DOMANDE_NON_VALIDE'; end if;
+  end loop;
+  delete from avvento_quiz where giorno = p_giorno;
+  for e in select * from json_array_elements(p_domande) loop
+    i := i + 1;
+    insert into avvento_quiz(giorno, n, domanda, giusta, sbagliate)
+    values (p_giorno, i, _clean(e->>'domanda', 160), _clean(e->>'giusta', 60),
+            array(select _clean(v, 60) from json_array_elements_text(coalesce(e->'sbagliate', '[]'::json)) v where btrim(v) <> ''));
+  end loop;
+  return json_build_object('ok', true, 'n', i);
+end $$;
+
+create or replace function avvento_quiz_edit(p_pw text, p_giorno int, p_admin text) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare x text;
+begin
+  perform _need(p_pw);
+  x := _avvento_admin(p_admin); if x is not null then return json_build_object('err', x); end if;
+  return json_build_object('domande', coalesce((select json_agg(json_build_object('domanda', domanda, 'giusta', giusta, 'sbagliate', sbagliate) order by n)
+    from avvento_quiz where giorno = p_giorno), '[]'::json));
+end $$;
+
+create or replace function avvento_quiz(p_pw text, p_name text, p_giorno int) returns json
+language plpgsql security definer set search_path = public, extensions as $$
+declare sale text := encode(gen_random_bytes(6), 'hex'); L json;
+begin
+  perform _need(p_pw); perform _io(p_name);
+  if not _admin_io() and not _avvento_in_corso(p_giorno, _clean(p_name, 30)) then raise exception 'PREMI_GIOCA'; end if;
+  with q as (
+    select n, domanda, giusta, sbagliate from avvento_quiz where giorno = p_giorno
+    union all   -- se l'amministratore non ha scritto le domande: un quiz di Natale di riserva
+    select v.n, v.d, v.g, v.s from (values
+      (1, 'Quanti sono i Re Magi?', 'Tre', array['Due', 'Quattro', 'Cinque']),
+      (2, 'In che città è nato Gesù?', 'Betlemme', array['Nazareth', 'Gerusalemme', 'Roma']),
+      (3, 'Che dolce di Natale viene da Milano?', 'Panettone', array['Pandoro', 'Panforte', 'Torrone']),
+      (4, 'Quando arriva la Befana?', '6 gennaio', array['1 gennaio', '25 dicembre', '31 dicembre']),
+      (5, 'Come si chiama la renna dal naso rosso?', 'Rudolph', array['Cometa', 'Fulmine', 'Donnola'])) v(n, d, g, s)
+    where not exists (select 1 from avvento_quiz where giorno = p_giorno)
+  )
+  select json_agg(json_build_object('domanda', domanda,
+           'opzioni', (select json_agg(o order by random()) from unnest(sbagliate || giusta) o),
+           'h', encode(digest(sale || giusta, 'sha256'), 'hex')) order by n) into L from q;
+  return json_build_object('sale', sale, 'domande', coalesce(L, '[]'::json));
+end $$;
+
 -- ---------- MEDAGLIERE PIPPEGOSO (Ricky, 20/11/2026) ----------
 -- L'amministratore assegna medaglie d'oro, d'argento e di bronzo (con un motivo); tutti vedono la classifica.
 -- Si apre il 19 dicembre 2026 (ora italiana): prima lo vede solo l'amministratore, che può già prepararlo. Per ora non si chiude (Ricky: "fino a quando non te lo dirò io").
@@ -2769,7 +2839,7 @@ grant execute on function check_pw, members_list, member_add, presenza, accesso_
   event_date_vote, event_fix_date, push_key, push_subscribe, push_unsubscribe, attivita_list, attivita_nuove, attivita_viste,
   avvento_inizia, avvento_gioca, avvento_classifica, avvento_fuori, comment_like,
   luoghi_list, luogo_add, luogo_edit, luogo_cero, luogo_del, medagliere, medaglia_add, medaglia_del,
-  parole_top, avvento_parole_set, avvento_parole_edit, avvento_parole, avvento_chi to anon, authenticated;
+  parole_top, avvento_parole_set, avvento_parole_edit, avvento_parole, avvento_chi, avvento_quiz_set, avvento_quiz_edit, avvento_quiz to anon, authenticated;
 drop function if exists _ss_admin(uuid, text);
 revoke execute on function _ok, _need, _poll_json, _admin_ok, _admin_try, _rnd, _shuffle, _ss_code, _ss_log, _ss_vietati,
   _ss_match, _ss_cappello, _ss_lettere, _ss_pin, _ss_adm, _event_json, _event_cover_ok, _event_day_ok,

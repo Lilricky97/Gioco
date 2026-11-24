@@ -746,7 +746,7 @@ await q(`delete from app_config where k in ('notif_url','notif_key','vapid_pub',
 // ACCESSO PERSONALE: ognuno entra col suo PIN, e il database controlla CHI fa ogni azione
 {
   // ogni funzione che agisce a nome di qualcuno controlla l'identità (controllo sul testo di schema.sql)
-  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like','luogo_add','luogo_edit','luogo_cero','luogo_del','medaglia_add','medaglia_del','avvento_parole_set','avvento_parole','avvento_chi']
+  const AZIONI = ['member_add','presenza','member_avatar','stories_list','story_like','story_add','story_seen','story_comment_add','story_comment_del','story_del','post_add','post_del','post_like','post_vote','reply_add','reply_del','album_create','photo_add','photo_comment_add','photo_vote','photo_comment_del','poll_create','poll_vote','poll_close','poll_del','ss_create','ss_join','ss_leave','ss_me','ss_reveal','ss_bought','ss_ask','ss_inbox','ss_answer','event_add','event_edit','event_del','event_rsvp','event_comment_add','event_comment_del','event_date_vote','event_fix_date','push_subscribe','avvento_inizia','avvento_gioca','avvento_fuori','attivita_list','attivita_nuove','attivita_viste','comment_like','luogo_add','luogo_edit','luogo_cero','luogo_del','medaglia_add','medaglia_del','avvento_parole_set','avvento_parole','avvento_chi','avvento_quiz_set','avvento_quiz']
   const senzaIo = AZIONI.filter(f => { const m = SCHEMA.match(new RegExp('create or replace function ' + f + '\\([\\s\\S]*?end \\$\\$;')); return !m || !/perform _io\(p_(name|author|organizer)\)/.test(m[0]) })
   ok(senzaIo.length === 0, `tutte le ${AZIONI.length} funzioni che agiscono a nome di qualcuno controllano chi sei` + (senzaIo.length ? ': mancano ' + senzaIo : ''))
   await db.exec(IO_VERO)   // da qui il controllo è quello vero
@@ -939,6 +939,38 @@ ok((await one('select _avvento_max(1)')) === 150 && (await one('select _avvento_
   ok((await err('select avvento_gioca($1,$2,$3,$4)',[W(zed),8,'Zed',800])) === 'PUNTEGGIO_NON_VALIDO','casella 8: un bonus di velocità senza nessuna risposta giusta non vale')
   ok((await one('select avvento_gioca($1,$2,$3,$4)',[W(zed),8,'Zed',4612])).ok === true,'casella 8: 4 giuste in 38,7 secondi = 4612 (salvato)')
   { await db.exec('set role anon'); let no = false; try { await db.query('select * from avvento_parole') } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no,'tabella avvento_parole chiusa alla chiave pubblica') }
+  await one('select admin_dimentica($1)',[W(boss)]); await oggi('2026-11-20')
+}
+
+// AVVENTO 11-19 (Ricky, 24/11/2026): tetti e ordine dei 9 giochini nuovi, quiz finale con le risposte segrete
+{
+  const W = tok => PW + String.fromCharCode(31) + tok
+  const oggi = d => q(`create or replace function _avvento_oggi() returns date language sql stable as $$ select '${d}'::date $$`)
+  const sha = t => createHash('sha256').update(t).digest('hex')
+  const boss = (await one('select accedi($1,$2,$3)',[PW,'Boss','1357'])).token, zed = (await one('select accedi($1,$2,$3)',[PW,'Zed','2468'])).token
+  await one('select admin_check($1,$2)',[W(boss),'4321'])
+  const asc = await q('select g, _avvento_asc(g) as a, _avvento_max(g) as m, _avvento_min(g) as n from generate_series(11, 19) g')
+  ok(asc.map(r => `${r.g}:${r.a ? 'meno' : 'più'}:${r.m}:${r.n}`).join() === '11:meno:1200:30,12:meno:20000:500,13:più:5999:1000,14:più:1500:0,15:più:150:0,16:più:60:0,17:più:310:0,18:più:5999:1000,19:più:10999:1000',
+    'caselle 11-19: puzzle e brindisi vince chi ci mette meno, le altre chi fa di più; tetti anti-trucco e minimi')
+  const D = [{ domanda: 'Chi ha l\'Audi A3?', giusta: 'Il Cava', sbagliate: ['La Nicole', 'Ricky', ''] }, { domanda: 'Dove siamo andati a Capodanno?', giusta: 'Mare', sbagliate: ['Montagna'] },
+    { domanda: 'Chi arriva sempre in ritardo?', giusta: 'Marco', sbagliate: ['Giulia', 'Sara', 'Luca'] }]
+  ok((await err('select avvento_quiz_set($1,$2,$3,$4,$5)',[W(zed),'Zed',19,JSON.stringify(D),null])) === 'NON_AUTORIZZATO','quiz finale: Zed non può scrivere le domande')
+  ok((await err('select avvento_quiz_set($1,$2,$3,$4,$5)',[W(boss),'Boss',19,JSON.stringify(D.slice(0, 2)),null])) === 'DOMANDE_NON_VALIDE'
+    && (await err('select avvento_quiz_set($1,$2,$3,$4,$5)',[W(boss),'Boss',19,JSON.stringify([...D.slice(0, 2), { domanda: 'x?', giusta: 'Sì', sbagliate: ['sì'] }]),null])) === 'DOMANDE_NON_VALIDE',
+    'quiz: servono almeno 3 domande, e la risposta giusta non può stare anche tra le sbagliate')
+  ok((await one('select avvento_quiz_set($1,$2,$3,$4,$5)',[W(boss),'Boss',19,JSON.stringify(D),null])).n === 3,'l\'amministratore scrive 3 domande (le risposte sbagliate vuote si tolgono)')
+  const ed = await one('select avvento_quiz_edit($1,$2,$3)',[W(boss),19,null])
+  ok(ed.domande[0].giusta === 'Il Cava' && ed.domande[0].sbagliate.join() === 'La Nicole,Ricky' && (await err('select avvento_quiz_edit($1,$2,$3)',[W(zed),19,null])) === 'NON_AUTORIZZATO','le risposte in chiaro le vede solo l\'amministratore')
+  await oggi('2026-12-18')
+  ok((await err('select avvento_quiz($1,$2,$3)',[W(zed),'Zed',19])) === 'PREMI_GIOCA','il 18 dicembre il quiz non esce')
+  await oggi('2026-12-19'); await one('select avvento_inizia($1,$2,$3)',[W(zed),19,'Zed'])
+  const qz = await one('select avvento_quiz($1,$2,$3)',[W(zed),'Zed',19])
+  ok(qz.domande.length === 3 && qz.domande.every((d, i) => d.domanda === D[i].domanda && d.opzioni.includes(D[i].giusta) && d.h === sha(qz.sale + D[i].giusta) && d.opzioni.length === 1 + D[i].sbagliate.filter(Boolean).length)
+    && !JSON.stringify(qz).includes('"giusta"'),'il 19, dopo "Gioca": domande con le risposte mescolate e l\'impronta della giusta (che non viaggia in chiaro)')
+  const ris = await one('select avvento_quiz($1,$2,$3)',[W(boss),'Boss',18])
+  ok(ris.domande.length === 5 && ris.domande[0].h === sha(ris.sale + 'Tre'),'se le domande non ci sono: quiz di Natale di riserva (5 domande)')
+  ok((await one('select avvento_gioca($1,$2,$3,$4)',[W(zed),19,'Zed',2873])).ok === true && (await err('select avvento_gioca($1,$2,$3,$4)',[W(zed),19,'Zed',11000])) === 'PUNTEGGIO_NON_VALIDO','quiz: 2 giuste in 12,6 s = 2873 salvato; oltre il massimo (10 giuste) rifiutato')
+  { await db.exec('set role anon'); let no = false; try { await db.query('select * from avvento_quiz') } catch (e) { no = /permission/.test(e.message) } finally { await db.exec('reset role') } ok(no,'tabella avvento_quiz chiusa alla chiave pubblica') }
   await one('select admin_dimentica($1)',[W(boss)]); await oggi('2026-11-20')
 }
 
